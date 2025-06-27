@@ -1,0 +1,19 @@
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/debug-1.11.0/ext/debug
+/usr/bin/ruby3.3 -I/usr/lib/ruby/vendor_ruby extconf.rb
+creating Makefile
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/debug-1.11.0/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-kdzk8k sitelibdir\=./.gem.20250626-3423395-kdzk8k clean
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/debug-1.11.0/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-kdzk8k sitelibdir\=./.gem.20250626-3423395-kdzk8k
+compiling debug.c
+compiling iseq_collector.c
+linking shared-object debug/debug.so
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/debug-1.11.0/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-kdzk8k sitelibdir\=./.gem.20250626-3423395-kdzk8k install
+/usr/bin/install -c -m 0755 debug.so ./.gem.20250626-3423395-kdzk8k/debug
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/debug-1.11.0/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-kdzk8k sitelibdir\=./.gem.20250626-3423395-kdzk8k clean

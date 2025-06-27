@@ -1,0 +1,75 @@
+source "https://rubygems.org"
+
+ruby "3.3.7"
+
+# Core Rails
+gem "rails", "~> 7.1.5", ">= 7.1.5.1"
+gem "bootsnap", require: false
+gem "pg", "~> 1.1"
+gem "puma", ">= 5.0"
+
+# Authentication & Authorization  
+gem "devise"
+gem "devise-jwt"
+gem "pundit"
+
+# API & CORS
+gem "rack-cors"
+gem "jsonapi-serializer"
+
+# Background Processing & Real-time
+gem "redis"
+gem "redis-client"
+gem "sidekiq"
+
+# Payment Processing (keep from old app)
+gem "stripe"
+gem "stripe_event"
+
+# Environment & Configuration
+gem "dotenv-rails"
+
+# Windows compatibility
+gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
+
+group :development, :test do
+  gem "debug", platforms: %i[mri mingw x64_mingw]
+  
+  # Testing
+  gem "factory_bot_rails"
+  gem "faker"
+  gem "rspec-rails"
+  gem "timecop"
+  
+  # Debugging
+  gem "pry-rails"
+  
+  # Security
+  gem "brakeman", require: false
+  
+  # Linting
+  gem "rubocop", require: false
+  gem "rubocop-rails", require: false
+  gem "rubocop-rspec", require: false
+end
+
+group :development do
+  # Development tools
+  gem "annotate"
+  gem "letter_opener"
+  
+  # Performance
+  gem "bullet"
+end
+
+group :test do
+  gem "action-cable-testing"
+  gem "database_cleaner-active_record"
+  gem "webmock"
+  gem "vcr"
+  gem 'jwt'
+end
+
+# Payment Processing
+gem 'stripe'
+gem 'stripe_event'

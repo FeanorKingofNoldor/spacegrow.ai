@@ -1,0 +1,18 @@
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/erb-5.0.1/ext/erb/escape
+/usr/bin/ruby3.3 -I/usr/lib/ruby/vendor_ruby extconf.rb
+creating Makefile
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-32x4ym sitelibdir\=./.gem.20250626-3423395-32x4ym clean
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-32x4ym sitelibdir\=./.gem.20250626-3423395-32x4ym
+compiling escape.c
+linking shared-object erb/escape.so
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-32x4ym sitelibdir\=./.gem.20250626-3423395-32x4ym install
+/usr/bin/install -c -m 0755 escape.so ./.gem.20250626-3423395-32x4ym/erb
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-32x4ym sitelibdir\=./.gem.20250626-3423395-32x4ym clean

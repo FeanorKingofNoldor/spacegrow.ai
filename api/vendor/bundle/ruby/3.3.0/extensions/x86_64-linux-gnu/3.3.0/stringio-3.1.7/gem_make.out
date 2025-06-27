@@ -1,0 +1,19 @@
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/stringio-3.1.7/ext/stringio
+/usr/bin/ruby3.3 -I/usr/lib/ruby/vendor_ruby extconf.rb
+checking for rb_io_mode_t in ruby/io.h... no
+creating Makefile
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/stringio-3.1.7/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-jrwi9n sitelibdir\=./.gem.20250626-3423395-jrwi9n clean
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/stringio-3.1.7/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-jrwi9n sitelibdir\=./.gem.20250626-3423395-jrwi9n
+compiling stringio.c
+linking shared-object stringio.so
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/stringio-3.1.7/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-jrwi9n sitelibdir\=./.gem.20250626-3423395-jrwi9n install
+/usr/bin/install -c -m 0755 stringio.so ./.gem.20250626-3423395-jrwi9n
+
+current directory: /home/feanor/coding_projects/spacegrow_ai/api/vendor/bundle/ruby/3.3.0/gems/stringio-3.1.7/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20250626-3423395-jrwi9n sitelibdir\=./.gem.20250626-3423395-jrwi9n clean
