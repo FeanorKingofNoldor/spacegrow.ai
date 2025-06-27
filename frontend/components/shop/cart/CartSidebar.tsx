@@ -33,15 +33,22 @@ export function CartSidebar({
 }: CartSidebarProps) {
   const total = items.reduce((sum, item) => sum + item.subtotal, 0);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className={`fixed inset-0 z-50 overflow-hidden transition-opacity duration-300 ${
+      isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+    }`}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      <div 
+        className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+          isOpen ? 'bg-opacity-50' : 'bg-opacity-0'
+        }`} 
+        onClick={onClose} 
+      />
       
       {/* Sidebar */}
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl">
+      <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ${
+        isOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}>
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
@@ -51,7 +58,7 @@ export function CartSidebar({
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -71,7 +78,7 @@ export function CartSidebar({
                   const imageAlt = getImageAlt(item.product.image, item.product.name);
 
                   return (
-                    <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
+                    <div key={`cart-item-${item.id}`} className="flex gap-3 p-3 border rounded-lg">
                       {/* Product Image */}
                       <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                         {imageSrc ? (
@@ -98,20 +105,20 @@ export function CartSidebar({
                           <button
                             onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
-                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-50"
+                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 transition-colors"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
                           <button
                             onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                            className="p-1 hover:bg-gray-100 rounded"
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => onRemoveItem(item.product.id)}
-                            className="ml-auto text-red-500 hover:text-red-700 text-xs"
+                            className="ml-auto text-red-500 hover:text-red-700 text-xs transition-colors"
                           >
                             Remove
                           </button>

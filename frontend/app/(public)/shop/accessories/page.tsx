@@ -21,6 +21,11 @@ const accessoriesProducts: Product[] = [
     features: ['pH 4.0, 7.0, 10.0 Solutions', 'EC 1413 μS/cm Solution', 'Long Lasting Formula', 'Professional Grade', '6 Month Shelf Life'],
     in_stock: true,
     active: true,
+    stock_quantity: 20,
+    stock_status: 'in_stock',
+    stock_description: 'Available for immediate shipping',
+    low_stock_threshold: 5,
+    featured: false,
   },
   {
     id: '4',
@@ -31,6 +36,11 @@ const accessoriesProducts: Product[] = [
     features: ['Cleaning Solutions', 'Soft Brush Set', 'Microfiber Cloths', 'Storage Case', 'Maintenance Guide'],
     in_stock: false,
     active: true,
+    stock_quantity: 0,
+    stock_status: 'out_of_stock',
+    stock_description: 'Currently out of stock',
+    low_stock_threshold: 5,
+    featured: false,
   },
   {
     id: '5',
@@ -41,6 +51,11 @@ const accessoriesProducts: Product[] = [
     features: ['Factory Calibrated', 'BNC Connector', '6 Month Warranty', 'Temperature Compensation', 'Quick Response'],
     in_stock: true,
     active: true,
+    stock_quantity: 15,
+    stock_status: 'in_stock',
+    stock_description: 'Ships within 24 hours',
+    low_stock_threshold: 3,
+    featured: true,
   },
   {
     id: '6',
@@ -51,6 +66,11 @@ const accessoriesProducts: Product[] = [
     features: ['High Precision', 'Temperature Compensation', 'Long Life Design', 'Easy Installation', '6 Month Warranty'],
     in_stock: true,
     active: true,
+    stock_quantity: 10,
+    stock_status: 'in_stock',
+    stock_description: 'Ships within 24 hours',
+    low_stock_threshold: 3,
+    featured: false,
   },
   {
     id: '7',
@@ -61,6 +81,11 @@ const accessoriesProducts: Product[] = [
     features: ['Universal Mounting', 'Stainless Steel Hardware', 'Adjustable Brackets', 'Indoor/Outdoor Use', 'Easy Installation'],
     in_stock: true,
     active: true,
+    stock_quantity: 30,
+    stock_status: 'in_stock',
+    stock_description: 'Ready to ship',
+    low_stock_threshold: 5,
+    featured: false,
   },
   {
     id: '8',
@@ -71,6 +96,11 @@ const accessoriesProducts: Product[] = [
     features: ['12V 2A Output', 'Multiple Plugs', 'Overcurrent Protection', 'CE/FCC Certified', '3 Year Warranty'],
     in_stock: true,
     active: true,
+    stock_quantity: 25,
+    stock_status: 'in_stock',
+    stock_description: 'Ships worldwide',
+    low_stock_threshold: 5,
+    featured: false,
   },
 ];
 
@@ -180,16 +210,6 @@ export default function AccessoriesPage() {
           products={accessoriesProducts}
           loading={loading}
           onAddToCart={handleAddToCart}
-        />
-
-        {/* Cart Sidebar */}
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={closeCart}
-          items={cart.items}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
         />
       </div>
     </div>

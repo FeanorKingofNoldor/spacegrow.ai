@@ -21,6 +21,11 @@ const liquidProducts: Product[] = [
     features: ['pH Sensor (±0.01)', 'EC Sensor (±2%)', 'Temperature Compensation', 'Automatic Dosing Control', 'Wi-Fi Connectivity', 'Mobile App'],
     in_stock: true,
     active: true,
+    stock_quantity: 25,
+    stock_status: 'in_stock',
+    stock_description: 'Available for immediate shipping',
+    low_stock_threshold: 5,
+    featured: true,
   },
   {
     id: 'liquid-2',
@@ -31,6 +36,11 @@ const liquidProducts: Product[] = [
     features: ['All V1 Features', 'Dissolved Oxygen Sensor', '5-Pump Dosing System', 'Advanced Algorithms', 'Professional Dashboard', 'API Integration'],
     in_stock: true,
     active: true,
+    stock_quantity: 12,
+    stock_status: 'in_stock',
+    stock_description: 'Ships in 2-3 days',
+    low_stock_threshold: 3,
+    featured: false,
   },
   {
     id: 'liquid-3',
@@ -41,6 +51,11 @@ const liquidProducts: Product[] = [
     features: ['pH Sensor (±0.02)', 'EC Sensor (±3%)', 'Basic Temperature', 'Manual Dosing Alerts', 'Wi-Fi Connectivity', 'Simple Interface'],
     in_stock: true,
     active: true,
+    stock_quantity: 30,
+    stock_status: 'in_stock',
+    stock_description: 'Ready to ship',
+    low_stock_threshold: 5,
+    featured: false,
   },
   {
     id: 'liquid-4',
@@ -51,6 +66,11 @@ const liquidProducts: Product[] = [
     features: ['Multiple pH/EC Inputs', 'Redundant Sensors', 'Industrial Pumps', 'Enterprise Reporting', 'Remote Diagnostics', '24/7 Support'],
     in_stock: true,
     active: true,
+    stock_quantity: 5,
+    stock_status: 'in_stock',
+    stock_description: 'Limited stock available',
+    low_stock_threshold: 2,
+    featured: false,
   },
   {
     id: 'liquid-5',
@@ -61,6 +81,11 @@ const liquidProducts: Product[] = [
     features: ['Lab-Grade Sensors', 'Data Export', 'Statistical Analysis', 'Research Protocols', 'Calibration Certificates', 'Academic Pricing Available'],
     in_stock: false,
     active: true,
+    stock_quantity: 0,
+    stock_status: 'out_of_stock',
+    stock_description: 'Out of stock - contact for availability',
+    low_stock_threshold: 1,
+    featured: false,
   },
 ];
 
@@ -340,16 +365,6 @@ export default function LiquidMonitorPage() {
           products={liquidProducts}
           loading={loading}
           onAddToCart={handleAddToCart}
-        />
-
-        {/* Cart Sidebar */}
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={closeCart}
-          items={cart.items}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
         />
       </div>
     </div>

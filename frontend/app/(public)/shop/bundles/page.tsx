@@ -21,6 +21,11 @@ const bundleProducts: Product[] = [
     features: ['Environmental Monitor V1', 'Liquid Monitor V1', 'Calibration Kit', 'Mounting Hardware', 'Setup Guide', 'Priority Support'],
     in_stock: true,
     active: true,
+    stock_quantity: 20,
+    stock_status: 'in_stock',
+    stock_description: 'Available for immediate shipping',
+    low_stock_threshold: 5,
+    featured: true,
   },
   {
     id: 'bundle-2',
@@ -31,6 +36,11 @@ const bundleProducts: Product[] = [
     features: ['Environmental Monitor V1', 'Calibration Solutions', 'Mounting Hardware', 'Power Supply', 'Quick Start Guide', '30-Day Support'],
     in_stock: true,
     active: true,
+    stock_quantity: 15,
+    stock_status: 'in_stock',
+    stock_description: 'Ships within 2 business days',
+    low_stock_threshold: 3,
+    featured: false,
   },
   {
     id: 'bundle-3',
@@ -41,6 +51,11 @@ const bundleProducts: Product[] = [
     features: ['Liquid Monitor V1', 'pH Replacement Probe', 'EC Replacement Probe', 'Calibration Kit', 'Cleaning Kit', 'Professional Setup'],
     in_stock: true,
     active: true,
+    stock_quantity: 10,
+    stock_status: 'in_stock',
+    stock_description: 'Limited stock available',
+    low_stock_threshold: 2,
+    featured: false,
   },
   {
     id: 'bundle-4',
@@ -51,6 +66,11 @@ const bundleProducts: Product[] = [
     features: ['2x Calibration Kits', '2x Cleaning Kits', 'Replacement Parts', 'Maintenance Schedule', 'Video Tutorials', '6-Month Supply'],
     in_stock: true,
     active: true,
+    stock_quantity: 30,
+    stock_status: 'in_stock',
+    stock_description: 'Always in stock',
+    low_stock_threshold: 10,
+    featured: false,
   },
   {
     id: 'bundle-5',
@@ -61,6 +81,11 @@ const bundleProducts: Product[] = [
     features: ['2x Environmental Monitor V1', '1x Liquid Monitor V1', 'Multi-Point Setup', 'Advanced Analytics', 'Bulk Accessories', 'Enterprise Support'],
     in_stock: false,
     active: true,
+    stock_quantity: 0,
+    stock_status: 'out_of_stock',
+    stock_description: 'Currently out of stock',
+    low_stock_threshold: 2,
+    featured: false,
   },
   {
     id: 'bundle-6',
@@ -71,6 +96,11 @@ const bundleProducts: Product[] = [
     features: ['Multiple Sensors', 'Educational Materials', 'Research Documentation', 'Lab Setup Guide', 'Academic Pricing', 'Extended Warranty'],
     in_stock: true,
     active: true,
+    stock_quantity: 8,
+    stock_status: 'in_stock',
+    stock_description: 'Ships in 1 week',
+    low_stock_threshold: 2,
+    featured: false,
   },
 ];
 
@@ -213,16 +243,6 @@ export default function BundlesPage() {
           products={bundleProducts}
           loading={loading}
           onAddToCart={handleAddToCart}
-        />
-
-        {/* Cart Sidebar */}
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={closeCart}
-          items={cart.items}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
         />
       </div>
     </div>

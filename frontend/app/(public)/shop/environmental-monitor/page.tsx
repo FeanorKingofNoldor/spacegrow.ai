@@ -21,6 +21,11 @@ const environmentalProducts: Product[] = [
     features: ['Temperature Sensor (±0.1°C)', 'Humidity Sensor (±2% RH)', 'Pressure Sensor (±0.1 hPa)', 'Wi-Fi Connectivity', 'Real-time Alerts', 'Mobile App'],
     in_stock: true,
     active: true,
+    stock_quantity: 25,
+    stock_status: 'in_stock',
+    stock_description: 'Available for immediate shipping',
+    low_stock_threshold: 5,
+    featured: true,
   },
   {
     id: 'env-2',
@@ -31,6 +36,11 @@ const environmentalProducts: Product[] = [
     features: ['All V1 Features', 'CO2 Sensor (±30 ppm)', 'Extended Wi-Fi Range', 'Professional Dashboard', 'Advanced Analytics', 'API Access'],
     in_stock: true,
     active: true,
+    stock_quantity: 15,
+    stock_status: 'in_stock',
+    stock_description: 'Ships within 2 business days',
+    low_stock_threshold: 3,
+    featured: false,
   },
   {
     id: 'env-3',
@@ -41,6 +51,11 @@ const environmentalProducts: Product[] = [
     features: ['Temperature Sensor (±0.2°C)', 'Humidity Sensor (±3% RH)', 'Basic Wi-Fi', 'Simple App Interface', 'Email Alerts', 'Easy Setup'],
     in_stock: true,
     active: true,
+    stock_quantity: 40,
+    stock_status: 'in_stock',
+    stock_description: 'In stock',
+    low_stock_threshold: 10,
+    featured: false,
   },
   {
     id: 'env-4',
@@ -51,6 +66,11 @@ const environmentalProducts: Product[] = [
     features: ['Weatherproof IP65', 'Solar Panel Compatible', 'Extended Battery Life', 'UV Resistance', 'Temperature Range -40°C to 80°C', 'Satellite Connectivity Option'],
     in_stock: false,
     active: true,
+    stock_quantity: 0,
+    stock_status: 'out_of_stock',
+    stock_description: 'Currently out of stock',
+    low_stock_threshold: 2,
+    featured: false,
   },
 ];
 
@@ -268,16 +288,6 @@ export default function EnvironmentalMonitorPage() {
           products={environmentalProducts}
           loading={loading}
           onAddToCart={handleAddToCart}
-        />
-
-        {/* Cart Sidebar */}
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={closeCart}
-          items={cart.items}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
         />
       </div>
     </div>

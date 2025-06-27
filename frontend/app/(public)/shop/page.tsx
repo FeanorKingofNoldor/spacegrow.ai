@@ -395,16 +395,6 @@ export default function EpicShopPage() {
           </section>
         </div>
 
-        {/* Cart Sidebar */}
-        <CartSidebar
-          isOpen={isCartOpen}
-          onClose={closeCart}
-          items={cart.items}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
-        />
-      </div>
 
       {/* Custom animations */}
       <style jsx>{`
@@ -433,5 +423,7 @@ export default function EpicShopPage() {
         }
       `}</style>
     </div>
+    {/* Close main container div */}
+  </div>
   );
 }

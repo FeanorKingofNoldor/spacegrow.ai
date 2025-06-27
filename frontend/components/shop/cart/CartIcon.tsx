@@ -18,15 +18,9 @@ export function CartIcon({ itemCount, onClick, className = '' }: CartIconProps) 
       <ShoppingCart className="w-6 h-6" />
       
       {itemCount > 0 && (
-        <>
-          {/* Badge */}
-          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-            {itemCount > 99 ? '99+' : itemCount}
-          </span>
-          
-          {/* Pulse animation when items are added */}
-          <span className="absolute -top-1 -right-1 bg-blue-600 rounded-full w-5 h-5 animate-ping opacity-75" />
-        </>
+        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+          {itemCount > 99 ? '99+' : itemCount}
+        </span>
       )}
     </button>
   );

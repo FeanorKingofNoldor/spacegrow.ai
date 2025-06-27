@@ -151,64 +151,72 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Add to cart with stock checking
-  const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
-    try {
-      console.log('🛒 Adding to cart:', product.name, 'x', quantity);
-      
-      // Check if product is active (since we don't have stock_quantity in the current API)
-      if (!product.active) {
-        throw new Error('Product is not available');
-      }
-
-      // Check current cart quantity for this product
-      const existingItem = cart.items.find(item => item.product.id === product.id);
-      const currentCartQuantity = existingItem ? existingItem.quantity : 0;
-      const totalRequestedQuantity = currentCartQuantity + quantity;
-
-      // Check stock availability for total quantity
-      const stockCheck = await checkStock(product.id, totalRequestedQuantity);
-      
-      if (!stockCheck.available) {
-        throw new Error(`Only ${stockCheck.stock_quantity} items available. You have ${currentCartQuantity} in cart.`);
-      }
-
-      // Add to cart
-      setCart(prevCart => {
-        const existingItemIndex = prevCart.items.findIndex(item => item.product.id === product.id);
-        let newItems: CartItem[];
-
-        if (existingItemIndex >= 0) {
-          // Update existing item
-          newItems = [...prevCart.items];
-          newItems[existingItemIndex] = {
-            ...newItems[existingItemIndex],
-            quantity: newItems[existingItemIndex].quantity + quantity,
-            subtotal: (newItems[existingItemIndex].quantity + quantity) * product.price
-          };
-        } else {
-          // Add new item
-          const newItem: CartItem = {
-            id: product.id,
-            product,
-            quantity,
-            subtotal: quantity * product.price
-          };
-          newItems = [...prevCart.items, newItem];
-        }
-
-        return recalculateCart(newItems);
-      });
-
-      // Auto-open cart for user feedback
-      setIsCartOpen(true);
-      console.log('✅ Added to cart successfully');
-      
-    } catch (error) {
-      console.error('❌ Failed to add to cart:', error);
-      throw error; // Re-throw so component can handle the error
+const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
+  try {
+    console.log('🛒 Adding to cart:', product.name, 'x', quantity);
+    console.log('🛒 Current cart before:', cart);
+    
+    // Check if product is active (since we don't have stock_quantity in the current API)
+    if (!product.active) {
+      throw new Error('Product is not available');
     }
-  }, [cart.items, checkStock, recalculateCart]);
+
+    // Check current cart quantity for this product
+    const existingItem = cart.items.find(item => item.product.id === product.id);
+    const currentCartQuantity = existingItem ? existingItem.quantity : 0;
+    const totalRequestedQuantity = currentCartQuantity + quantity;
+
+    // Check stock availability for total quantity
+    const stockCheck = await checkStock(product.id, totalRequestedQuantity);
+    
+    if (!stockCheck.available) {
+      throw new Error(`Only ${stockCheck.stock_quantity} items available. You have ${currentCartQuantity} in cart.`);
+    }
+
+    // Add to cart
+    setCart(prevCart => {
+      console.log('🛒 Previous cart state:', prevCart);
+      
+      const existingItemIndex = prevCart.items.findIndex(item => item.product.id === product.id);
+      let newItems: CartItem[];
+
+      if (existingItemIndex >= 0) {
+        // Update existing item
+        newItems = [...prevCart.items];
+        newItems[existingItemIndex] = {
+          ...newItems[existingItemIndex],
+          quantity: newItems[existingItemIndex].quantity + quantity,
+          subtotal: (newItems[existingItemIndex].quantity + quantity) * product.price
+        };
+        console.log('🛒 Updated existing item:', newItems[existingItemIndex]);
+      } else {
+        // Add new item
+        const newItem: CartItem = {
+          id: product.id,
+          product,
+          quantity,
+          subtotal: quantity * product.price
+        };
+        newItems = [...prevCart.items, newItem];
+        console.log('🛒 Added new item:', newItem);
+      }
+
+      const updatedCart = recalculateCart(newItems);
+      console.log('🛒 New cart state:', updatedCart);
+      return updatedCart;
+    });
+
+    console.log('🛒 About to open cart...');
+    // Auto-open cart for user feedback
+    setIsCartOpen(true);
+    console.log('✅ Cart opened successfully');
+    console.log('✅ Added to cart successfully');
+    
+  } catch (error) {
+    console.error('❌ Failed to add to cart:', error);
+    throw error; // Re-throw so component can handle the error
+  }
+}, [cart.items, checkStock, recalculateCart]);
 
   // Remove from cart
   const removeFromCart = useCallback((productId: string) => {
