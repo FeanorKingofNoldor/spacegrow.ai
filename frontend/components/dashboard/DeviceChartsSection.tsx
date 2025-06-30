@@ -82,16 +82,6 @@ export function DeviceChartsSection() {
 
   const sensors = device.sensors || [];
   
-  // Show empty state if no sensors
-  if (sensors.length === 0) {
-    return (
-      <div className="bg-space-glass backdrop-blur-md border border-space-border rounded-xl p-8 text-center">
-        <h3 className="text-cosmic-text font-semibold mb-2">No Sensors Configured</h3>
-        <p className="text-cosmic-text-muted">This device doesn't have any sensors configured yet.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Connection Status */}

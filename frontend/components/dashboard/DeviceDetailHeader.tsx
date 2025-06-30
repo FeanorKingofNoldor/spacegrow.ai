@@ -1,4 +1,4 @@
-// Updated components/dashboard/DeviceDetailHeader.tsx - ENHANCED with real device data
+// Updated components/dashboard/DeviceDetailHeader.tsx - ENHANCED with real device data + FIXED
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -117,7 +117,7 @@ export function DeviceDetailHeader() {
         </div>
       </div>
 
-      {/* Device Status Summary */}
+      {/* Device Status Summary - FIXED with optional chaining and fallbacks */}
       <div className="mt-4 flex flex-wrap gap-4">
         <div className="bg-space-secondary rounded-lg px-3 py-2">
           <span className="text-xs text-cosmic-text-muted">Status: </span>
@@ -125,7 +125,10 @@ export function DeviceDetailHeader() {
             device.status === 'active' ? 'text-green-400' :
             device.status === 'pending' ? 'text-yellow-400' : 'text-red-400'
           }`}>
-            {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
+            {device.status ? 
+              device.status.charAt(0).toUpperCase() + device.status.slice(1) : 
+              'Unknown'
+            }
           </span>
         </div>
         
@@ -135,7 +138,10 @@ export function DeviceDetailHeader() {
             device.alert_status === 'normal' ? 'text-green-400' :
             device.alert_status === 'warning' ? 'text-yellow-400' : 'text-red-400'
           }`}>
-            {device.alert_status.charAt(0).toUpperCase() + device.alert_status.slice(1)}
+            {device.alert_status ? 
+              device.alert_status.charAt(0).toUpperCase() + device.alert_status.slice(1) : 
+              'Unknown'
+            }
           </span>
         </div>
 

@@ -1,4 +1,4 @@
-// components/charts/SensorChart.tsx
+// components/charts/SensorChart.tsx - FIXED to properly handle empty states
 'use client';
 
 import { useState } from 'react';
@@ -16,7 +16,7 @@ interface SensorChartProps {
 
 export function SensorChart({ 
   sensor, 
-  liveValue = sensor.last_reading || 0,
+  liveValue, // Remove the default fallback to 0 - let charts handle null/undefined
   className = '' 
 }: SensorChartProps) {
   const [mode, setMode] = useState<ChartMode>('live');
@@ -35,6 +35,10 @@ export function SensorChart({
     { value: 'history_7d', label: '7 Days' },
     { value: 'history_3m', label: '3 Months' }
   ];
+
+  // Determine the actual value to pass to GaugeChart
+  // Priority: 1) liveValue prop, 2) sensor.last_reading, 3) null (for empty state)
+  const gaugeValue = liveValue !== undefined ? liveValue : sensor.last_reading;
 
   return (
     <div className={`relative ${className}`}>
@@ -57,13 +61,13 @@ export function SensorChart({
       {mode === 'live' ? (
         <GaugeChart 
           sensor={sensor} 
-          value={liveValue}
+          value={gaugeValue} // Pass null/undefined if no data - let GaugeChart show empty state
           className="h-full"
         />
       ) : (
         <TimeSeriesChart 
           sensor={sensor} 
-          data={historicalData}
+          data={historicalData || []} // Ensure we always pass an array
           loading={loading}
           className="h-full"
         />

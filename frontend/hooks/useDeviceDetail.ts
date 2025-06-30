@@ -1,4 +1,4 @@
-// hooks/useDeviceDetail.ts
+// hooks/useDeviceDetail.ts - FIXED
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,7 +26,7 @@ export function useDeviceDetail(deviceId: string): UseDeviceDetailReturn {
 
     try {
       const response = await fetch(
-        `/api/v1/frontend/dashboard/device/${deviceId}`,
+        `/api/v1/frontend/devices/${deviceId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -40,6 +40,8 @@ export function useDeviceDetail(deviceId: string): UseDeviceDetailReturn {
       }
 
       const result: DeviceDetailResponse = await response.json();
+      
+      // FIX: Extract just the device from the nested data structure
       setDevice(result.data.device);
       console.log('📱 Device loaded:', result.data.device.name);
 

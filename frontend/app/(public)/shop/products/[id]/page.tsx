@@ -17,7 +17,7 @@ import {
   ShoppingCart,
   Loader2
 } from 'lucide-react';
-import { getImageUrl, getImageAlt } from '../../../../../../utils/imageHelpers';
+import { getImageUrl, getImageAlt } from '../../../../../utils/imageHelpers';
 
 export default function ProductDetailPage() {
   const params = useParams();
