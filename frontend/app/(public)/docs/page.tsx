@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 const documentationSections = [
   {
@@ -71,7 +71,7 @@ const documentationSections = [
 
 export default function DocsPage() {
   return (
-    <StaticPageLayout
+    <StaticPageTemplate
       title="Documentation"
       description="Everything you need to know about using SpaceGrow.ai to monitor and optimize your growing environment."
     >
@@ -164,6 +164,6 @@ export default function DocsPage() {
           </div>
         </div>
       </div>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

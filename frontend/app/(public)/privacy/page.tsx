@@ -1,8 +1,8 @@
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 export default function PrivacyPage() {
   return (
-    <StaticPageLayout 
+    <StaticPageTemplate 
       title="Privacy Policy" 
       description="Learn how we collect, use, and protect your personal information."
       lastUpdated="January 1, 2025"
@@ -111,6 +111,6 @@ export default function PrivacyPage() {
         <li>Email: privacy@spacegrow.ai</li>
         <li>Address: [Your Company Address]</li>
       </ul>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 const sensorTypes = [
   {
@@ -174,7 +174,7 @@ const calibrationSchedule = [
 
 export default function SensorsPage() {
   return (
-    <StaticPageLayout
+    <StaticPageTemplate
       title="Sensor Technology"
       description="Comprehensive guide to our precision sensors, optimal ranges, and monitoring best practices."
     >
@@ -343,6 +343,6 @@ export default function SensorsPage() {
                           Contact us for custom sensor solutions
                         </Link>
                       </div>
-                    </StaticPageLayout>
+                    </StaticPageTemplate>
                   )
                 }

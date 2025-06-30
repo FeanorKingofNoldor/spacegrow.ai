@@ -1,8 +1,8 @@
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 export default function TermsPage() {
   return (
-    <StaticPageLayout 
+    <StaticPageTemplate 
       title="Terms of Service" 
       description="Please read these terms and conditions carefully before using our service."
       lastUpdated="January 1, 2025"
@@ -86,6 +86,6 @@ export default function TermsPage() {
       <p>
         If you have any questions about these Terms of Service, please contact us at legal@spacegrow.ai.
       </p>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

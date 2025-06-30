@@ -1,3 +1,6 @@
+// components/navigation/Footer.tsx
+import Link from 'next/link';
+
 const navigation = {
   products: [
     { name: 'Environmental Monitor', href: '/shop/environmental-monitor' },
@@ -60,35 +63,35 @@ const navigation = {
       ),
     },
   ],
-}
+};
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 dark:bg-gray-950">
+    <footer className="bg-space-secondary border-t border-space-border">
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-20 sm:pt-24 lg:px-8 lg:pt-32">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="grid grid-cols-2 gap-8 xl:col-span-2">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm/6 font-semibold text-white">Products</h3>
+                <h3 className="text-sm/6 font-semibold text-cosmic-text">Products</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.products.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-white">
+                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
                         {item.name}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm/6 font-semibold text-white">Support</h3>
+                <h3 className="text-sm/6 font-semibold text-cosmic-text">Support</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.support.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-white">
+                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
                         {item.name}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -96,25 +99,25 @@ export function Footer() {
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm/6 font-semibold text-white">Company</h3>
+                <h3 className="text-sm/6 font-semibold text-cosmic-text">Company</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.company.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-white">
+                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
                         {item.name}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm/6 font-semibold text-white">Legal</h3>
+                <h3 className="text-sm/6 font-semibold text-cosmic-text">Legal</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.legal.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-white">
+                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
                         {item.name}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -122,8 +125,8 @@ export function Footer() {
             </div>
           </div>
           <div className="mt-10 xl:mt-0">
-            <h3 className="text-sm/6 font-semibold text-white">Stay updated</h3>
-            <p className="mt-2 text-sm/6 text-gray-400">
+            <h3 className="text-sm/6 font-semibold text-cosmic-text">Stay updated</h3>
+            <p className="mt-2 text-sm/6 text-cosmic-text-muted">
               Get the latest IoT growing tips, product updates, and exclusive offers.
             </p>
             <form className="mt-6 sm:flex sm:max-w-md">
@@ -137,12 +140,21 @@ export function Footer() {
                 required
                 placeholder="Enter your email"
                 autoComplete="email"
-                className="w-full min-w-0 rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline outline-1 -outline-offset-1 outline-gray-700 placeholder:text-gray-500 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-green-500 sm:w-64 sm:text-sm/6 xl:w-full"
+                className="
+                  w-full min-w-0 rounded-lg bg-space-glass border border-space-border 
+                  px-3 py-2 text-sm text-cosmic-text placeholder-cosmic-text-light
+                  focus:outline-none focus:ring-2 focus:ring-stellar-accent focus:border-transparent
+                  sm:w-64 sm:text-sm/6 xl:w-full transition-all duration-200
+                "
               />
               <div className="mt-4 sm:ml-4 sm:mt-0 sm:shrink-0">
                 <button
                   type="submit"
-                  className="flex w-full items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500"
+                  className="
+                    flex w-full items-center justify-center rounded-lg bg-gradient-cosmic 
+                    px-4 py-2 text-sm font-semibold text-white shadow-lg
+                    hover:scale-105 transition-all duration-200 animate-nebula-glow
+                  "
                 >
                   Subscribe
                 </button>
@@ -150,20 +162,24 @@ export function Footer() {
             </form>
           </div>
         </div>
-        <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 md:flex md:items-center md:justify-between lg:mt-24">
+        <div className="mt-16 border-t border-space-border pt-8 sm:mt-20 md:flex md:items-center md:justify-between lg:mt-24">
           <div className="flex gap-x-6 md:order-2">
             {navigation.social.map((item) => (
-              <a key={item.name} href={item.href} className="text-gray-400 hover:text-white">
+              <a
+                key={item.name}
+                href={item.href}
+                className="text-cosmic-text-light hover:text-stellar-accent transition-colors"
+              >
                 <span className="sr-only">{item.name}</span>
-                <item.icon aria-hidden="true" className="size-6" />
+                <item.icon aria-hidden="true" className="h-6 w-6" />
               </a>
             ))}
           </div>
-          <p className="mt-8 text-sm/6 text-gray-400 md:order-1 md:mt-0">
+          <p className="mt-8 text-sm/6 text-cosmic-text-light md:order-1 md:mt-0">
             &copy; 2025 SpaceGrow.ai. All rights reserved.
           </p>
         </div>
       </div>
     </footer>
-  )
+  );
 }

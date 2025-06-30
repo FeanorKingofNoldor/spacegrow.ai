@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 const supportChannels = [
   {
@@ -162,7 +162,7 @@ const supportTiers = [
 
 export default function SupportPage() {
   return (
-    <StaticPageLayout
+    <StaticPageTemplate
       title="Support Center"
       description="Get help with your SpaceGrow.ai devices, find answers to common questions, and connect with our community."
     >
@@ -750,6 +750,6 @@ export default function SupportPage() {
           </div>
         </div>
       </div>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

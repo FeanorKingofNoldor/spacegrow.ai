@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 const devices = [
   {
@@ -85,7 +85,7 @@ const comparisonFeatures = [
 
 export default function DevicesPage() {
   return (
-    <StaticPageLayout
+    <StaticPageTemplate
       title="IoT Devices"
       description="Professional-grade IoT devices designed for precision growing, monitoring, and automation."
     >
@@ -368,6 +368,6 @@ export default function DevicesPage() {
           </div>
         </div>
       </div>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

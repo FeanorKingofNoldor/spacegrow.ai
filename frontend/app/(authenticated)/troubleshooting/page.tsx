@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 const troubleshootingCategories = [
   {
@@ -217,7 +217,7 @@ const quickDiagnostics = [
 
 export default function TroubleshootingPage() {
   return (
-    <StaticPageLayout
+    <StaticPageTemplate
       title="Troubleshooting Guide"
       description="Quick solutions to common issues with SpaceGrow.ai devices and sensors."
       lastUpdated="January 2025"
@@ -453,6 +453,6 @@ export default function TroubleshootingPage() {
           </div>
         </div>
       </div>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

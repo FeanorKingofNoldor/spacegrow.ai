@@ -1,8 +1,32 @@
 @import "tailwindcss";
 
 :root {
+  /* Base colors */
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Light Theme - Space Colors */
+  --space-primary: #fefefe;
+  --space-secondary: #f8f9ff;
+  --space-card: rgba(255, 255, 255, 0.8);
+  --space-border: rgba(200, 178, 219, 0.3);
+  
+  /* Light Theme - Cosmic Accents */
+  --nebula-primary: #e0aaff;
+  --nebula-secondary: #c8b2db;
+  --cosmic-blue: #a2d2ff;
+  --cosmic-pink: #ffc2d1;
+  --stellar-accent: #7b2cbf;
+  
+  /* Light Theme - Text */
+  --cosmic-text: #1a1a2e;
+  --cosmic-text-muted: #4a4a5a;
+  --cosmic-text-light: #6a6a7a;
+  
+  /* Sunflare effect colors */
+  --sunflare-primary: rgba(123, 44, 191, 0.15);
+  --sunflare-secondary: rgba(157, 78, 221, 0.1);
+  --sunflare-tertiary: rgba(58, 134, 255, 0.05);
 }
 
 @theme inline {
@@ -10,13 +34,50 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Space theme colors */
+  --color-space-primary: var(--space-primary);
+  --color-space-secondary: var(--space-secondary);
+  --color-space-card: var(--space-card);
+  --color-space-border: var(--space-border);
+  --color-nebula-primary: var(--nebula-primary);
+  --color-nebula-secondary: var(--nebula-secondary);
+  --color-cosmic-blue: var(--cosmic-blue);
+  --color-cosmic-pink: var(--cosmic-pink);
+  --color-stellar-accent: var(--stellar-accent);
+  --color-cosmic-text: var(--cosmic-text);
+  --color-cosmic-text-muted: var(--cosmic-text-muted);
+  --color-cosmic-text-light: var(--cosmic-text-light);
 }
 
-/* System preference dark mode */
+/* Dark mode colors */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    
+    /* Dark Theme - Space Colors */
+    --space-primary: #0a0a0a;
+    --space-secondary: #1a1a2e;
+    --space-card: rgba(26, 26, 46, 0.8);
+    --space-border: rgba(123, 44, 191, 0.3);
+    
+    /* Dark Theme - Cosmic Accents */
+    --nebula-primary: #7b2cbf;
+    --nebula-secondary: #9d4edd;
+    --cosmic-blue: #3a86ff;
+    --cosmic-pink: #ff006e;
+    --stellar-accent: #06ffa5;
+    
+    /* Dark Theme - Text */
+    --cosmic-text: #ededed;
+    --cosmic-text-muted: #b8b8b8;
+    --cosmic-text-light: #888888;
+    
+    /* Dark Sunflare effect colors */
+    --sunflare-primary: rgba(123, 44, 191, 0.3);
+    --sunflare-secondary: rgba(157, 78, 221, 0.2);
+    --sunflare-tertiary: rgba(58, 134, 255, 0.1);
   }
 }
 
@@ -24,23 +85,110 @@
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  
+  /* Dark Theme - Space Colors */
+  --space-primary: #0a0a0a;
+  --space-secondary: #1a1a2e;
+  --space-card: rgba(26, 26, 46, 0.8);
+  --space-border: rgba(123, 44, 191, 0.3);
+  
+  /* Dark Theme - Cosmic Accents */
+  --nebula-primary: #7b2cbf;
+  --nebula-secondary: #9d4edd;
+  --cosmic-blue: #3a86ff;
+  --cosmic-pink: #ff006e;
+  --stellar-accent: #06ffa5;
+  
+  /* Dark Theme - Text */
+  --cosmic-text: #ededed;
+  --cosmic-text-muted: #b8b8b8;
+  --cosmic-text-light: #888888;
+  
+  /* Dark Sunflare effect colors */
+  --sunflare-primary: rgba(123, 44, 191, 0.3);
+  --sunflare-secondary: rgba(157, 78, 221, 0.2);
+  --sunflare-tertiary: rgba(58, 134, 255, 0.1);
 }
 
 .light {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Light Theme - Space Colors */
+  --space-primary: #fefefe;
+  --space-secondary: #f8f9ff;
+  --space-card: rgba(255, 255, 255, 0.8);
+  --space-border: rgba(200, 178, 219, 0.3);
+  
+  /* Light Theme - Cosmic Accents */
+  --nebula-primary: #e0aaff;
+  --nebula-secondary: #c8b2db;
+  --cosmic-blue: #a2d2ff;
+  --cosmic-pink: #ffc2d1;
+  --stellar-accent: #7b2cbf;
+  
+  /* Light Theme - Text */
+  --cosmic-text: #1a1a2e;
+  --cosmic-text-muted: #4a4a5a;
+  --cosmic-text-light: #6a6a7a;
+  
+  /* Light Sunflare effect colors */
+  --sunflare-primary: rgba(123, 44, 191, 0.15);
+  --sunflare-secondary: rgba(157, 78, 221, 0.1);
+  --sunflare-tertiary: rgba(58, 134, 255, 0.05);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--space-primary);
+  color: var(--cosmic-text);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 /* Enable dark variant in Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
 
-/* Add to globals.css */
+/* ===== COSMIC ANIMATIONS ===== */
+
+/* Starfield Background */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes twinkle-delayed {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+@keyframes drift {
+  0% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(10px) translateY(-5px); }
+  50% { transform: translateX(-5px) translateY(-10px); }
+  75% { transform: translateX(-10px) translateY(5px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+/* Sunflare Animation */
+@keyframes sunflare-pulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1) rotate(0deg);
+  }
+  50% { 
+    opacity: 0.9;
+    transform: scale(1.1) rotate(2deg);
+  }
+}
+
+@keyframes sunflare-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(20px, -10px) rotate(1deg); }
+  66% { transform: translate(-10px, 15px) rotate(-1deg); }
+}
+
+/* Floating Elements */
 @keyframes slow-float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-20px) rotate(5deg); }
@@ -51,6 +199,121 @@ body {
   50% { transform: translateY(20px) rotate(-5deg); }
 }
 
+/* Nebula Glow */
+@keyframes nebula-glow {
+  0%, 100% { 
+    filter: brightness(1) hue-rotate(0deg);
+    opacity: 0.7;
+  }
+  50% { 
+    filter: brightness(1.2) hue-rotate(10deg);
+    opacity: 0.9;
+  }
+}
+
+/* ===== COSMIC BACKGROUND EFFECTS ===== */
+
+/* Starfield Layer */
+.cosmic-starfield::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+  box-shadow: 
+    12px 15px 1px 0px rgba(255,255,255,0.8),
+    84px 92px 1px 0px rgba(255,255,255,0.6),
+    190px 120px 1px 0px rgba(255,255,255,0.9),
+    350px 80px 1px 0px rgba(255,255,255,0.7),
+    500px 200px 1px 0px rgba(255,255,255,0.5),
+    680px 150px 1px 0px rgba(255,255,255,0.8),
+    820px 90px 1px 0px rgba(255,255,255,0.6),
+    950px 180px 1px 0px rgba(255,255,255,0.9),
+    1200px 60px 1px 0px rgba(255,255,255,0.7),
+    1400px 140px 1px 0px rgba(255,255,255,0.5),
+    80px 300px 1px 0px rgba(255,255,255,0.8),
+    250px 420px 1px 0px rgba(255,255,255,0.6),
+    450px 380px 1px 0px rgba(255,255,255,0.9),
+    650px 480px 1px 0px rgba(255,255,255,0.7),
+    850px 520px 1px 0px rgba(255,255,255,0.5),
+    1050px 450px 1px 0px rgba(255,255,255,0.8),
+    1250px 350px 1px 0px rgba(255,255,255,0.6),
+    1450px 500px 1px 0px rgba(255,255,255,0.9),
+    120px 600px 1px 0px rgba(255,255,255,0.7),
+    320px 720px 1px 0px rgba(255,255,255,0.5);
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+.cosmic-starfield::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+  box-shadow: 
+    45px 75px 1px 0px rgba(255,255,255,0.6),
+    180px 200px 1px 0px rgba(255,255,255,0.8),
+    380px 160px 1px 0px rgba(255,255,255,0.5),
+    580px 240px 1px 0px rgba(255,255,255,0.9),
+    780px 120px 1px 0px rgba(255,255,255,0.7),
+    980px 300px 1px 0px rgba(255,255,255,0.6),
+    1180px 180px 1px 0px rgba(255,255,255,0.8),
+    1380px 220px 1px 0px rgba(255,255,255,0.5),
+    150px 450px 1px 0px rgba(255,255,255,0.9),
+    350px 550px 1px 0px rgba(255,255,255,0.7),
+    550px 650px 1px 0px rgba(255,255,255,0.6),
+    750px 750px 1px 0px rgba(255,255,255,0.8),
+    950px 580px 1px 0px rgba(255,255,255,0.5),
+    1150px 680px 1px 0px rgba(255,255,255,0.9),
+    1350px 620px 1px 0px rgba(255,255,255,0.7);
+  animation: twinkle-delayed 6s ease-in-out infinite alternate;
+}
+
+/* Sunflare Effect */
+.cosmic-sunflare {
+  position: fixed;
+  top: -20%;
+  left: -20%;
+  width: 60%;
+  height: 60%;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    ellipse at center,
+    var(--sunflare-primary) 0%,
+    var(--sunflare-secondary) 30%,
+    var(--sunflare-tertiary) 60%,
+    transparent 80%
+  );
+  animation: sunflare-pulse 12s ease-in-out infinite;
+}
+
+.cosmic-sunflare::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(
+    ellipse at center,
+    var(--sunflare-secondary) 0%,
+    var(--sunflare-tertiary) 40%,
+    transparent 70%
+  );
+  animation: sunflare-drift 20s ease-in-out infinite;
+}
+
+/* ===== UTILITY CLASSES ===== */
+
 .animate-slow-float {
   animation: slow-float 8s ease-in-out infinite;
 }
@@ -59,13 +322,93 @@ body {
   animation: slow-float-reverse 10s ease-in-out infinite;
 }
 
+.animate-nebula-glow {
+  animation: nebula-glow 6s ease-in-out infinite;
+}
+
+.animate-drift {
+  animation: drift 15s ease-in-out infinite;
+}
+
+/* Gradient Utilities */
 .bg-gradient-radial {
   background: radial-gradient(circle, var(--tw-gradient-stops));
 }
 
+.bg-gradient-cosmic {
+  background: linear-gradient(
+    135deg,
+    var(--nebula-primary) 0%,
+    var(--cosmic-blue) 50%,
+    var(--cosmic-pink) 100%
+  );
+}
+
+.bg-gradient-nebula {
+  background: radial-gradient(
+    ellipse at top left,
+    var(--nebula-primary) 0%,
+    var(--nebula-secondary) 40%,
+    transparent 70%
+  );
+}
+
+.bg-space-glass {
+  background: var(--space-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--space-border);
+}
+
+/* Text Utilities */
+.text-gradient-cosmic {
+  background: linear-gradient(
+    45deg,
+    var(--nebula-primary),
+    var(--cosmic-blue),
+    var(--stellar-accent)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Layout Utilities */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Dark mode starfield adjustments */
+.dark .cosmic-starfield::before,
+.dark .cosmic-starfield::after {
+  box-shadow: 
+    12px 15px 1px 0px rgba(255,255,255,0.9),
+    84px 92px 1px 0px rgba(123,44,191,0.8),
+    190px 120px 1px 0px rgba(255,255,255,0.7),
+    350px 80px 1px 0px rgba(157,78,221,0.9),
+    500px 200px 1px 0px rgba(255,255,255,0.6),
+    680px 150px 1px 0px rgba(58,134,255,0.8),
+    820px 90px 1px 0px rgba(255,255,255,0.7),
+    950px 180px 1px 0px rgba(123,44,191,0.9),
+    1200px 60px 1px 0px rgba(255,255,255,0.8),
+    1400px 140px 1px 0px rgba(157,78,221,0.6),
+    80px 300px 1px 0px rgba(255,255,255,0.9),
+    250px 420px 1px 0px rgba(58,134,255,0.7),
+    450px 380px 1px 0px rgba(255,255,255,0.8),
+    650px 480px 1px 0px rgba(123,44,191,0.9),
+    850px 520px 1px 0px rgba(255,255,255,0.6),
+    1050px 450px 1px 0px rgba(157,78,221,0.8),
+    1250px 350px 1px 0px rgba(255,255,255,0.7),
+    1450px 500px 1px 0px rgba(58,134,255,0.9),
+    120px 600px 1px 0px rgba(255,255,255,0.8),
+    320px 720px 1px 0px rgba(123,44,191,0.7);
 }

@@ -1,8 +1,8 @@
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 export default function CookiesPage() {
   return (
-    <StaticPageLayout 
+    <StaticPageTemplate 
       title="Cookie Policy" 
       description="Learn about how we use cookies and similar technologies on our website."
       lastUpdated="January 1, 2025"
@@ -119,6 +119,6 @@ export default function CookiesPage() {
       <p>
         <strong>Note:</strong> By continuing to use our website, you consent to our use of cookies as described in this policy.
       </p>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }

@@ -27,14 +27,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
           <AuthProvider>
             <ShopProvider>
-              {children}
+              {/* Cosmic Background Effects */}
+              <div className="cosmic-starfield" />
+              <div className="cosmic-sunflare" />
+              
+              {/* Main Content */}
+              <div className="relative z-10">
+                {children}
+              </div>
             </ShopProvider>
           </AuthProvider>
         </ThemeProvider>

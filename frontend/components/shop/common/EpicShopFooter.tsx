@@ -1,306 +1,212 @@
 // components/shop/common/EpicShopFooter.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Rocket, 
-  Star, 
-  Zap, 
-  Shield, 
-  Heart, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Twitter, 
-  Github, 
-  Instagram, 
-  Linkedin,
-  Store,
-  Thermometer,
-  Droplets,
-  Package,
-  Wrench,
-  Award,
-  Users,
-  TrendingUp,
-  Globe,
-  Sparkles,
-  Atom
-} from 'lucide-react';
-import { ClientOnlyDotSparkles, ClientOnlyIconSparkles } from '@/components/ui/client-only-sparkles';
+import { Shield, Truck, RefreshCw, Headphones } from 'lucide-react';
 
-const quickLinks = [
-  { name: 'All Products', href: '/shop', icon: <Store className="w-4 h-4" /> },
-  { name: 'Environmental', href: '/shop/environmental-monitor', icon: <Thermometer className="w-4 h-4" /> },
-  { name: 'Liquid Monitors', href: '/shop/liquid-monitor', icon: <Droplets className="w-4 h-4" /> },
-  { name: 'Bundles', href: '/shop/bundles', icon: <Package className="w-4 h-4" /> },
-  { name: 'Accessories', href: '/shop/accessories', icon: <Wrench className="w-4 h-4" /> },
+const features = [
+  {
+    icon: Shield,
+    title: 'Secure Payments',
+    description: 'SSL encrypted checkout'
+  },
+  {
+    icon: Truck,
+    title: 'Free Shipping',
+    description: 'On orders over $200'
+  },
+  {
+    icon: RefreshCw,
+    title: '30-Day Returns',
+    description: 'Hassle-free returns'
+  },
+  {
+    icon: Headphones,
+    title: '24/7 Support',
+    description: 'Expert technical help'
+  }
 ];
 
-const supportLinks = [
-  { name: 'Setup Guide', href: '/support/setup' },
-  { name: 'Troubleshooting', href: '/support/troubleshooting' },
-  { name: 'API Documentation', href: '/docs/api' },
-  { name: 'Warranty', href: '/support/warranty' },
-  { name: 'Returns', href: '/shop/refunds' },
-];
-
-const companyLinks = [
-  { name: 'About Us', href: '/about' },
-  { name: 'Careers', href: '/careers' },
-  { name: 'Press Kit', href: '/press' },
-  { name: 'Partnerships', href: '/partners' },
-  { name: 'Sustainability', href: '/sustainability' },
-];
-
-const socialLinks = [
-  { name: 'Twitter', href: '#', icon: <Twitter className="w-5 h-5" />, color: 'hover:text-blue-400' },
-  { name: 'Instagram', href: '#', icon: <Instagram className="w-5 h-5" />, color: 'hover:text-pink-400' },
-  { name: 'LinkedIn', href: '#', icon: <Linkedin className="w-5 h-5" />, color: 'hover:text-blue-500' },
-  { name: 'GitHub', href: '#', icon: <Github className="w-5 h-5" />, color: 'hover:text-purple-400' },
-];
-
-const stats = [
-  { label: 'Happy Growers', value: '50,000+', icon: <Users className="w-6 h-6" /> },
-  { label: 'Devices Sold', value: '100,000+', icon: <TrendingUp className="w-6 h-6" /> },
-  { label: 'Countries', value: '85+', icon: <Globe className="w-6 h-6" /> },
-  { label: 'Uptime', value: '99.9%', icon: <Shield className="w-6 h-6" /> },
-];
+const navigation = {
+  products: [
+    { name: 'Environmental Monitor', href: '/shop/environmental-monitor' },
+    { name: 'Liquid Monitor', href: '/shop/liquid-monitor' },
+    { name: 'Accessories', href: '/shop/accessories' },
+    { name: 'Bundles', href: '/shop/bundles' },
+  ],
+  support: [
+    { name: 'Setup Guide', href: '/docs/setup' },
+    { name: 'API Documentation', href: '/docs/api' },
+    { name: 'Troubleshooting', href: '/support' },
+    { name: 'Contact Support', href: '/contact' },
+  ],
+  company: [
+    { name: 'About SpaceGrow', href: '/about' },
+    { name: 'Technology', href: '/technology' },
+    { name: 'Partners', href: '/partners' },
+    { name: 'Careers', href: '/careers' },
+  ],
+  legal: [
+    { name: 'Privacy Policy', href: '/privacy' },
+    { name: 'Terms of Service', href: '/terms' },
+    { name: 'Shipping Policy', href: '/shipping' },
+    { name: 'Refund Policy', href: '/refunds' },
+  ],
+};
 
 export function EpicShopFooter() {
-  const [currentYear] = useState(new Date().getFullYear());
-  const [emailInput, setEmailInput] = useState('');
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (emailInput) {
-      setIsSubscribed(true);
-      setEmailInput('');
-      setTimeout(() => setIsSubscribed(false), 3000);
-    }
-  };
-
   return (
-    <footer className="relative overflow-hidden">
-      {/* Cosmic background for footer */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-purple-900/50 to-transparent">
-
-		{/* Floating particles */}
-		<ClientOnlyIconSparkles 
-		count={30}
-		className=""
-		iconClassName="w-2 h-2 text-white/30"
-		/>
-        
-        {/* Glowing orbs */}
-        <div className="absolute bottom-0 left-1/4 w-32 h-32 bg-gradient-radial from-blue-500/20 to-transparent rounded-full blur-2xl animate-pulse"></div>
-        <div className="absolute top-10 right-1/3 w-24 h-24 bg-gradient-radial from-purple-500/20 to-transparent rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      <div className="relative backdrop-blur-md bg-gray-900/80 border-t border-purple-500/30">
-        {/* Stats Banner */}
-        <div className="border-b border-gray-800/50">
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <div 
-                  key={stat.label} 
-                  className="text-center group"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex items-center justify-center mb-2">
-                    <div className="p-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full group-hover:scale-110 transition-transform">
-                      <div className="text-purple-400 group-hover:text-pink-400 transition-colors">
-                        {stat.icon}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Main Footer Content */}
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid lg:grid-cols-5 gap-8">
-            {/* Company Info */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl blur-lg opacity-50"></div>
-                  <div className="relative w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                    <Rocket className="w-6 h-6 text-white" />
+    <footer className="bg-space-secondary border-t border-space-border">
+      {/* Features Section */}
+      <div className="bg-space-card/50 backdrop-blur-sm">
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature, index) => (
+              <div 
+                key={feature.title} 
+                className="flex items-center space-x-4 animate-drift"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex-shrink-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-cosmic">
+                    <feature.icon className="h-5 w-5 text-white" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    SpaceGrow
+                  <h3 className="text-sm font-semibold text-cosmic-text">
+                    {feature.title}
                   </h3>
-                  <p className="text-xs text-gray-400">Grow Beyond Earth</p>
+                  <p className="text-xs text-cosmic-text-muted">
+                    {feature.description}
+                  </p>
                 </div>
               </div>
-              
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                Revolutionary IoT monitoring systems designed for the future of agriculture. 
-                From Earth to Mars, we're helping growers achieve perfect conditions with 
-                laboratory-grade precision and space-age technology.
-              </p>
+            ))}
+          </div>
+        </div>
+      </div>
 
-              {/* Newsletter Signup */}
-              <div className="mb-6">
-                <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  Join the Space Growers
-                </h4>
-                <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    disabled={isSubscribed}
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSubscribed}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
-                      isSubscribed 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transform hover:scale-105'
-                    }`}
-                  >
-                    {isSubscribed ? (
-                      <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4" />
-                        Subscribed!
-                      </div>
-                    ) : (
-                      'Launch'
-                    )}
-                  </button>
-                </form>
-              </div>
-
-              {/* Contact Info */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Mail className="w-4 h-4 text-purple-400" />
-                  <span>support@spacegrow.ai</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Phone className="w-4 h-4 text-purple-400" />
-                  <span>1-800-XSPACE (1-800-977-2233)</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-300">
-                  <MapPin className="w-4 h-4 text-purple-400" />
-                  <span>Mars Colony Prep Center, Earth HQ</span>
-                </div>
-              </div>
+      {/* Main Footer */}
+      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+          
+          {/* Brand Section */}
+          <div className="space-y-8">
+            <div className="text-2xl font-bold text-gradient-cosmic">
+              SpaceGrow.ai
             </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-white font-semibold mb-6 flex items-center gap-2">
-                <Store className="w-4 h-4 text-blue-400" />
-                Shop Categories
-              </h4>
-              <ul className="space-y-3">
-                {quickLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      href={link.href}
-                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors group"
-                    >
-                      <span className="text-gray-500 group-hover:text-blue-400 transition-colors">
-                        {link.icon}
-                      </span>
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <p className="text-sm text-cosmic-text-muted max-w-md">
+              Professional IoT solutions for intelligent growing. Monitor, control, and optimize your environment with precision sensors and real-time data.
+            </p>
+            
+            {/* Newsletter */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-cosmic-text">Stay Updated</h3>
+              <form className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="
+                    flex-1 rounded-lg bg-space-glass border border-space-border 
+                    px-3 py-2 text-sm text-cosmic-text placeholder-cosmic-text-light
+                    focus:outline-none focus:ring-2 focus:ring-stellar-accent focus:border-transparent
+                    transition-all duration-200
+                  "
+                />
+                <button
+                  type="submit"
+                  className="
+                    rounded-lg bg-gradient-cosmic px-4 py-2 text-sm font-semibold text-white
+                    hover:scale-105 transition-all duration-200 animate-nebula-glow
+                  "
+                >
+                  Subscribe
+                </button>
+              </form>
             </div>
+          </div>
 
-            {/* Support */}
-            <div>
-              <h4 className="text-white font-semibold mb-6 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-green-400" />
-                Support
-              </h4>
-              <ul className="space-y-3">
-                {supportLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      href={link.href}
-                      className="text-gray-300 hover:text-white transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="text-white font-semibold mb-6 flex items-center gap-2">
-                <Award className="w-4 h-4 text-yellow-400" />
-                Company
-              </h4>
-              <ul className="space-y-3">
-                {companyLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      href={link.href}
-                      className="text-gray-300 hover:text-white transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Social Links */}
-              <div className="mt-8">
-                <h5 className="text-white font-medium mb-4">Follow Our Journey</h5>
-                <div className="flex gap-3">
-                  {socialLinks.map((social) => (
-                    <a
-                      key={social.name}
-                      href={social.href}
-                      className={`p-3 bg-gray-800/50 rounded-lg ${social.color} transition-all duration-300 transform hover:scale-110`}
-                      title={social.name}
-                    >
-                      {social.icon}
-                    </a>
+          {/* Links Grid */}
+          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-sm font-semibold text-cosmic-text">Products</h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.products.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
                   ))}
-                </div>
+                </ul>
+              </div>
+              <div className="mt-10 md:mt-0">
+                <h3 className="text-sm font-semibold text-cosmic-text">Support</h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.support.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-sm font-semibold text-cosmic-text">Company</h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.company.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-10 md:mt-0">
+                <h3 className="text-sm font-semibold text-cosmic-text">Legal</h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.legal.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800/50">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-6 text-sm text-gray-400">
-                <span>© {currentYear} SpaceGrow. All rights reserved.</span>
-                <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <span>Made with</span>
-                <Heart className="w-4 h-4 text-red-400 animate-pulse" />
-                <span>for growers everywhere</span>
-                <Atom className="w-4 h-4 text-purple-400 animate-spin" style={{ animationDuration: '3s' }} />
+        {/* Bottom Section */}
+        <div className="mt-16 border-t border-space-border pt-8 sm:mt-20">
+          <div className="flex flex-col items-center justify-between sm:flex-row">
+            <p className="text-sm text-cosmic-text-light">
+              &copy; 2025 SpaceGrow.ai. All rights reserved.
+            </p>
+            <div className="mt-4 sm:mt-0">
+              <div className="flex items-center space-x-2">
+                <div className="h-2 w-2 bg-stellar-accent rounded-full animate-pulse"></div>
+                <span className="text-sm text-cosmic-text-light">
+                  Secure Shopping Experience
+                </span>
               </div>
             </div>
           </div>

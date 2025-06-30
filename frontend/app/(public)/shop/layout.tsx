@@ -29,7 +29,7 @@ export default function ShopLayout({
   return (
     <>
       {/* No Header - each shop page has its own ShopNavHeader */}
-      <main className="min-h-screen">{children}</main>
+      <main className="min-h-screen bg-space-primary">{children}</main>
       
       {/* Epic Shop Footer */}
       <EpicShopFooter />

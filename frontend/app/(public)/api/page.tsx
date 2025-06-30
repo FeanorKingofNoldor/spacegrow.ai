@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import StaticPageLayout from '@/components/layout/StaticPageLayout'
+import StaticPageTemplate from '@/components/templates/StaticPageTemplate'
 
 const codeExamples = {
   curl: `curl -X POST https://api.spacegrow.ai/v1/devices/register \\
@@ -80,7 +80,7 @@ const endpoints = [
 
 export default function ApiPage() {
   return (
-    <StaticPageLayout
+    <StaticPageTemplate
       title="API Reference"
       description="Complete REST API documentation for integrating with SpaceGrow.ai platform."
       lastUpdated="January 2025"
@@ -345,6 +345,6 @@ export default function ApiPage() {
           </div>
         </div>
       </div>
-    </StaticPageLayout>
+    </StaticPageTemplate>
   )
 }
