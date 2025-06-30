@@ -11,6 +11,12 @@ Rails.application.routes.draw do
         post 'auth/login', to: 'auth/sessions#create'
         delete 'auth/logout', to: 'auth/sessions#destroy'
         post 'auth/signup', to: 'auth/registrations#create'
+        
+        # Additional auth endpoints
+        get 'auth/me', to: 'auth/sessions#me'
+        post 'auth/refresh', to: 'auth/sessions#refresh'
+        post 'auth/forgot_password', to: 'auth/passwords#create'
+        put 'auth/reset_password', to: 'auth/passwords#update'
       end
 
       # ESP32 device routes (device authentication required)

@@ -21,7 +21,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import Link from 'next/link';
-import { ClientOnlyDotSparkles, ClientOnlyIconSparkles } from '@/components/ui/client-only-sparkles';
+import { ClientOnlyDotSparkles, ClientOnlyIconSparkles } from '@/components/ui/ClientOnlySparkle';
 
 // Helper function to get image URL
 const getImageUrl = (image: string | { url: string; alt?: string; thumbnail?: string } | undefined): string | undefined => {

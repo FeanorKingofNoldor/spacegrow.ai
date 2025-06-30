@@ -1,7 +1,9 @@
 // components/landing/ProductShowcase.tsx
 'use client';
 
+import Link from 'next/link';
 import { ArrowRight, Thermometer, Droplets, Gauge } from 'lucide-react';
+import { CosmicButton } from '@/components/ui/ButtonVariants';
 
 const products = [
   {
@@ -35,57 +37,65 @@ const products = [
 
 export function ProductShowcase() {
   return (
-    <section className="bg-space-secondary py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-base/7 font-semibold text-stellar-accent">Our Products</h2>
-          <p className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gradient-cosmic sm:text-5xl">
-            Hardware designed for precision
-          </p>
-          <p className="mt-6 text-lg/8 text-cosmic-text-muted">
-            Professional-grade sensors and controllers that integrate seamlessly with our platform.
-          </p>
-        </div>
-        <div className="mx-auto mt-16 grid max-w-2xl auto-rows-fr grid-cols-1 gap-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          {products.map((product, index) => (
-            <article
-              key={product.id}
-              className="group relative isolate flex flex-col justify-end overflow-hidden rounded-2xl bg-space-card border border-space-border px-8 pb-8 pt-80 sm:pt-48 lg:pt-80 hover:scale-105 transition-all duration-300"
-            >
-              <img
-                alt={product.name}
-                src={product.image}
-                className="absolute inset-0 -z-10 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 -z-10 bg-gradient-to-t from-space-primary via-space-primary/40" />
-              <div className="absolute inset-0 -z-10 rounded-2xl ring-1 ring-inset ring-space-border" />
-
-              <div className="flex flex-wrap items-center gap-y-1 overflow-hidden text-sm/6 text-cosmic-text-muted">
-                <product.icon className="h-4 w-4 text-stellar-accent" />
-                <span className="ml-2">{product.features.join(' • ')}</span>
-              </div>
-              <h3 className="mt-3 text-lg/6 font-semibold text-cosmic-text group-hover:text-gradient-cosmic transition-all duration-300">
-                <span className="absolute inset-0" />
-                {product.name}
-              </h3>
-              <p className="mt-2 text-sm/6 text-cosmic-text-muted">{product.description}</p>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-xl font-bold text-stellar-accent">{product.price}</span>
-                <div className="flex items-center space-x-2 text-cosmic-text-muted group-hover:text-stellar-accent transition-colors">
-                  <span className="text-xs font-medium">Learn More</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+    <section className="py-16 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-3xl p-8 md:p-12 shadow-2xl">
+          <div className="text-center mb-12">
+            <h2 className="text-base font-semibold text-yellow-400 mb-4">Our Products</h2>
+            <p className="text-4xl md:text-5xl font-semibold tracking-tight text-white mb-6">
+              Hardware designed for{' '}
+              <span className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">
+                precision
+              </span>
+            </p>
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              Professional-grade sensors and controllers that integrate seamlessly with our platform.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {products.map((product, index) => (
+              <article
+                key={product.id}
+                className="group relative overflow-hidden rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:border-white/30 transition-all duration-300 hover:scale-105"
+              >
+                <div className="aspect-w-16 aspect-h-10 relative">
+                  <img
+                    alt={product.name}
+                    src={product.image}
+                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="mt-16 flex justify-center">
-          <a
-            href="/shop"
-            className="rounded-lg bg-gradient-cosmic px-6 py-3 text-sm font-semibold text-white shadow-lg hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stellar-accent transition-all duration-200 animate-nebula-glow"
-          >
-            View All Products
-          </a>
+
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-3">
+                    <product.icon className="h-4 w-4 text-yellow-400" />
+                    <span>{product.features.join(' • ')}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-yellow-400 transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4">{product.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold text-yellow-400">{product.price}</span>
+                    <div className="flex items-center space-x-2 text-gray-400 group-hover:text-yellow-400 transition-colors">
+                      <span className="text-xs font-medium">Learn More</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          
+          <div className="text-center">
+            <Link href="/shop">
+              <CosmicButton size="lg">
+                View All Products
+              </CosmicButton>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

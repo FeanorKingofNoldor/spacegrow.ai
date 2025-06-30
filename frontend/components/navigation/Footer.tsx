@@ -1,5 +1,6 @@
 // components/navigation/Footer.tsx
 import Link from 'next/link';
+import { CosmicButton } from '@/components/ui/ButtonVariants';
 
 const navigation = {
   products: [
@@ -67,17 +68,17 @@ const navigation = {
 
 export function Footer() {
   return (
-    <footer className="bg-space-secondary border-t border-space-border">
+    <footer className="bg-transparent border-t border-white/20 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-20 sm:pt-24 lg:px-8 lg:pt-32">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="grid grid-cols-2 gap-8 xl:col-span-2">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm/6 font-semibold text-cosmic-text">Products</h3>
+                <h3 className="text-sm/6 font-semibold text-white-900 dark:text-white-100">Products</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.products.map((item) => (
                     <li key={item.name}>
-                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
+                      <Link href={item.href} className="text-sm/6 text-white-600 dark:text-white-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors">
                         {item.name}
                       </Link>
                     </li>
@@ -85,11 +86,11 @@ export function Footer() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm/6 font-semibold text-cosmic-text">Support</h3>
+                <h3 className="text-sm/6 font-semibold text-white-900 dark:text-white-100">Support</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.support.map((item) => (
                     <li key={item.name}>
-                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
+                      <Link href={item.href} className="text-sm/6 text-white-600 dark:text-white-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors">
                         {item.name}
                       </Link>
                     </li>
@@ -99,11 +100,11 @@ export function Footer() {
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm/6 font-semibold text-cosmic-text">Company</h3>
+                <h3 className="text-sm/6 font-semibold text-white-900 dark:text-white-100">Company</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.company.map((item) => (
                     <li key={item.name}>
-                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
+                      <Link href={item.href} className="text-sm/6 text-white-600 dark:text-white-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors">
                         {item.name}
                       </Link>
                     </li>
@@ -111,11 +112,11 @@ export function Footer() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm/6 font-semibold text-cosmic-text">Legal</h3>
+                <h3 className="text-sm/6 font-semibold text-white-900 dark:text-white-100">Legal</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.legal.map((item) => (
                     <li key={item.name}>
-                      <Link href={item.href} className="text-sm/6 text-cosmic-text-muted hover:text-cosmic-text transition-colors">
+                      <Link href={item.href} className="text-sm/6 text-white-600 dark:text-white-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors">
                         {item.name}
                       </Link>
                     </li>
@@ -125,8 +126,8 @@ export function Footer() {
             </div>
           </div>
           <div className="mt-10 xl:mt-0">
-            <h3 className="text-sm/6 font-semibold text-cosmic-text">Stay updated</h3>
-            <p className="mt-2 text-sm/6 text-cosmic-text-muted">
+            <h3 className="text-sm/6 font-semibold text-white-900 dark:text-white-100">Stay updated</h3>
+            <p className="mt-2 text-sm/6 text-white-600 dark:text-white-400">
               Get the latest IoT growing tips, product updates, and exclusive offers.
             </p>
             <form className="mt-6 sm:flex sm:max-w-md">
@@ -141,41 +142,34 @@ export function Footer() {
                 placeholder="Enter your email"
                 autoComplete="email"
                 className="
-                  w-full min-w-0 rounded-lg bg-space-glass border border-space-border 
-                  px-3 py-2 text-sm text-cosmic-text placeholder-cosmic-text-light
-                  focus:outline-none focus:ring-2 focus:ring-stellar-accent focus:border-transparent
+                  w-full min-w-0 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20
+                  px-3 py-2 text-sm text-white-900 dark:text-white-100 placeholder-white-500 dark:placeholder-white-400
+                  focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent
                   sm:w-64 sm:text-sm/6 xl:w-full transition-all duration-200
                 "
               />
               <div className="mt-4 sm:ml-4 sm:mt-0 sm:shrink-0">
-                <button
-                  type="submit"
-                  className="
-                    flex w-full items-center justify-center rounded-lg bg-gradient-cosmic 
-                    px-4 py-2 text-sm font-semibold text-white shadow-lg
-                    hover:scale-105 transition-all duration-200 animate-nebula-glow
-                  "
-                >
+                <CosmicButton type="submit" size="md">
                   Subscribe
-                </button>
+                </CosmicButton>
               </div>
             </form>
           </div>
         </div>
-        <div className="mt-16 border-t border-space-border pt-8 sm:mt-20 md:flex md:items-center md:justify-between lg:mt-24">
+        <div className="mt-16 border-t border-white/20 pt-8 sm:mt-20 md:flex md:items-center md:justify-between lg:mt-24">
           <div className="flex gap-x-6 md:order-2">
             {navigation.social.map((item) => (
               <a
                 key={item.name}
                 href={item.href}
-                className="text-cosmic-text-light hover:text-stellar-accent transition-colors"
+                className="text-white-500 dark:text-white-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
               >
                 <span className="sr-only">{item.name}</span>
                 <item.icon aria-hidden="true" className="h-6 w-6" />
               </a>
             ))}
           </div>
-          <p className="mt-8 text-sm/6 text-cosmic-text-light md:order-1 md:mt-0">
+          <p className="mt-8 text-sm/6 text-white-500 dark:text-white-400 md:order-1 md:mt-0">
             &copy; 2025 SpaceGrow.ai. All rights reserved.
           </p>
         </div>

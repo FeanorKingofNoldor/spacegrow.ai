@@ -16,24 +16,24 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={cn(
           // Base styles
-          'inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-400 disabled:pointer-events-none disabled:opacity-50',
           
           // Variants
           {
             // Cosmic gradient button (primary)
-            'cosmic': 'bg-gradient-cosmic text-white shadow-lg hover:scale-105 animate-nebula-glow',
+            'cosmic': 'bg-gradient-cosmic border border-yellow-400/30 text-white shadow-lg hover:scale-105 animate-nebula-glow hover:border-yellow-400/50',
             
             // Outline button
-            'outline': 'border border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-purple-600 dark:hover:text-purple-400',
+            'outline': 'border border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-yellow-400 hover:border-yellow-400',
             
             // Ghost button
-            'ghost': 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100',
+            'ghost': 'border border-transparent bg-transparent text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30',
             
             // Glass button
-            'glass': 'bg-space-glass border border-space-border text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gradient-cosmic hover:text-white',
+            'glass': 'bg-white/10 backdrop-blur-sm border border-white/30 text-white hover:text-yellow-400 hover:bg-white/20 hover:border-yellow-400/50',
             
             // Stellar accent button
-            'stellar': 'bg-purple-600 dark:bg-green-500 text-white hover:bg-purple-700 dark:hover:bg-green-600 shadow-md'
+            'stellar': 'bg-yellow-500 border border-yellow-600 text-black hover:bg-yellow-400 shadow-md hover:border-yellow-500'
           }[variant],
           
           // Sizes

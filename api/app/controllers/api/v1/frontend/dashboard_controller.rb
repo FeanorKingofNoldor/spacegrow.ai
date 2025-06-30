@@ -102,7 +102,24 @@ class Api::V1::Frontend::DashboardController < Api::V1::Frontend::ProtectedContr
           id: sensor.id,
           type: sensor.sensor_type.name,
           status: sensor.current_status,
-          last_reading: sensor.sensor_data.order(:timestamp).last&.value
+          last_reading: sensor.sensor_data.order(:timestamp).last&.value,
+          sensor_type: {
+            id: sensor.sensor_type.id,
+            name: sensor.sensor_type.name,
+            unit: sensor.sensor_type.unit,
+            min_value: sensor.sensor_type.min_value,
+            max_value: sensor.sensor_type.max_value,
+            error_low_min: sensor.sensor_type.error_low_min,
+            error_low_max: sensor.sensor_type.error_low_max,
+            warning_low_min: sensor.sensor_type.warning_low_min,
+            warning_low_max: sensor.sensor_type.warning_low_max,
+            normal_min: sensor.sensor_type.normal_min,
+            normal_max: sensor.sensor_type.normal_max,
+            warning_high_min: sensor.sensor_type.warning_high_min,
+            warning_high_max: sensor.sensor_type.warning_high_max,
+            error_high_min: sensor.sensor_type.error_high_min,
+            error_high_max: sensor.sensor_type.error_high_max
+          }
         }
       end
     })

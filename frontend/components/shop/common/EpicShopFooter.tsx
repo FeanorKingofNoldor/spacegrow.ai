@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import { Shield, Truck, RefreshCw, Headphones } from 'lucide-react';
+import { CosmicButton } from '@/components/ui/ButtonVariants';
 
 const features = [
   {
@@ -56,9 +57,9 @@ const navigation = {
 
 export function EpicShopFooter() {
   return (
-    <footer className="bg-space-secondary border-t border-space-border">
+    <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
       {/* Features Section */}
-      <div className="bg-space-card/50 backdrop-blur-sm">
+      <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
@@ -68,15 +69,15 @@ export function EpicShopFooter() {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex-shrink-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-cosmic">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-cosmic border border-purple-400/30 dark:border-green-400/30">
                     <feature.icon className="h-5 w-5 text-white" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-cosmic-text">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     {feature.title}
                   </h3>
-                  <p className="text-xs text-cosmic-text-muted">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     {feature.description}
                   </p>
                 </div>
@@ -95,33 +96,27 @@ export function EpicShopFooter() {
             <div className="text-2xl font-bold text-gradient-cosmic">
               SpaceGrow.ai
             </div>
-            <p className="text-sm text-cosmic-text-muted max-w-md">
+            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
               Professional IoT solutions for intelligent growing. Monitor, control, and optimize your environment with precision sensors and real-time data.
             </p>
             
             {/* Newsletter */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-cosmic-text">Stay Updated</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Stay Updated</h3>
               <form className="flex gap-2">
                 <input
                   type="email"
                   placeholder="Enter your email"
                   className="
-                    flex-1 rounded-lg bg-space-glass border border-space-border 
-                    px-3 py-2 text-sm text-cosmic-text placeholder-cosmic-text-light
-                    focus:outline-none focus:ring-2 focus:ring-stellar-accent focus:border-transparent
+                    flex-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600
+                    px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent
                     transition-all duration-200
                   "
                 />
-                <button
-                  type="submit"
-                  className="
-                    rounded-lg bg-gradient-cosmic px-4 py-2 text-sm font-semibold text-white
-                    hover:scale-105 transition-all duration-200 animate-nebula-glow
-                  "
-                >
+                <CosmicButton type="submit" size="md">
                   Subscribe
-                </button>
+                </CosmicButton>
               </form>
             </div>
           </div>
@@ -130,13 +125,13 @@ export function EpicShopFooter() {
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold text-cosmic-text">Products</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Products</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.products.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -145,13 +140,13 @@ export function EpicShopFooter() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold text-cosmic-text">Support</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Support</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.support.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -162,13 +157,13 @@ export function EpicShopFooter() {
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold text-cosmic-text">Company</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Company</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.company.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -177,13 +172,13 @@ export function EpicShopFooter() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold text-cosmic-text">Legal</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Legal</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.legal.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-cosmic-text-muted hover:text-stellar-accent transition-colors"
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -196,15 +191,15 @@ export function EpicShopFooter() {
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-16 border-t border-space-border pt-8 sm:mt-20">
+        <div className="mt-16 border-t border-gray-200 dark:border-gray-700 pt-8 sm:mt-20">
           <div className="flex flex-col items-center justify-between sm:flex-row">
-            <p className="text-sm text-cosmic-text-light">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               &copy; 2025 SpaceGrow.ai. All rights reserved.
             </p>
             <div className="mt-4 sm:mt-0">
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-stellar-accent rounded-full animate-pulse"></div>
-                <span className="text-sm text-cosmic-text-light">
+                <div className="h-2 w-2 bg-purple-600 dark:bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   Secure Shopping Experience
                 </span>
               </div>

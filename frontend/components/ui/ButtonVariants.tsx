@@ -57,22 +57,6 @@ export const GlassButton = forwardRef<HTMLButtonElement, Omit<ButtonProps, 'vari
 );
 GlassButton.displayName = 'GlassButton';
 
-// Theme Toggle Button
-export const ThemeButton = forwardRef<HTMLButtonElement, Omit<ButtonProps, 'variant' | 'size'>>(
-  ({ className, children, ...props }, ref) => (
-    <Button
-      ref={ref}
-      variant="glass"
-      size="sm"
-      className={cn('p-2 h-10 w-10', className)}
-      {...props}
-    >
-      {children}
-    </Button>
-  )
-);
-ThemeButton.displayName = 'ThemeButton';
-
 // Navigation Button
 export const NavButton = forwardRef<HTMLButtonElement, Omit<ButtonProps, 'variant'>>(
   ({ className, ...props }, ref) => (

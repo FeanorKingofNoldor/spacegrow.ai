@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { CartIcon } from '@/components/shop/cart/CartIcon';
 import { useShop } from '@/contexts/ShopContext';
-import { ClientOnlyDotSparkles, ClientOnlyIconSparkles } from '@/components/ui/client-only-sparkles';
+import { ClientOnlyDotSparkles, ClientOnlyIconSparkles } from '@/components/ui/ClientOnlySparkle';
 
 interface NavItem {
   name: string;
