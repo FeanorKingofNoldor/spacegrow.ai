@@ -22,8 +22,11 @@ namespace :mock_data do
     # Step 3: Create and Activate 4 Devices
     4.times do |i|
       device_type = DeviceType.order('RANDOM()').first
-      order = Order.create!(user: user, status: 'paid', total: 299.99)
-      LineItem.create!(order: order, product: Product.find_by(device_type: device_type), quantity: 1, price: 299.99)
+      product = Product.find_by(device_type: device_type)
+      
+      order = Order.create!(user: user, status: 'pending', total: product.price) # Start as pending
+      LineItem.create!(order: order, product: product, quantity: 1, price: product.price)
+      order.update!(status: 'paid')
       activation_token = DeviceActivationToken.create!(device_type: device_type, order: order, token: SecureRandom.hex(16), expires_at: 30.days.from_now)
       device = DeviceActivationService.call(token: activation_token.token, device_type: device_type).device
       device.update!(status: 'active', last_connection: Time.current)

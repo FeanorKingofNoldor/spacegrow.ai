@@ -160,10 +160,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_27_211318) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "stock_quantity", default: 0, null: false
+    t.integer "stock_quantity", default: 1000, null: false
+    t.integer "low_stock_threshold", default: 10, null: false
     t.boolean "featured", default: false, null: false
     t.text "detailed_description"
-    t.integer "low_stock_threshold", default: 5, null: false
     t.index ["active"], name: "index_products_on_active"
     t.index ["device_type_id"], name: "index_products_on_device_type_id"
     t.index ["featured"], name: "index_products_on_featured"

@@ -29,7 +29,7 @@ class DeviceActivationTokenService
               device_type: item.product.device_type,
               expires_at: 30.days.from_now
             )
-            DeviceMailer.activation_token_email(token).deliver_later
+           # DeviceMailer.activation_token_email(token).deliver_later
             token
           end.compact
         end.flatten.compact

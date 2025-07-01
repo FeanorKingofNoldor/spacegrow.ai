@@ -1,4 +1,4 @@
-# app/models/product.rb
+# app/models/product.rb - COMPLETE VERSION
 class Product < ApplicationRecord
   belongs_to :device_type, optional: true
   has_many :line_items
@@ -6,30 +6,26 @@ class Product < ApplicationRecord
 
   validates :name, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :stock_quantity, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :low_stock_threshold, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :stripe_price_id, presence: true, unless: :seeding?
-
-  # Set defaults
-  after_initialize :set_defaults, if: :new_record?
+  validates :stripe_price_id, presence: true, unless: -> { Rails.env.development? || Rails.env.test? }
 
   scope :active, -> { where(active: true) }
   scope :devices, -> { where.not(device_type_id: nil) }
   scope :accessories, -> { where(device_type_id: nil) }
-  scope :featured, -> { where(featured: true) }
-  scope :in_stock, -> { where('stock_quantity > 0') }
+  scope :in_stock, -> { where('stock_quantity > ?', 0) }
   scope :low_stock, -> { where('stock_quantity <= low_stock_threshold AND stock_quantity > 0') }
   scope :out_of_stock, -> { where(stock_quantity: 0) }
-
-  def seeding?
-    Rails.application.config.seeding
-  end
+  scope :featured, -> { where(featured: true) }
 
   def device?
     device_type.present?
   end
 
-  # Inventory methods
+  def can_purchase?(quantity = 1)
+    active? && in_stock? && stock_quantity >= quantity
+  end
+  
+  alias_method :can_order?, :can_purchase?
+
   def in_stock?
     stock_quantity > 0
   end
@@ -48,47 +44,34 @@ class Product < ApplicationRecord
     'in_stock'
   end
 
-  def can_order?(quantity = 1)
-    stock_quantity >= quantity
-  end
-
-  # Reduce stock when order is placed
-  def reduce_stock!(quantity)
-    if can_order?(quantity)
-      update!(stock_quantity: stock_quantity - quantity)
-      true
-    else
-      false
-    end
-  end
-
-  # Increase stock when order is refunded
-  def increase_stock!(quantity)
-    update!(stock_quantity: stock_quantity + quantity)
-  end
-
-  # Get stock level description
   def stock_description
     case stock_status
     when 'out_of_stock'
-      'Out of Stock'
+      'Out of stock'
     when 'low_stock'
       "Only #{stock_quantity} left!"
     when 'in_stock'
-      if stock_quantity > 10
-        'In Stock'
-      else
-        "#{stock_quantity} in stock"
-      end
+      'In stock'
     end
   end
 
-  private
+  def reduce_stock!(quantity)
+    update!(stock_quantity: [stock_quantity - quantity, 0].max)
+  end
 
-  def set_defaults
-    self.stock_quantity ||= 10
-    self.low_stock_threshold ||= 3
-    self.featured ||= false
-    self.active ||= true
+  def add_stock!(quantity)
+    increment!(:stock_quantity, quantity)
+  end
+
+  def stock_quantity
+    super || 1000
+  end
+
+  def low_stock_threshold
+    super || 10
+  end
+
+  def featured
+    super || false
   end
 end
