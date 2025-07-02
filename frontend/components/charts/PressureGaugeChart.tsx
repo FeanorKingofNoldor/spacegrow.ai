@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Activity, AlertTriangle, Wifi, WifiOff, Gauge } from 'lucide-react';
 import { DeviceSensor } from '@/types/device';
 
-interface GaugeChartProps {
+interface PressureGaugeChartProps {
   sensor: DeviceSensor;
   value: number | null | undefined;
   className?: string;
 }
 
-// Generic Gauge Component (Fallback)
-const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }) => {
+// Pressure Gauge Component
+const PressureGaugeChart: React.FC<PressureGaugeChartProps> = ({ sensor, value, className = '' }) => {
   const [animatedValue, setAnimatedValue] = useState(0);
   const { sensor_type } = sensor;
   
@@ -47,6 +47,11 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     };
   };
   
+  // Convert PSI to Bar and other pressure units
+  const psiToBar = (psi: number): number => psi * 0.0689476; // 1 PSI = 0.0689476 Bar
+  const psiToKPa = (psi: number): number => psi * 6.89476; // 1 PSI = 6.89476 kPa
+  const psiToAtm = (psi: number): number => psi * 0.068046; // 1 PSI = 0.068046 atm
+  
   // Create arc path for SVG
   const createArc = (startAngle: number, endAngle: number, innerRadius: number, outerRadius: number): string => {
     const start = getPoint(startAngle, outerRadius);
@@ -65,19 +70,19 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     ].join(" ");
   };
   
-  // Define generic zones with cosmic color scheme
+  // Define pressure zones with pressure-specific color scheme
   const zones = [
     {
       min: sensor_type.error_low_min,
       max: sensor_type.error_low_max,
       color: '#ff0040',
-      label: 'Critical Low'
+      label: 'Vacuum/Low'
     },
     {
       min: sensor_type.warning_low_min,
       max: sensor_type.warning_low_max,
       color: '#ffaa00',
-      label: 'Warning Low'
+      label: 'Low Pressure'
     },
     {
       min: sensor_type.normal_min,
@@ -89,13 +94,13 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
       min: sensor_type.warning_high_min,
       max: sensor_type.warning_high_max,
       color: '#00aaff',
-      label: 'Warning High'
+      label: 'High Pressure'
     },
     {
       min: sensor_type.error_high_min,
       max: sensor_type.error_high_max,
       color: '#aa00ff',
-      label: 'Critical High'
+      label: 'Over Pressure'
     }
   ];
   
@@ -116,7 +121,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
   
   // Get current zone status
   const getCurrentZoneStatus = (val: number): string => {
-    if (val >= sensor_type.normal_min && val <= sensor_type.normal_max) return 'NORMAL';
+    if (val >= sensor_type.normal_min && val <= sensor_type.normal_max) return 'OPTIMAL';
     if ((val >= sensor_type.warning_low_min && val <= sensor_type.warning_low_max) || 
         (val >= sensor_type.warning_high_min && val <= sensor_type.warning_high_max)) return 'WARNING';
     return 'CRITICAL';
@@ -135,32 +140,46 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     return { status: 'Unknown', color: '#6b7280' };
   };
   
-  // Generate tick marks for generic scale
-  const generateGenericTicks = (): React.ReactElement[] => {
+  // Generate tick marks for pressure scale (PSI)
+  const generatePressureTicks = (): React.ReactElement[] => {
     const ticks: React.ReactElement[] = [];
     
     // Generate major ticks based on sensor range
     const maxValue = sensor_type.max_value;
-    const minValue = sensor_type.min_value;
     const majorTickValues: number[] = [];
     
-    // Create 6 evenly spaced ticks
-    for (let i = 0; i <= 5; i++) {
-      const tickValue = minValue + ((maxValue - minValue) * i) / 5;
-      majorTickValues.push(Math.round(tickValue * 10) / 10); // Round to 1 decimal
+    // Smart tick generation based on pressure range
+    if (maxValue <= 100) {
+      // For low pressure: 0, 10, 20, 30, etc.
+      for (let i = 0; i <= 10; i++) {
+        const tickValue = Math.round((i * maxValue) / 10);
+        majorTickValues.push(tickValue);
+      }
+    } else if (maxValue <= 1000) {
+      // For medium pressure: 0, 100, 200, 300, etc.
+      for (let i = 0; i <= 10; i++) {
+        const tickValue = Math.round((i * maxValue) / 10 / 100) * 100;
+        majorTickValues.push(tickValue);
+      }
+    } else {
+      // For high pressure: 0, 1000, 2000, 3000, etc.
+      for (let i = 0; i <= 10; i++) {
+        const tickValue = Math.round((i * maxValue) / 10 / 1000) * 1000;
+        majorTickValues.push(tickValue);
+      }
     }
     
     majorTickValues.forEach((tickValue: number, i: number) => {
-      const tickAngle = startAngle + ((tickValue - minValue) / (maxValue - minValue)) * totalAngle;
+      const tickAngle = startAngle + (tickValue / sensor_type.max_value) * totalAngle;
       const tickStart = getPoint(tickAngle, radius - strokeWidth / 2 - 15);
       const tickEnd = getPoint(tickAngle, radius - strokeWidth / 2 - 5);
       const labelPos = getPoint(tickAngle, radius - strokeWidth / 2 - 25);
       
-      // Format display value
+      // Format large numbers for readability
       const displayValue = tickValue >= 1000 ? `${(tickValue / 1000).toFixed(1)}k` : tickValue.toString();
       
       ticks.push(
-        <g key={`generic-major-tick-${i}`}>
+        <g key={`pressure-major-tick-${i}`}>
           <line
             x1={tickStart.x}
             y1={tickStart.y}
@@ -189,6 +208,55 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     
     return ticks;
   };
+  
+  // Generate Bar tick marks (inner scale - pressure conversion)
+  const generateBarTicks = (): React.ReactElement[] => {
+    const ticks: React.ReactElement[] = [];
+    
+    // Generate Bar ticks at key PSI intervals
+    const psiIntervals = [0, sensor_type.max_value * 0.2, sensor_type.max_value * 0.4, 
+                         sensor_type.max_value * 0.6, sensor_type.max_value * 0.8, sensor_type.max_value];
+    
+    psiIntervals.forEach((psiValue: number, i: number) => {
+      const barValue = psiToBar(psiValue);
+      const tickAngle = startAngle + (psiValue / sensor_type.max_value) * totalAngle;
+      const tickStart = getPoint(tickAngle, radius - strokeWidth / 2 - 45);
+      const tickEnd = getPoint(tickAngle, radius - strokeWidth / 2 - 35);
+      const labelPos = getPoint(tickAngle, radius - strokeWidth / 2 - 55);
+      
+      // Format Bar values
+      const displayBar = barValue >= 10 ? barValue.toFixed(0) : barValue.toFixed(1);
+      
+      ticks.push(
+        <g key={`bar-tick-${i}`}>
+          <line
+            x1={tickStart.x}
+            y1={tickStart.y}
+            x2={tickEnd.x}
+            y2={tickEnd.y}
+            stroke="#00ffff"
+            strokeWidth="1"
+            opacity="0.8"
+            style={{ filter: 'drop-shadow(0 0 2px #00ffff)' }}
+          />
+          <text
+            x={labelPos.x}
+            y={labelPos.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#00ffff"
+            fontSize="9"
+            fontWeight="500"
+            style={{ filter: 'drop-shadow(0 0 2px #00ffff)' }}
+          >
+            {displayBar}
+          </text>
+        </g>
+      );
+    });
+    
+    return ticks;
+  };
 
   // If no valid data, show empty state
   if (!hasValidData) {
@@ -200,15 +268,15 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             <Gauge size={16} />
             <span>{sensor.type}</span>
           </h3>
-          <p className="text-xs text-cosmic-text-muted">{sensor_type.unit}</p>
+          <p className="text-xs text-cosmic-text-muted">PSI / Bar</p>
         </div>
 
         {/* Empty State */}
         <div className="h-64 w-full flex flex-col items-center justify-center text-center border-2 border-dashed border-space-border rounded-lg">
           <Activity size={32} className="text-cosmic-text-muted mb-2 opacity-50" />
-          <h4 className="text-sm font-medium text-cosmic-text mb-1">Waiting for Sensor Data</h4>
+          <h4 className="text-sm font-medium text-cosmic-text mb-1">Waiting for Pressure Data</h4>
           <p className="text-xs text-cosmic-text-muted mb-3 max-w-32">
-            Sensor readings will appear here once data is received
+            Pressure readings will appear here once sensor data is received
           </p>
           
           <div className="flex items-center space-x-1 text-xs text-cosmic-text-muted">
@@ -224,9 +292,9 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             <div className="text-xs text-cosmic-text-muted">
               <p className="font-medium text-cosmic-text mb-1">Check:</p>
               <ul className="space-y-0.5 list-disc list-inside ml-1">
-                <li>Device connection status</li>
-                <li>Sensor calibration</li>
-                <li>Power supply status</li>
+                <li>Pressure sensor calibration</li>
+                <li>Pressure line connections</li>
+                <li>System pressure leaks</li>
               </ul>
             </div>
           </div>
@@ -246,12 +314,12 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
           <span>{sensor.type}</span>
         </h3>
         <div className="flex items-center justify-center space-x-2">
-          <p className="text-xs text-cosmic-text-muted">{sensor_type.unit}</p>
+          <p className="text-xs text-cosmic-text-muted">PSI / Bar</p>
           <Wifi size={12} className="text-green-400" />
         </div>
       </div>
 
-      {/* Generic Gauge SVG */}
+      {/* Pressure Gauge SVG */}
       <div className="flex justify-center">
         <svg width={size} height={size * 0.85} viewBox={`0 0 ${size} ${size * 0.9}`} className="overflow-visible">
           {/* Outer chrome border - neon green */}
@@ -312,7 +380,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             </filter>
           </defs>
           
-          {/* Generic zone backgrounds - seamless and enhanced */}
+          {/* Pressure zone backgrounds - seamless and enhanced */}
           {zones.map((zone, index) => {
             const zoneStart = startAngle + ((zone.min - sensor_type.min_value) / valueRange) * totalAngle;
             const zoneEnd = startAngle + ((zone.max - sensor_type.min_value) / valueRange) * totalAngle;
@@ -331,10 +399,13 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             );
           })}
           
-          {/* Generic tick marks and labels */}
-          {generateGenericTicks()}
+          {/* PSI tick marks and labels (outer scale - green) */}
+          {generatePressureTicks()}
           
-          {/* Scale unit label - cosmic neon */}
+          {/* Bar tick marks and labels (inner scale - cyan) */}
+          {generateBarTicks()}
+          
+          {/* Scale unit labels - cosmic neon */}
           <text
             x={center}
             y={center + 55}
@@ -344,31 +415,42 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #00ffff)' }}
           >
-            {sensor_type.unit}
+            PSI
           </text>
-          
-          {/* Range condition labels */}
           <text
-            x={center - 50}
+            x={center}
             y={center + 70}
             textAnchor="middle"
+            fill="#00ff41"
+            fontSize="10"
+            fontWeight="600"
+            style={{ filter: 'drop-shadow(0 0 3px #00ff41)' }}
+          >
+            Bar
+          </text>
+          
+          {/* Pressure condition labels */}
+          <text
+            x={center - 50}
+            y={center + 85}
+            textAnchor="middle"
             fill="#ff0040"
-            fontSize="9"
+            fontSize="8"
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #ff0040)' }}
           >
-            MIN
+            VACUUM
           </text>
           <text
             x={center + 50}
-            y={center + 70}
+            y={center + 85}
             textAnchor="middle"
             fill="#aa00ff"
-            fontSize="9"
+            fontSize="8"
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #aa00ff)' }}
           >
-            MAX
+            HIGH
           </text>
           
           {/* Needle shadow */}
@@ -430,14 +512,14 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
                background: 'linear-gradient(145deg, #1a1a1a, #2d2d2d)',
                boxShadow: 'inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.1)'
              }}>
-          {animatedValue >= 1000 ? `${(animatedValue / 1000).toFixed(2)}k` : animatedValue.toFixed(2)}
+          {animatedValue >= 1000 ? `${(animatedValue / 1000).toFixed(2)}k` : animatedValue.toFixed(1)}
         </div>
       </div>
 
-      {/* Sensor value and unit */}
+      {/* Pressure unit conversions */}
       <div className="text-center mt-2">
         <div className="text-xs text-cosmic-text-muted">
-          {animatedValue.toFixed(2)} {sensor_type.unit} - {zoneInfo.status}
+          {animatedValue.toFixed(1)} PSI = {psiToBar(animatedValue).toFixed(2)} Bar
         </div>
       </div>
 
@@ -458,4 +540,4 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
   );
 };
 
-export { GaugeChart };
+export { PressureGaugeChart };

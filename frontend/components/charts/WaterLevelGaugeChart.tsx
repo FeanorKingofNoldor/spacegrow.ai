@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, AlertTriangle, Wifi, WifiOff, Gauge } from 'lucide-react';
+import { Activity, AlertTriangle, Wifi, WifiOff, Waves } from 'lucide-react';
 import { DeviceSensor } from '@/types/device';
 
-interface GaugeChartProps {
+interface WaterLevelGaugeChartProps {
   sensor: DeviceSensor;
   value: number | null | undefined;
   className?: string;
 }
 
-// Generic Gauge Component (Fallback)
-const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }) => {
+// Water Level Gauge Component
+const WaterLevelGaugeChart: React.FC<WaterLevelGaugeChartProps> = ({ sensor, value, className = '' }) => {
   const [animatedValue, setAnimatedValue] = useState(0);
   const { sensor_type } = sensor;
   
@@ -47,6 +47,10 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     };
   };
   
+  // Convert cm to inches and percentage
+  const cmToInches = (cm: number): number => cm * 0.393701;
+  const cmToPercentage = (cm: number): number => (cm / sensor_type.max_value) * 100;
+  
   // Create arc path for SVG
   const createArc = (startAngle: number, endAngle: number, innerRadius: number, outerRadius: number): string => {
     const start = getPoint(startAngle, outerRadius);
@@ -65,7 +69,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     ].join(" ");
   };
   
-  // Define generic zones with cosmic color scheme
+  // Define water level zones with fluid-specific color scheme
   const zones = [
     {
       min: sensor_type.error_low_min,
@@ -77,25 +81,25 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
       min: sensor_type.warning_low_min,
       max: sensor_type.warning_low_max,
       color: '#ffaa00',
-      label: 'Warning Low'
+      label: 'Low Level'
     },
     {
       min: sensor_type.normal_min,
       max: sensor_type.normal_max,
       color: '#00ff80',
-      label: 'Normal'
+      label: 'Normal Level'
     },
     {
       min: sensor_type.warning_high_min,
       max: sensor_type.warning_high_max,
       color: '#00aaff',
-      label: 'Warning High'
+      label: 'High Level'
     },
     {
       min: sensor_type.error_high_min,
       max: sensor_type.error_high_max,
       color: '#aa00ff',
-      label: 'Critical High'
+      label: 'Overflow Risk'
     }
   ];
   
@@ -116,7 +120,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
   
   // Get current zone status
   const getCurrentZoneStatus = (val: number): string => {
-    if (val >= sensor_type.normal_min && val <= sensor_type.normal_max) return 'NORMAL';
+    if (val >= sensor_type.normal_min && val <= sensor_type.normal_max) return 'OPTIMAL';
     if ((val >= sensor_type.warning_low_min && val <= sensor_type.warning_low_max) || 
         (val >= sensor_type.warning_high_min && val <= sensor_type.warning_high_max)) return 'WARNING';
     return 'CRITICAL';
@@ -135,32 +139,28 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     return { status: 'Unknown', color: '#6b7280' };
   };
   
-  // Generate tick marks for generic scale
-  const generateGenericTicks = (): React.ReactElement[] => {
+  // Generate tick marks for water level scale (cm)
+  const generateWaterLevelTicks = (): React.ReactElement[] => {
     const ticks: React.ReactElement[] = [];
     
     // Generate major ticks based on sensor range
     const maxValue = sensor_type.max_value;
-    const minValue = sensor_type.min_value;
+    const tickInterval = Math.ceil(maxValue / 10); // Approximately 10 major ticks
     const majorTickValues: number[] = [];
     
-    // Create 6 evenly spaced ticks
-    for (let i = 0; i <= 5; i++) {
-      const tickValue = minValue + ((maxValue - minValue) * i) / 5;
-      majorTickValues.push(Math.round(tickValue * 10) / 10); // Round to 1 decimal
+    for (let i = 0; i <= 10; i++) {
+      const tickValue = Math.round((i * maxValue) / 10);
+      majorTickValues.push(tickValue);
     }
     
     majorTickValues.forEach((tickValue: number, i: number) => {
-      const tickAngle = startAngle + ((tickValue - minValue) / (maxValue - minValue)) * totalAngle;
+      const tickAngle = startAngle + (tickValue / sensor_type.max_value) * totalAngle;
       const tickStart = getPoint(tickAngle, radius - strokeWidth / 2 - 15);
       const tickEnd = getPoint(tickAngle, radius - strokeWidth / 2 - 5);
       const labelPos = getPoint(tickAngle, radius - strokeWidth / 2 - 25);
       
-      // Format display value
-      const displayValue = tickValue >= 1000 ? `${(tickValue / 1000).toFixed(1)}k` : tickValue.toString();
-      
       ticks.push(
-        <g key={`generic-major-tick-${i}`}>
+        <g key={`water-major-tick-${i}`}>
           <line
             x1={tickStart.x}
             y1={tickStart.y}
@@ -177,11 +177,56 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             textAnchor="middle"
             dominantBaseline="middle"
             fill="#00ff41"
-            fontSize="10"
+            fontSize="11"
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #00ff41)' }}
           >
-            {displayValue}
+            {tickValue}
+          </text>
+        </g>
+      );
+    });
+    
+    return ticks;
+  };
+  
+  // Generate percentage tick marks (inner scale)
+  const generatePercentageTicks = (): React.ReactElement[] => {
+    const ticks: React.ReactElement[] = [];
+    
+    // Generate percentage ticks at key intervals (0%, 25%, 50%, 75%, 100%)
+    const percentageIntervals = [0, 25, 50, 75, 100];
+    
+    percentageIntervals.forEach((percentage: number, i: number) => {
+      const cmValue = (percentage / 100) * sensor_type.max_value;
+      const tickAngle = startAngle + (cmValue / sensor_type.max_value) * totalAngle;
+      const tickStart = getPoint(tickAngle, radius - strokeWidth / 2 - 45);
+      const tickEnd = getPoint(tickAngle, radius - strokeWidth / 2 - 35);
+      const labelPos = getPoint(tickAngle, radius - strokeWidth / 2 - 55);
+      
+      ticks.push(
+        <g key={`percentage-tick-${i}`}>
+          <line
+            x1={tickStart.x}
+            y1={tickStart.y}
+            x2={tickEnd.x}
+            y2={tickEnd.y}
+            stroke="#00ffff"
+            strokeWidth="1"
+            opacity="0.8"
+            style={{ filter: 'drop-shadow(0 0 2px #00ffff)' }}
+          />
+          <text
+            x={labelPos.x}
+            y={labelPos.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#00ffff"
+            fontSize="9"
+            fontWeight="500"
+            style={{ filter: 'drop-shadow(0 0 2px #00ffff)' }}
+          >
+            {percentage}%
           </text>
         </g>
       );
@@ -197,18 +242,18 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
         {/* Sensor Name */}
         <div className="text-center mb-2">
           <h3 className="text-sm font-semibold text-cosmic-text flex items-center justify-center space-x-2">
-            <Gauge size={16} />
+            <Waves size={16} />
             <span>{sensor.type}</span>
           </h3>
-          <p className="text-xs text-cosmic-text-muted">{sensor_type.unit}</p>
+          <p className="text-xs text-cosmic-text-muted">cm / inches / %</p>
         </div>
 
         {/* Empty State */}
         <div className="h-64 w-full flex flex-col items-center justify-center text-center border-2 border-dashed border-space-border rounded-lg">
           <Activity size={32} className="text-cosmic-text-muted mb-2 opacity-50" />
-          <h4 className="text-sm font-medium text-cosmic-text mb-1">Waiting for Sensor Data</h4>
+          <h4 className="text-sm font-medium text-cosmic-text mb-1">Waiting for Water Level Data</h4>
           <p className="text-xs text-cosmic-text-muted mb-3 max-w-32">
-            Sensor readings will appear here once data is received
+            Water level readings will appear here once sensor data is received
           </p>
           
           <div className="flex items-center space-x-1 text-xs text-cosmic-text-muted">
@@ -224,9 +269,9 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             <div className="text-xs text-cosmic-text-muted">
               <p className="font-medium text-cosmic-text mb-1">Check:</p>
               <ul className="space-y-0.5 list-disc list-inside ml-1">
-                <li>Device connection status</li>
-                <li>Sensor calibration</li>
-                <li>Power supply status</li>
+                <li>Water level sensor positioning</li>
+                <li>Sensor calibration and zero point</li>
+                <li>Reservoir or tank conditions</li>
               </ul>
             </div>
           </div>
@@ -242,16 +287,16 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
       {/* Sensor Name */}
       <div className="text-center mb-2">
         <h3 className="text-sm font-semibold text-cosmic-text flex items-center justify-center space-x-2">
-          <Gauge size={16} />
+          <Waves size={16} />
           <span>{sensor.type}</span>
         </h3>
         <div className="flex items-center justify-center space-x-2">
-          <p className="text-xs text-cosmic-text-muted">{sensor_type.unit}</p>
+          <p className="text-xs text-cosmic-text-muted">cm / % Full</p>
           <Wifi size={12} className="text-green-400" />
         </div>
       </div>
 
-      {/* Generic Gauge SVG */}
+      {/* Water Level Gauge SVG */}
       <div className="flex justify-center">
         <svg width={size} height={size * 0.85} viewBox={`0 0 ${size} ${size * 0.9}`} className="overflow-visible">
           {/* Outer chrome border - neon green */}
@@ -312,7 +357,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             </filter>
           </defs>
           
-          {/* Generic zone backgrounds - seamless and enhanced */}
+          {/* Water level zone backgrounds - seamless and enhanced */}
           {zones.map((zone, index) => {
             const zoneStart = startAngle + ((zone.min - sensor_type.min_value) / valueRange) * totalAngle;
             const zoneEnd = startAngle + ((zone.max - sensor_type.min_value) / valueRange) * totalAngle;
@@ -331,10 +376,13 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             );
           })}
           
-          {/* Generic tick marks and labels */}
-          {generateGenericTicks()}
+          {/* Water level tick marks and labels (outer scale - green) */}
+          {generateWaterLevelTicks()}
           
-          {/* Scale unit label - cosmic neon */}
+          {/* Percentage tick marks and labels (inner scale - cyan) */}
+          {generatePercentageTicks()}
+          
+          {/* Scale unit labels - cosmic neon */}
           <text
             x={center}
             y={center + 55}
@@ -344,31 +392,42 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #00ffff)' }}
           >
-            {sensor_type.unit}
+            cm
           </text>
-          
-          {/* Range condition labels */}
           <text
-            x={center - 50}
+            x={center}
             y={center + 70}
             textAnchor="middle"
+            fill="#00ff41"
+            fontSize="10"
+            fontWeight="600"
+            style={{ filter: 'drop-shadow(0 0 3px #00ff41)' }}
+          >
+            %
+          </text>
+          
+          {/* Water level condition labels */}
+          <text
+            x={center - 50}
+            y={center + 85}
+            textAnchor="middle"
             fill="#ff0040"
-            fontSize="9"
+            fontSize="8"
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #ff0040)' }}
           >
-            MIN
+            LOW
           </text>
           <text
             x={center + 50}
-            y={center + 70}
+            y={center + 85}
             textAnchor="middle"
             fill="#aa00ff"
-            fontSize="9"
+            fontSize="8"
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #aa00ff)' }}
           >
-            MAX
+            HIGH
           </text>
           
           {/* Needle shadow */}
@@ -430,14 +489,14 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
                background: 'linear-gradient(145deg, #1a1a1a, #2d2d2d)',
                boxShadow: 'inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.1)'
              }}>
-          {animatedValue >= 1000 ? `${(animatedValue / 1000).toFixed(2)}k` : animatedValue.toFixed(2)}
+          {animatedValue.toFixed(1)} cm
         </div>
       </div>
 
-      {/* Sensor value and unit */}
+      {/* Water level conversions */}
       <div className="text-center mt-2">
         <div className="text-xs text-cosmic-text-muted">
-          {animatedValue.toFixed(2)} {sensor_type.unit} - {zoneInfo.status}
+          {animatedValue.toFixed(1)} cm = {cmToInches(animatedValue).toFixed(2)}" = {cmToPercentage(animatedValue).toFixed(1)}%
         </div>
       </div>
 
@@ -458,4 +517,4 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
   );
 };
 
-export { GaugeChart };
+export { WaterLevelGaugeChart};

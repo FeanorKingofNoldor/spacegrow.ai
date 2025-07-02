@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, AlertTriangle, Wifi, WifiOff, Gauge } from 'lucide-react';
+import { Activity, AlertTriangle, Wifi, WifiOff, Beaker } from 'lucide-react';
 import { DeviceSensor } from '@/types/device';
 
-interface GaugeChartProps {
+interface PHGaugeChartProps {
   sensor: DeviceSensor;
   value: number | null | undefined;
   className?: string;
 }
 
-// Generic Gauge Component (Fallback)
-const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }) => {
+// pH Gauge Component
+const PHGaugeChart: React.FC<PHGaugeChartProps> = ({ sensor, value, className = '' }) => {
   const [animatedValue, setAnimatedValue] = useState(0);
   const { sensor_type } = sensor;
   
@@ -65,37 +65,37 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     ].join(" ");
   };
   
-  // Define generic zones with cosmic color scheme
+  // Define pH zones with neon acid-base color scheme
   const zones = [
     {
       min: sensor_type.error_low_min,
       max: sensor_type.error_low_max,
       color: '#ff0040',
-      label: 'Critical Low'
+      label: 'Very Acidic'
     },
     {
       min: sensor_type.warning_low_min,
       max: sensor_type.warning_low_max,
       color: '#ffaa00',
-      label: 'Warning Low'
+      label: 'Acidic'
     },
     {
       min: sensor_type.normal_min,
       max: sensor_type.normal_max,
       color: '#00ff80',
-      label: 'Normal'
+      label: 'Optimal'
     },
     {
       min: sensor_type.warning_high_min,
       max: sensor_type.warning_high_max,
       color: '#00aaff',
-      label: 'Warning High'
+      label: 'Alkaline'
     },
     {
       min: sensor_type.error_high_min,
       max: sensor_type.error_high_max,
       color: '#aa00ff',
-      label: 'Critical High'
+      label: 'Very Alkaline'
     }
   ];
   
@@ -116,7 +116,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
   
   // Get current zone status
   const getCurrentZoneStatus = (val: number): string => {
-    if (val >= sensor_type.normal_min && val <= sensor_type.normal_max) return 'NORMAL';
+    if (val >= sensor_type.normal_min && val <= sensor_type.normal_max) return 'OPTIMAL';
     if ((val >= sensor_type.warning_low_min && val <= sensor_type.warning_low_max) || 
         (val >= sensor_type.warning_high_min && val <= sensor_type.warning_high_max)) return 'WARNING';
     return 'CRITICAL';
@@ -135,32 +135,21 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
     return { status: 'Unknown', color: '#6b7280' };
   };
   
-  // Generate tick marks for generic scale
-  const generateGenericTicks = (): React.ReactElement[] => {
+  // Generate tick marks for pH scale (0-14)
+  const generatePHTicks = (): React.ReactElement[] => {
     const ticks: React.ReactElement[] = [];
     
-    // Generate major ticks based on sensor range
-    const maxValue = sensor_type.max_value;
-    const minValue = sensor_type.min_value;
-    const majorTickValues: number[] = [];
+    // Major ticks every 2 pH units (0, 2, 4, 6, 8, 10, 12, 14)
+    const majorTicks = [0, 2, 4, 6, 8, 10, 12, 14];
     
-    // Create 6 evenly spaced ticks
-    for (let i = 0; i <= 5; i++) {
-      const tickValue = minValue + ((maxValue - minValue) * i) / 5;
-      majorTickValues.push(Math.round(tickValue * 10) / 10); // Round to 1 decimal
-    }
-    
-    majorTickValues.forEach((tickValue: number, i: number) => {
-      const tickAngle = startAngle + ((tickValue - minValue) / (maxValue - minValue)) * totalAngle;
+    majorTicks.forEach((tickValue: number, i: number) => {
+      const tickAngle = startAngle + (tickValue / sensor_type.max_value) * totalAngle;
       const tickStart = getPoint(tickAngle, radius - strokeWidth / 2 - 15);
       const tickEnd = getPoint(tickAngle, radius - strokeWidth / 2 - 5);
       const labelPos = getPoint(tickAngle, radius - strokeWidth / 2 - 25);
       
-      // Format display value
-      const displayValue = tickValue >= 1000 ? `${(tickValue / 1000).toFixed(1)}k` : tickValue.toString();
-      
       ticks.push(
-        <g key={`generic-major-tick-${i}`}>
+        <g key={`ph-major-tick-${i}`}>
           <line
             x1={tickStart.x}
             y1={tickStart.y}
@@ -177,11 +166,53 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             textAnchor="middle"
             dominantBaseline="middle"
             fill="#00ff41"
-            fontSize="10"
+            fontSize="11"
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #00ff41)' }}
           >
-            {displayValue}
+            {tickValue}
+          </text>
+        </g>
+      );
+    });
+    
+    return ticks;
+  };
+  
+  // Generate minor tick marks for pH scale (1, 3, 5, 7, 9, 11, 13)
+  const generateMinorPHTicks = (): React.ReactElement[] => {
+    const ticks: React.ReactElement[] = [];
+    const minorTicks = [1, 3, 5, 7, 9, 11, 13];
+    
+    minorTicks.forEach((tickValue: number, i: number) => {
+      const tickAngle = startAngle + (tickValue / sensor_type.max_value) * totalAngle;
+      const tickStart = getPoint(tickAngle, radius - strokeWidth / 2 - 45);
+      const tickEnd = getPoint(tickAngle, radius - strokeWidth / 2 - 35);
+      const labelPos = getPoint(tickAngle, radius - strokeWidth / 2 - 55);
+      
+      ticks.push(
+        <g key={`ph-minor-tick-${i}`}>
+          <line
+            x1={tickStart.x}
+            y1={tickStart.y}
+            x2={tickEnd.x}
+            y2={tickEnd.y}
+            stroke="#00ffff"
+            strokeWidth="1"
+            opacity="0.8"
+            style={{ filter: 'drop-shadow(0 0 2px #00ffff)' }}
+          />
+          <text
+            x={labelPos.x}
+            y={labelPos.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#00ffff"
+            fontSize="9"
+            fontWeight="500"
+            style={{ filter: 'drop-shadow(0 0 2px #00ffff)' }}
+          >
+            {tickValue}
           </text>
         </g>
       );
@@ -197,18 +228,18 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
         {/* Sensor Name */}
         <div className="text-center mb-2">
           <h3 className="text-sm font-semibold text-cosmic-text flex items-center justify-center space-x-2">
-            <Gauge size={16} />
+            <Beaker size={16} />
             <span>{sensor.type}</span>
           </h3>
-          <p className="text-xs text-cosmic-text-muted">{sensor_type.unit}</p>
+          <p className="text-xs text-cosmic-text-muted">pH Scale (0-14)</p>
         </div>
 
         {/* Empty State */}
         <div className="h-64 w-full flex flex-col items-center justify-center text-center border-2 border-dashed border-space-border rounded-lg">
           <Activity size={32} className="text-cosmic-text-muted mb-2 opacity-50" />
-          <h4 className="text-sm font-medium text-cosmic-text mb-1">Waiting for Sensor Data</h4>
+          <h4 className="text-sm font-medium text-cosmic-text mb-1">Waiting for pH Data</h4>
           <p className="text-xs text-cosmic-text-muted mb-3 max-w-32">
-            Sensor readings will appear here once data is received
+            pH readings will appear here once sensor data is received
           </p>
           
           <div className="flex items-center space-x-1 text-xs text-cosmic-text-muted">
@@ -224,9 +255,9 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             <div className="text-xs text-cosmic-text-muted">
               <p className="font-medium text-cosmic-text mb-1">Check:</p>
               <ul className="space-y-0.5 list-disc list-inside ml-1">
-                <li>Device connection status</li>
-                <li>Sensor calibration</li>
-                <li>Power supply status</li>
+                <li>pH probe calibration</li>
+                <li>Probe cleaning and storage</li>
+                <li>Buffer solution freshness</li>
               </ul>
             </div>
           </div>
@@ -242,16 +273,16 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
       {/* Sensor Name */}
       <div className="text-center mb-2">
         <h3 className="text-sm font-semibold text-cosmic-text flex items-center justify-center space-x-2">
-          <Gauge size={16} />
+          <Beaker size={16} />
           <span>{sensor.type}</span>
         </h3>
         <div className="flex items-center justify-center space-x-2">
-          <p className="text-xs text-cosmic-text-muted">{sensor_type.unit}</p>
+          <p className="text-xs text-cosmic-text-muted">pH Scale</p>
           <Wifi size={12} className="text-green-400" />
         </div>
       </div>
 
-      {/* Generic Gauge SVG */}
+      {/* pH Gauge SVG */}
       <div className="flex justify-center">
         <svg width={size} height={size * 0.85} viewBox={`0 0 ${size} ${size * 0.9}`} className="overflow-visible">
           {/* Outer chrome border - neon green */}
@@ -312,7 +343,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             </filter>
           </defs>
           
-          {/* Generic zone backgrounds - seamless and enhanced */}
+          {/* pH zone backgrounds - seamless and enhanced */}
           {zones.map((zone, index) => {
             const zoneStart = startAngle + ((zone.min - sensor_type.min_value) / valueRange) * totalAngle;
             const zoneEnd = startAngle + ((zone.max - sensor_type.min_value) / valueRange) * totalAngle;
@@ -331,10 +362,13 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             );
           })}
           
-          {/* Generic tick marks and labels */}
-          {generateGenericTicks()}
+          {/* Major pH tick marks and labels (outer scale - green) */}
+          {generatePHTicks()}
           
-          {/* Scale unit label - cosmic neon */}
+          {/* Minor pH tick marks and labels (inner scale - cyan) */}
+          {generateMinorPHTicks()}
+          
+          {/* Scale unit labels - cosmic neon */}
           <text
             x={center}
             y={center + 55}
@@ -344,10 +378,10 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #00ffff)' }}
           >
-            {sensor_type.unit}
+            pH
           </text>
           
-          {/* Range condition labels */}
+          {/* Acid/Base labels */}
           <text
             x={center - 50}
             y={center + 70}
@@ -357,7 +391,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #ff0040)' }}
           >
-            MIN
+            ACID
           </text>
           <text
             x={center + 50}
@@ -368,7 +402,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
             fontWeight="600"
             style={{ filter: 'drop-shadow(0 0 3px #aa00ff)' }}
           >
-            MAX
+            BASE
           </text>
           
           {/* Needle shadow */}
@@ -430,14 +464,14 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
                background: 'linear-gradient(145deg, #1a1a1a, #2d2d2d)',
                boxShadow: 'inset 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(255,255,255,0.1)'
              }}>
-          {animatedValue >= 1000 ? `${(animatedValue / 1000).toFixed(2)}k` : animatedValue.toFixed(2)}
+          {animatedValue.toFixed(2)}
         </div>
       </div>
 
-      {/* Sensor value and unit */}
+      {/* pH Classification */}
       <div className="text-center mt-2">
         <div className="text-xs text-cosmic-text-muted">
-          {animatedValue.toFixed(2)} {sensor_type.unit} - {zoneInfo.status}
+          pH {animatedValue.toFixed(2)} - {zoneInfo.status}
         </div>
       </div>
 
@@ -458,4 +492,4 @@ const GaugeChart: React.FC<GaugeChartProps> = ({ sensor, value, className = '' }
   );
 };
 
-export { GaugeChart };
+export { PHGaugeChart };

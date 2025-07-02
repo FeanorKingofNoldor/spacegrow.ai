@@ -1,22 +1,30 @@
-// components/charts/SensorChart.tsx - FIXED to properly handle empty states
+// components/charts/SensorChart.tsx - CLEANED with proper routing
 'use client';
 
 import { useState } from 'react';
 import { DeviceSensor } from '@/types/device';
 import { ChartMode } from '@/types/chart';
-import { GaugeChart } from './GaugeChart';
+import { GaugeChart } from './GaugeChart'; // Fallback generic gauge
 import { TimeSeriesChart } from './TimeSeriesChart';
 import { useChartData } from '@/hooks/useChartData';
 
+// Import sensor-specific gauge components
+import { TempGaugeChart } from './TempGaugeChart';
+import { PHGaugeChart } from './PHGaugeChart';
+import { PressureGaugeChart } from './PressureGaugeChart';
+import { ECGaugeChart } from './ECGaugeChart';
+import { WaterLevelGaugeChart } from './WaterLevelGaugeChart';
+import { HumidityGaugeChart } from './HumidityGaugeChart';
+
 interface SensorChartProps {
   sensor: DeviceSensor;
-  liveValue?: number;
+  liveValue?: number | null;
   className?: string;
 }
 
 export function SensorChart({ 
   sensor, 
-  liveValue, // Remove the default fallback to 0 - let charts handle null/undefined
+  liveValue,
   className = '' 
 }: SensorChartProps) {
   const [mode, setMode] = useState<ChartMode>('live');
@@ -25,7 +33,7 @@ export function SensorChart({
   const { data: historicalData, loading } = useChartData({
     sensorId: sensor.id,
     mode,
-    autoRefresh: mode !== 'live', // Auto-refresh historical data
+    autoRefresh: mode !== 'live',
     refreshInterval: 60000 // 1 minute
   });
 
@@ -37,8 +45,85 @@ export function SensorChart({
   ];
 
   // Determine the actual value to pass to GaugeChart
-  // Priority: 1) liveValue prop, 2) sensor.last_reading, 3) null (for empty state)
-  const gaugeValue = liveValue !== undefined ? liveValue : sensor.last_reading;
+  const gaugeValue: number | null | undefined = liveValue !== undefined ? liveValue : sensor.last_reading;
+
+  // Smart sensor type detection and component selection
+  const getSensorGaugeComponent = () => {
+    const sensorType = sensor.type?.toLowerCase() || '';
+    const sensorTypeName = sensor.sensor_type?.name?.toLowerCase() || '';
+    
+    // Check both sensor.type and sensor.sensor_type.name for flexibility
+    const typeIdentifiers = [sensorType, sensorTypeName];
+    
+    // Temperature sensors
+    if (typeIdentifiers.some(id => 
+      id.includes('temperature') || 
+      id.includes('temp')
+    )) {
+      console.log('🌡️ Temperature sensor detected - using TempGaugeChart');
+      return TempGaugeChart;
+    }
+    
+    // pH sensors
+    if (typeIdentifiers.some(id => 
+      id.includes('ph') || 
+      id.includes('acid') || 
+      id.includes('alkaline')
+    )) {
+      console.log('🧪 pH sensor detected - using PHGaugeChart');
+      return PHGaugeChart;
+    }
+    
+    // Pressure sensors
+    if (typeIdentifiers.some(id => 
+      id.includes('pressure') || 
+      id.includes('psi') || 
+      id.includes('bar')
+    )) {
+      console.log('💨 Pressure sensor detected - using PressureGaugeChart (fallback to GaugeChart for now)');
+      return PressureGaugeChart;
+      return GaugeChart; // Fallback until PressureGaugeChart is created
+    }
+    
+    // EC/Conductivity sensors
+    if (typeIdentifiers.some(id => 
+      id.includes('ec') || 
+      id.includes('electrical') || 
+      id.includes('conductivity') || 
+      id.includes('tds')
+    )) {
+      console.log('⚡ EC sensor detected - using ECGaugeChart (fallback to GaugeChart for now)');
+      return ECGaugeChart;
+      return GaugeChart; // Fallback until ECGaugeChart is created
+    }
+    
+    if (typeIdentifiers.some(id => 
+      id.includes('humidity') || 
+      id.includes('moisture') ||
+      id.includes('rh')
+    )) {
+      console.log('💧 Humidity sensor detected - using HumidityGaugeChart');
+      return HumidityGaugeChart;
+    }
+
+	    // Water Level sensors
+    if (typeIdentifiers.some(id => 
+      id.includes('water') || 
+      id.includes('level') || 
+      id.includes('depth') || 
+      id.includes('height')
+    )) {
+      console.log('🌊 Water Level sensor detected - using WaterLevelGaugeChart');
+      return WaterLevelGaugeChart;
+    }
+    
+    // Default fallback for unknown sensor types
+    console.log(`❓ Unknown sensor type: ${sensorType}/${sensorTypeName} - using generic gauge`);
+    return GaugeChart;
+  };
+
+  // Get the appropriate gauge component
+  const GaugeComponent = getSensorGaugeComponent();
 
   return (
     <div className={`relative ${className}`}>
@@ -59,15 +144,15 @@ export function SensorChart({
 
       {/* Chart Display */}
       {mode === 'live' ? (
-        <GaugeChart 
+        <GaugeComponent 
           sensor={sensor} 
-          value={gaugeValue} // Pass null/undefined if no data - let GaugeChart show empty state
+          value={gaugeValue}
           className="h-full"
         />
       ) : (
         <TimeSeriesChart 
           sensor={sensor} 
-          data={historicalData || []} // Ensure we always pass an array
+          data={historicalData || []}
           loading={loading}
           className="h-full"
         />

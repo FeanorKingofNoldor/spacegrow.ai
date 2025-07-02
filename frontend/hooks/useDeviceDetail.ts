@@ -1,4 +1,4 @@
-// hooks/useDeviceDetail.ts - FIXED
+// hooks/useDeviceDetail.ts - FIXED to include full device data structure
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -41,9 +41,20 @@ export function useDeviceDetail(deviceId: string): UseDeviceDetailReturn {
 
       const result: DeviceDetailResponse = await response.json();
       
-      // FIX: Extract just the device from the nested data structure
-      setDevice(result.data.device);
+      // FIX: Merge device data with sensor_groups and latest_readings
+      const enrichedDevice: Device = {
+        ...result.data.device,
+        sensor_groups: result.data.sensor_groups,
+        latest_readings: result.data.latest_readings,
+        device_status: result.data.device_status,
+        presets: result.data.presets,
+        profiles: result.data.profiles
+      };
+      
+      setDevice(enrichedDevice);
       console.log('📱 Device loaded:', result.data.device.name);
+      console.log('🔧 Sensor groups:', result.data.sensor_groups);
+      console.log('📊 Latest readings:', result.data.latest_readings);
 
     } catch (err) {
       console.error('❌ Failed to fetch device:', err);
