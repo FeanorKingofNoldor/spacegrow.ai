@@ -3,6 +3,9 @@ Rails.application.routes.draw do
   # Health check endpoint
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # ✅ TRY DIFFERENT MOUNT SYNTAX: Mount ActionCable for WebSocket connections
+  mount ActionCable.server, at: '/cable'
+
   # API routes
   namespace :api do
     namespace :v1 do
@@ -66,7 +69,7 @@ Rails.application.routes.draw do
         # Dashboard
         get 'dashboard', to: 'dashboard#index'
         get 'dashboard/devices', to: 'dashboard#devices'
-        get 'dashboard/device/:id', to: 'dashboard#device'
+        get 'dashboard/device/:id', to:'dashboard#device'
         
         # Device management
         resources :devices, only: [:index, :show, :create, :update, :destroy] do
@@ -90,9 +93,11 @@ Rails.application.routes.draw do
         end
         
         # Presets
-        resources :presets, only: [:create, :show] do
+        resources :presets, only: [:create, :show, :update, :destroy] do
           collection do
+            get :by_device_type
             get :user_by_device_type
+            post :validate
           end
         end
         

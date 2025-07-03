@@ -1,4 +1,4 @@
-// types/device.ts - FIXED to match API response
+// types/device.ts
 export interface SensorType {
   id: number;
   name: string;
@@ -25,50 +25,103 @@ export interface DeviceSensor {
   sensor_type: SensorType;
 }
 
+export interface SensorReading {
+  id?: string;
+  value: number;
+  timestamp: string;
+  zone: 'normal' | 'warning_low' | 'warning_high' | 'error_low' | 'error_high' | 'error_out_of_range';
+  is_valid: boolean;
+}
+
+export interface DeviceStatus {
+  overall_status: string;
+  alert_level: string;
+  last_seen: string | null;
+  connection_status: 'online' | 'offline';
+}
+
+export interface Preset {
+  id: string;
+  name: string;
+  settings: Record<string, any>;
+  is_user_defined: boolean;
+  user_id?: string;
+  device_id?: string;
+}
+
 export interface Device {
   id: number;
   name: string;
-  status: 'pending' | 'active' | 'disabled';
+  status: 'active' | 'pending' | 'disabled';
   alert_status: 'normal' | 'warning' | 'error' | 'no_data';
   device_type: string;
   last_connection: string | null;
   created_at: string;
   updated_at: string;
-  sensors: DeviceSensor[];
+  sensors?: DeviceSensor[];
   
-  // Add the missing properties from API response:
+  // Optional properties from detailed API responses
   sensor_groups?: Record<string, DeviceSensor[]>;
-  latest_readings?: Record<string, number>;
-  device_status?: {
-    overall_status: string;
-    alert_level: string;
-    last_seen: string;
-    connection_status: string;
-  };
-  presets?: any[];
-  profiles?: any[];
+  latest_readings?: Record<string, number | SensorReading>;
+  device_status?: DeviceStatus;
+  presets?: Preset[];
+  profiles?: Preset[];
 }
 
-export interface SensorReading {
-  value: number;
-  timestamp: string;
-  is_valid: boolean;
-  zone: 'error_low' | 'warning_low' | 'normal' | 'warning_high' | 'error_high' | 'error_out_of_range';
+// Extended device interface for detailed views (backwards compatibility)
+export interface DeviceDetail extends Device {
+  sensors: DeviceSensor[];
+  latest_readings: Record<string, SensorReading>;
+  device_status: DeviceStatus;
+  presets: Preset[];
+  profiles: Preset[];
 }
 
+// API Response types
 export interface DeviceDetailResponse {
   status: 'success';
   data: {
     device: Device;
     sensor_groups: Record<string, DeviceSensor[]>;
     latest_readings: Record<string, number>;
-    device_status: {
-      overall_status: string;
-      alert_level: string;
-      last_seen: string;
-      connection_status: string;
-    };
-    presets: any[];
-    profiles: any[];
+    device_status: DeviceStatus;
+    presets: Preset[];
+    profiles: Preset[];
   };
 }
+
+// WebSocket message types for device updates
+export interface DeviceStatusUpdate {
+  device_id: string | number;
+  alert_status?: 'normal' | 'warning' | 'error' | 'no_data';
+  status?: 'active' | 'pending' | 'disabled';
+  last_connection?: string;
+  status_class?: string; // Pre-calculated CSS classes from backend
+}
+
+export interface SensorStatusUpdate {
+  device_id: string | number;
+  status: string;
+  alert_status: 'normal' | 'warning' | 'error' | 'no_data';
+  sensors: Array<{
+    sensor_id: string | number;
+    status: 'ok' | 'warning' | 'error' | 'no_data' | 'warning_high' | 'warning_low' | 'error_high' | 'error_low';
+  }>;
+}
+
+export interface DashboardUpdate {
+  devices?: DeviceStatusUpdate[];
+  stats?: {
+    total: number;
+    active: number;
+    warning: number;
+    error: number;
+  };
+}
+
+// Utility types for type safety
+export type AlertStatus = 'normal' | 'warning' | 'error' | 'no_data';
+export type DeviceConnectionStatus = 'active' | 'pending' | 'disabled';
+export type SensorStatus = 'ok' | 'warning' | 'error' | 'no_data' | 'warning_high' | 'warning_low' | 'error_high' | 'error_low';
+export type SensorZone = 'normal' | 'warning_low' | 'warning_high' | 'error_low' | 'error_high' | 'error_out_of_range';
+export type ConnectionStatus = 'online' | 'offline';

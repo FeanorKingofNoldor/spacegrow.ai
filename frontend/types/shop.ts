@@ -84,6 +84,7 @@ export interface ApiResponse<T = any> {
   error?: string; // Additional error field for consistency
 }
 
+// Legacy ProductsResponse (keeping for backward compatibility)
 export interface ProductsResponse {
   products: Product[];
   total: number;
@@ -91,6 +92,40 @@ export interface ProductsResponse {
   per_page?: number;
   categories: string[];
   filters: ShopFilters;
+}
+
+// ✅ NEW: API Response wrapper for shop endpoints
+export interface ShopApiResponse<T = any> {
+  status: 'success' | 'error';
+  data?: T;
+  message?: string;
+  errors?: string[];
+  error?: string;
+}
+
+// ✅ NEW: Specific API response for products
+export interface ProductsApiResponse extends ShopApiResponse<ProductsData> {
+  data: ProductsData;
+}
+
+// ✅ NEW: The actual products data structure
+export interface ProductsData {
+  products: Product[];
+  total?: number;
+  page?: number;
+  per_page?: number;
+  categories?: string[];
+  filters?: ShopFilters;
+}
+
+// ✅ NEW: Featured products API response
+export interface FeaturedProductsApiResponse extends ShopApiResponse<FeaturedProductsData> {
+  data: FeaturedProductsData;
+}
+
+// ✅ NEW: Featured products data structure
+export interface FeaturedProductsData {
+  products: Product[];
 }
 
 // Enhanced filter types with stock management
@@ -224,7 +259,7 @@ export interface StockMovement {
   created_at: string;
 }
 
-// Featured products response
+// Featured products response (legacy - keeping for backward compatibility)
 export interface FeaturedProductsResponse {
   products: Product[];
 }

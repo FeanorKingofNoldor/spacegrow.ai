@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { api } from '@/lib/api' // ✅ Import the new API client
 
 // Types for our auth system
 interface User {
@@ -28,7 +29,7 @@ interface AuthContextType {
   logout: () => void
   refreshToken: () => Promise<boolean>
   getCurrentUser: () => Promise<boolean>
-  setUser: (user: User | null) => void  // ✅ Added this
+  setUser: (user: User | null) => void
   isAuthenticated: boolean
 }
 
@@ -47,12 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     const token = getStoredToken()
     if (token) {
+      console.log('🔐 Found stored token, checking auth...', token.substring(0, 10) + '...')
       // Try to get current user info
       const success = await getCurrentUser()
       if (!success) {
         // Token is invalid, clear it
+        console.log('🔐 Token invalid, clearing auth')
         clearAuth()
       }
+    } else {
+      console.log('🔐 No stored token found')
     }
     setLoading(false)
   }
@@ -63,24 +68,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return false
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
+      console.log('🔐 Getting current user from API...')
+      
+      // ✅ Use the new API client
+      const data = await api.auth.me() as AuthResponse
+      console.log('🔐 Current user response:', data)
+      
+      if (data.data) {
         setUser(data.data)
         return true
       } else {
+        console.warn('🔐 No user data in response')
         clearAuth()
         return false
       }
     } catch (error) {
-      console.error('Get current user failed:', error)
+      console.error('🚨 Get current user failed:', error)
       clearAuth()
       return false
     }
@@ -89,31 +92,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          user: { 
-            email, 
-            password 
-          } 
-        }),
-      })
-
-      if (response.ok) {
-        const data: AuthResponse = await response.json()
+      console.log('🔐 Attempting login for:', email)
+      
+      // ✅ Use the new API client
+      const data = await api.auth.login(email, password) as AuthResponse
+      console.log('🔐 Login response:', data)
+      
+      if (data.data && data.token) {
         setUser(data.data)
         storeToken(data.token)
+        console.log('✅ Login successful')
         return true
       } else {
-        const errorData = await response.json()
-        console.error('Login failed:', errorData.status?.message || 'Unknown error')
+        console.error('🚨 Login failed: Invalid response structure')
         return false
       }
     } catch (error) {
-      console.error('Login failed:', error)
+      console.error('🚨 Login failed:', error)
       return false
     }
   }
@@ -121,32 +116,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Signup function
   const signup = async (email: string, password: string, passwordConfirmation: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          user: { 
-            email, 
-            password,
-            password_confirmation: passwordConfirmation
-          } 
-        }),
-      })
-
-      if (response.ok) {
-        const data: AuthResponse = await response.json()
+      console.log('🔐 Attempting signup for:', email)
+      
+      // ✅ Use the new API client
+      const data = await api.auth.signup(email, password, passwordConfirmation) as AuthResponse
+      console.log('🔐 Signup response:', data)
+      
+      if (data.data && data.token) {
         setUser(data.data)
         storeToken(data.token)
+        console.log('✅ Signup successful')
         return true
       } else {
-        const errorData = await response.json()
-        console.error('Signup failed:', errorData.status?.message || 'Unknown error')
+        console.error('🚨 Signup failed: Invalid response structure')
         return false
       }
     } catch (error) {
-      console.error('Signup failed:', error)
+      console.error('🚨 Signup failed:', error)
       return false
     }
   }
@@ -157,25 +143,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return false
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data: AuthResponse = await response.json()
+      console.log('🔐 Refreshing token...')
+      
+      // ✅ Use the new API client
+      const data = await api.auth.refresh() as AuthResponse
+      console.log('🔐 Token refresh response:', data)
+      
+      if (data.data && data.token) {
         setUser(data.data)
         storeToken(data.token)
+        console.log('✅ Token refresh successful')
         return true
       } else {
+        console.error('🚨 Token refresh failed: Invalid response structure')
         clearAuth()
         return false
       }
     } catch (error) {
-      console.error('Token refresh failed:', error)
+      console.error('🚨 Token refresh failed:', error)
       clearAuth()
       return false
     }
@@ -185,23 +170,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     const token = getStoredToken()
     
+    console.log('🔐 Logging out...')
+    
     // Call backend logout endpoint
     if (token) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
+        // ✅ Use the new API client
+        await api.auth.logout()
+        console.log('✅ Backend logout successful')
       } catch (error) {
-        console.error('Logout API call failed:', error)
+        console.error('🚨 Logout API call failed:', error)
         // Continue with local logout even if API call fails
       }
     }
     
     clearAuth()
+    console.log('✅ Local logout complete')
   }
 
   // Helper functions for token management
@@ -212,10 +196,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const storeToken = (token: string) => {
     if (typeof window === 'undefined') return
+    console.log('🔐 Storing token:', token.substring(0, 10) + '...')
     localStorage.setItem('auth_token', token)
   }
 
   const clearAuth = () => {
+    console.log('🔐 Clearing auth data')
     setUser(null)
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
@@ -226,12 +212,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return
 
+    console.log('🔐 Setting up token refresh interval for user:', user.email)
+    
     // Set up token refresh interval (refresh every 23 hours for 24h tokens)
     const refreshInterval = setInterval(() => {
+      console.log('🔐 Auto-refreshing token...')
       refreshToken()
     }, 23 * 60 * 60 * 1000) // 23 hours
 
-    return () => clearInterval(refreshInterval)
+    return () => {
+      console.log('🔐 Clearing token refresh interval')
+      clearInterval(refreshInterval)
+    }
   }, [user])
 
   const value: AuthContextType = {
@@ -242,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshToken,
     getCurrentUser,
-    setUser,  // ✅ Added this
+    setUser,
     isAuthenticated: !!user,
   }
 

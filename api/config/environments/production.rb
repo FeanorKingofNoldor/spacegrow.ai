@@ -32,10 +32,20 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Mount Action Cable outside main process or domain.
-  # config.action_cable.mount_path = nil
-  # config.action_cable.url = "wss://example.com/cable"
-  # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
+  # ✅ PRODUCTION: ActionCable Configuration
+  config.action_cable.mount_path = '/cable'
+  config.action_cable.url = ENV.fetch('ACTIONCABLE_URL', 'wss://your-domain.com/cable')
+  config.action_cable.allowed_request_origins = ENV.fetch('ACTIONCABLE_ALLOWED_ORIGINS', '').split(',').map(&:strip).reject(&:blank?)
+  
+  # ✅ PRODUCTION: Enable request forgery protection in production
+  config.action_cable.disable_request_forgery_protection = false
+  
+  # ✅ PRODUCTION: ActionCable logging
+  config.action_cable.logger = Rails.logger
+  config.action_cable.log_tags = [
+    :request_id,
+    -> request { "ActionCable-#{request.remote_ip}" }
+  ]
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
@@ -81,10 +91,12 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
 
   # Enable DNS rebinding protection and other `Host` header attacks.
+  # ✅ PRODUCTION: Add your domains here
   # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
+  #   "your-domain.com",     # Replace with your actual domain
+  #   /.*\.your-domain\.com/ # Allow subdomains
   # ]
+  
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

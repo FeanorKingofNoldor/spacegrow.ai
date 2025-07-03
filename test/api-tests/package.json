@@ -1,0 +1,31 @@
+{
+  "name": "xspacegrow-api-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive API test suite for XSpaceGrow",
+  "main": "test-auth.js",
+  "scripts": {
+    "test": "node test-auth.js",
+    "test:auth": "node test-auth.js",
+    "test:devices": "node test-devices.js",
+    "test:websocket": "node test-websocket.js",
+    "test:load": "node test-load.js",
+    "test:all": "npm run test:auth && npm run test:devices && npm run test:websocket && npm run test:load",
+    "setup": "npm install"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "dotenv": "^16.3.1",
+    "ws": "^8.14.0",
+    "json2csv": "^5.0.7"
+  },
+  "devDependencies": {
+    "autocannon": "^7.12.0",
+    "clinic": "^13.0.0",
+    "loadtest": "^8.0.0"
+  },
+  "keywords": ["api", "testing", "xspacegrow", "iot", "load-testing", "websocket"],
+  "author": "XSpaceGrow Team",
+  "license": "MIT"
+}

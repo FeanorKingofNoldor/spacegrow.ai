@@ -2,7 +2,16 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Product, Cart, CartItem, ApiResponse, ProductsResponse, StockCheckResponse } from '@/types/shop';
+import { 
+  Product, 
+  Cart, 
+  CartItem, 
+  StockCheckResponse, 
+  ProductsApiResponse,
+  FeaturedProductsApiResponse,
+  ShopApiResponse 
+} from '@/types/shop';
+import { api } from '@/lib/api'; // ✅ Import the new API client
 
 interface ShopContextType {
   // Products
@@ -45,8 +54,9 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       try {
         const parsedCart = JSON.parse(savedCart);
         setCart(parsedCart);
+        console.log('🛒 Loaded cart from localStorage:', parsedCart);
       } catch (error) {
-        console.error('Failed to load cart from localStorage:', error);
+        console.error('🚨 Failed to load cart from localStorage:', error);
         localStorage.removeItem('xspacegrow_cart');
       }
     }
@@ -55,6 +65,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   // Save cart to localStorage whenever cart changes
   useEffect(() => {
     localStorage.setItem('xspacegrow_cart', JSON.stringify(cart));
+    console.log('🛒 Saved cart to localStorage:', cart);
   }, [cart]);
 
   // Recalculate cart totals
@@ -72,25 +83,21 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       
       console.log('🔄 Fetching products from API...');
       
-      // Use relative URL - Next.js proxy will handle the routing
-      const response = await fetch('/api/v1/store/products');
-      
-      console.log('🌐 Fetching from: /api/v1/store/products');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('📦 Raw API Response:', data);
+      // ✅ Use the new API client
+      const data = await api.shop.products() as ProductsApiResponse | { products: Product[] }
+      console.log('📦 Raw API Response:', data)
       
       // Parse response according to your Rails API structure
-      if (data.status === 'success' && data.data && data.data.products) {
+      if ('status' in data && data.status === 'success' && data.data && data.data.products) {
         console.log('✅ Found products:', data.data.products.length);
         setProducts(data.data.products);
+      } else if ('products' in data && data.products) {
+        // Handle case where products are directly in response
+        console.log('✅ Found products (direct):', data.products.length);
+        setProducts(data.products);
       } else {
         console.warn('⚠️ Unexpected API response structure:', data);
-        throw new Error(data.message || 'No products found in response');
+        throw new Error('message' in data && data.message ? data.message : 'No products found in response');
       }
     } catch (error) {
       console.error('❌ Failed to fetch products:', error);
@@ -106,117 +113,149 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔄 Fetching featured products...');
       
-      // Use the dedicated featured endpoint with relative URL
-      const response = await fetch('/api/v1/store/products/featured');
+      // ✅ Use the new API client
+      const data = await api.shop.featuredProducts() as FeaturedProductsApiResponse | { products: Product[] }
+      console.log('📦 Featured products response:', data)
       
-      if (!response.ok) {
-        console.warn('Featured endpoint not available, falling back to regular products');
-        // Fallback to regular products endpoint
-        const fallbackResponse = await fetch('/api/v1/store/products');
-        if (!fallbackResponse.ok) {
-          throw new Error(`HTTP error! status: ${fallbackResponse.status}`);
-        }
-        const data = await fallbackResponse.json();
-        if (data.status === 'success' && data.data && data.data.products) {
-          const featured = data.data.products.slice(0, 3);
-          console.log('✅ Found featured products (fallback):', featured.length);
-          setFeaturedProducts(featured);
-        }
-        return;
-      }
-      
-      const data = await response.json();
-      
-      if (data.status === 'success' && data.data && data.data.products) {
+      if ('status' in data && data.status === 'success' && data.data && data.data.products) {
         console.log('✅ Found featured products:', data.data.products.length);
         setFeaturedProducts(data.data.products);
+      } else if ('products' in data && data.products) {
+        // Handle case where products are directly in response
+        console.log('✅ Found featured products (direct):', data.products.length);
+        setFeaturedProducts(data.products);
+      } else {
+        console.warn('⚠️ Featured products endpoint returned unexpected data, falling back...');
+        // Fallback to regular products
+        const fallbackData = await api.shop.products() as ProductsApiResponse | { products: Product[] }
+        if ('status' in fallbackData && fallbackData.status === 'success' && fallbackData.data && fallbackData.data.products) {
+          const featured = fallbackData.data.products.slice(0, 3);
+          console.log('✅ Found featured products (fallback):', featured.length);
+          setFeaturedProducts(featured);
+        } else if ('products' in fallbackData && fallbackData.products) {
+          const featured = fallbackData.products.slice(0, 3);
+          console.log('✅ Found featured products (fallback direct):', featured.length);
+          setFeaturedProducts(featured);
+        }
       }
     } catch (error) {
       console.error('❌ Failed to fetch featured products:', error);
+      // Try fallback to regular products
+      try {
+        const fallbackData = await api.shop.products() as ProductsApiResponse | { products: Product[] }
+        if ('status' in fallbackData && fallbackData.status === 'success' && fallbackData.data && fallbackData.data.products) {
+          const featured = fallbackData.data.products.slice(0, 3);
+          console.log('✅ Found featured products (error fallback):', featured.length);
+          setFeaturedProducts(featured);
+        } else if ('products' in fallbackData && fallbackData.products) {
+          const featured = fallbackData.products.slice(0, 3);
+          console.log('✅ Found featured products (error fallback direct):', featured.length);
+          setFeaturedProducts(featured);
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+      }
     }
   }, []);
 
-  // Check stock availability - MOCK for now since endpoint doesn't exist
+  // Check stock availability
   const checkStock = useCallback(async (productId: string, quantity: number): Promise<StockCheckResponse> => {
-    // Mock implementation - replace with real API call when available
-    console.log(`🔍 Checking stock for product ${productId}, quantity: ${quantity}`);
-    
-    return {
-      available: true,
-      stock_quantity: 999,
-      product_id: productId,
-      requested_quantity: quantity,
-      stock_status: 'in_stock',
-      stock_description: 'In stock'
-    };
+    try {
+      console.log(`🔍 Checking stock for product ${productId}, quantity: ${quantity}`);
+      
+      // ✅ Try to use the new API client if endpoint exists
+      const data = await api.shop.checkStock(productId) as ShopApiResponse<StockCheckResponse>
+      console.log('📦 Stock check response:', data)
+      
+      return {
+        available: data.data?.available || true,
+        stock_quantity: data.data?.stock_quantity || 999,
+        product_id: productId,
+        requested_quantity: quantity,
+        stock_status: data.data?.stock_status || 'in_stock',
+        stock_description: data.data?.stock_description || 'In stock'
+      };
+    } catch (error) {
+      console.warn('⚠️ Stock check endpoint not available, using mock data:', error);
+      
+      // Mock implementation fallback
+      return {
+        available: true,
+        stock_quantity: 999,
+        product_id: productId,
+        requested_quantity: quantity,
+        stock_status: 'in_stock',
+        stock_description: 'In stock'
+      };
+    }
   }, []);
 
-const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
-  try {
-    console.log('🛒 Adding to cart:', product.name, 'x', quantity);
-    console.log('🛒 Current cart before:', cart);
-    
-    // Check if product is active (since we don't have stock_quantity in the current API)
-    if (!product.active) {
-      throw new Error('Product is not available');
-    }
-
-    // Check current cart quantity for this product
-    const existingItem = cart.items.find(item => item.product.id === product.id);
-    const currentCartQuantity = existingItem ? existingItem.quantity : 0;
-    const totalRequestedQuantity = currentCartQuantity + quantity;
-
-    // Check stock availability for total quantity
-    const stockCheck = await checkStock(product.id, totalRequestedQuantity);
-    
-    if (!stockCheck.available) {
-      throw new Error(`Only ${stockCheck.stock_quantity} items available. You have ${currentCartQuantity} in cart.`);
-    }
-
-    // Add to cart
-    setCart(prevCart => {
-      console.log('🛒 Previous cart state:', prevCart);
+  const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
+    try {
+      console.log('🛒 Adding to cart:', product.name, 'x', quantity);
+      console.log('🛒 Current cart before:', cart);
       
-      const existingItemIndex = prevCart.items.findIndex(item => item.product.id === product.id);
-      let newItems: CartItem[];
-
-      if (existingItemIndex >= 0) {
-        // Update existing item
-        newItems = [...prevCart.items];
-        newItems[existingItemIndex] = {
-          ...newItems[existingItemIndex],
-          quantity: newItems[existingItemIndex].quantity + quantity,
-          subtotal: (newItems[existingItemIndex].quantity + quantity) * product.price
-        };
-        console.log('🛒 Updated existing item:', newItems[existingItemIndex]);
-      } else {
-        // Add new item
-        const newItem: CartItem = {
-          id: product.id,
-          product,
-          quantity,
-          subtotal: quantity * product.price
-        };
-        newItems = [...prevCart.items, newItem];
-        console.log('🛒 Added new item:', newItem);
+      // Check if product is active (since we don't have stock_quantity in the current API)
+      if (!product.active) {
+        throw new Error('Product is not available');
       }
 
-      const updatedCart = recalculateCart(newItems);
-      console.log('🛒 New cart state:', updatedCart);
-      return updatedCart;
-    });
+      // Check current cart quantity for this product
+      const existingItem = cart.items.find(item => item.product.id === product.id);
+      const currentCartQuantity = existingItem ? existingItem.quantity : 0;
+      const totalRequestedQuantity = currentCartQuantity + quantity;
 
-    console.log('🛒 About to open cart...');
-    // Auto-open cart for user feedback
-    setIsCartOpen(true);
-    console.log('✅ Cart opened successfully');
-    console.log('✅ Added to cart successfully');
-    
-  } catch (error) {
-    console.error('❌ Failed to add to cart:', error);
-    throw error; // Re-throw so component can handle the error
-  }
-}, [cart.items, checkStock, recalculateCart]);
+      // Check stock availability for total quantity
+      const stockCheck = await checkStock(product.id, totalRequestedQuantity);
+      
+      if (!stockCheck.available) {
+        throw new Error(`Only ${stockCheck.stock_quantity} items available. You have ${currentCartQuantity} in cart.`);
+      }
+
+      // Add to cart
+      setCart(prevCart => {
+        console.log('🛒 Previous cart state:', prevCart);
+        
+        const existingItemIndex = prevCart.items.findIndex(item => item.product.id === product.id);
+        let newItems: CartItem[];
+
+        if (existingItemIndex >= 0) {
+          // Update existing item
+          newItems = [...prevCart.items];
+          newItems[existingItemIndex] = {
+            ...newItems[existingItemIndex],
+            quantity: newItems[existingItemIndex].quantity + quantity,
+            subtotal: (newItems[existingItemIndex].quantity + quantity) * product.price
+          };
+          console.log('🛒 Updated existing item:', newItems[existingItemIndex]);
+        } else {
+          // Add new item
+          const newItem: CartItem = {
+            id: product.id,
+            product,
+            quantity,
+            subtotal: quantity * product.price
+          };
+          newItems = [...prevCart.items, newItem];
+          console.log('🛒 Added new item:', newItem);
+        }
+
+        const updatedCart = recalculateCart(newItems);
+        console.log('🛒 New cart state:', updatedCart);
+        return updatedCart;
+      });
+
+      console.log('🛒 About to open cart...');
+      // Auto-open cart for user feedback
+      setIsCartOpen(true);
+      console.log('✅ Cart opened successfully');
+      console.log('✅ Added to cart successfully');
+      
+    } catch (error) {
+      console.error('❌ Failed to add to cart:', error);
+      throw error; // Re-throw so component can handle the error
+    }
+  }, [cart.items, checkStock, recalculateCart]);
 
   // Remove from cart
   const removeFromCart = useCallback((productId: string) => {

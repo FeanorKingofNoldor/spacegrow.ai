@@ -20,6 +20,14 @@ class Api::V1::Frontend::DevicesController < Api::V1::Frontend::ProtectedControl
  end
 
  def create
+   # ✅ FIXED: Add device limit check before creating device
+   unless current_user.can_add_device?
+     return render json: {
+       status: 'error',
+       errors: ["Device limit of #{current_user.device_limit} reached for your current plan"]
+     }, status: :unprocessable_entity
+   end
+
    device = current_user.devices.build(device_params)
    
    if device.save
@@ -63,7 +71,6 @@ class Api::V1::Frontend::DevicesController < Api::V1::Frontend::ProtectedControl
 
  def update_status
    authorize @device
-   authorize @device
    if @device.update(status_params)
      render json: {
        status: 'success',
@@ -82,6 +89,12 @@ class Api::V1::Frontend::DevicesController < Api::V1::Frontend::ProtectedControl
 
  def set_device
    @device = current_user.devices.find(params[:id])
+ rescue ActiveRecord::RecordNotFound
+   # ✅ FIXED: Better error handling for user isolation
+   render json: {
+     status: 'error',
+     error: 'Device not found or access denied'
+   }, status: :not_found
  end
 
  def device_params
