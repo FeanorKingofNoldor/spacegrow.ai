@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { DeviceCard } from '@/components/dashboard/DeviceCard';
 import { PresetModal } from '@/components/dashboard/presets/PresetModal';
+import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Device } from '@/types/device';
 import { api } from '@/lib/api';
@@ -295,6 +296,9 @@ export default function MyDevicesPage() {
             </div>
           </div>
         </div>
+
+        {/* ✅ NEW: Subscription Alerts */}
+        <SubscriptionBanner />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

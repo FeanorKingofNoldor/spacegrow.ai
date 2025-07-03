@@ -5,6 +5,7 @@ import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWr
 import { DeviceOverviewSection } from '@/components/dashboard/DeviceOverviewSection';
 import { DeviceGridSection } from '@/components/dashboard/DeviceGridSection';
 import { DeviceAlertsSection } from '@/components/dashboard/DeviceAlertsSection';
+import { SubscriptionBanner, DeviceUsageIndicator } from '@/components/subscription/SubscriptionBanner';
 
 export default function DeviceDashboardPage() {
   return (
@@ -17,6 +18,12 @@ export default function DeviceDashboardPage() {
             Macro overview of all your growing devices and their current status.
           </p>
         </div>
+
+        {/* ✅ NEW: Subscription Alerts */}
+        <SubscriptionBanner />
+
+        {/* ✅ NEW: Device Usage Indicator */}
+        <DeviceUsageIndicator />
 
         {/* Device Overview Stats */}
         <DeviceOverviewSection />

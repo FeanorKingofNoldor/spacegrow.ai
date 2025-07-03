@@ -9,6 +9,7 @@ import { SystemStatusSection } from '@/components/dashboard/auth_main_page/Syste
 import { QuickActionsSection } from '@/components/dashboard/auth_main_page/QuickActionsSection';
 import { FirmwareUpdatesSection } from '@/components/dashboard/auth_main_page/FirmwareUpdatesSection';
 import { SystemOverviewSection } from '@/components/dashboard/SystemOverviewSection';
+import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
 
 export default function SystemDashboardPage() {
   return (
@@ -16,6 +17,9 @@ export default function SystemDashboardPage() {
       <div className="space-y-6">
         {/* Welcome Section */}
         <WelcomeSection />
+
+        {/* ✅ NEW: Subscription Alerts */}
+        <SubscriptionBanner />
 
         {/* System Overview - Power, Stats, etc. */}
         <SystemOverviewSection />

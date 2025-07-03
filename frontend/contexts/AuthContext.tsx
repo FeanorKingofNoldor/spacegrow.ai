@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { api } from '@/lib/api' // ✅ Import the new API client
+import { Subscription } from '@/types/subscription'
 
 // Types for our auth system
 interface User {
@@ -10,6 +11,7 @@ interface User {
   role: 'user' | 'pro' | 'admin'
   created_at: string
   devices_count: number
+  subscription?: Subscription
 }
 
 interface AuthResponse {

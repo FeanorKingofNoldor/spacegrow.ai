@@ -17,7 +17,9 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Shield
+  Shield,
+  Crown,
+  Receipt
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -107,6 +109,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           active={pathname.startsWith('/user/automation')}
         />
         
+        {/* ✅ NEW: Subscription Section */}
+        <div className="my-3 border-t border-space-border opacity-30" />
+        
+        <SidebarItem
+          href="/user/subscription"
+          icon={Crown}
+          label="Subscription"
+          collapsed={collapsed}
+          active={pathname.startsWith('/user/subscription')}
+        />
+        <SidebarItem
+          href="/user/billing"
+          icon={Receipt}
+          label="Billing"
+          collapsed={collapsed}
+          active={pathname.startsWith('/user/billing')}
+        />
+        
         {/* Separator */}
         <div className="my-3 border-t border-space-border opacity-30" />
         
@@ -182,35 +202,31 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           {profileDropdownOpen && !collapsed && (
             <div className="absolute bottom-full left-0 right-0 mb-1 bg-space-glass backdrop-blur-md border border-space-border rounded-lg shadow-lg">
               <Link 
-                href="/dashboard/profile"
+                href="/user/profile"
                 className="block px-3 py-2 text-sm text-cosmic-text hover:bg-space-glass hover:text-stellar-accent transition-colors"
                 onClick={() => setProfileDropdownOpen(false)}
               >
                 Edit Profile
               </Link>
               <Link 
-                href="/dashboard/settings"
+                href="/user/subscription"
                 className="block px-3 py-2 text-sm text-cosmic-text hover:bg-space-glass hover:text-stellar-accent transition-colors"
                 onClick={() => setProfileDropdownOpen(false)}
               >
-                Account Settings
+                <div className="flex items-center space-x-2">
+                  <Crown size={16} />
+                  <span>Subscription</span>
+                </div>
               </Link>
               <Link 
-                href="/dashboard/billing"
+                href="/user/billing"
                 className="block px-3 py-2 text-sm text-cosmic-text hover:bg-space-glass hover:text-stellar-accent transition-colors"
                 onClick={() => setProfileDropdownOpen(false)}
               >
                 <div className="flex items-center space-x-2">
                   <CreditCard size={16} />
-                  <span>Billing & Subscription</span>
+                  <span>Billing & Payments</span>
                 </div>
-              </Link>
-              <Link 
-                href="/dashboard/preferences"
-                className="block px-3 py-2 text-sm text-cosmic-text hover:bg-space-glass hover:text-stellar-accent transition-colors"
-                onClick={() => setProfileDropdownOpen(false)}
-              >
-                Preferences
               </Link>
             </div>
           )}
