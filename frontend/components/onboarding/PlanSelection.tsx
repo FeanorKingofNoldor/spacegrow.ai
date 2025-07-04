@@ -8,13 +8,12 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Plan } from '@/types/subscription';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Check, Star, Zap, Users, TrendingUp } from 'lucide-react';
+import { Check, Star, Zap, Users, TrendingUp, Building, Mail, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function PlanSelection() {
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [selectedInterval, setSelectedInterval] = useState<'month' | 'year'>('month');
-  const [submitting, setSubmitting] = useState(false);
+  const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
   
   const { plans, loading, error, selectPlan } = useSubscription();
   const { user } = useAuth();
@@ -27,18 +26,21 @@ export function PlanSelection() {
     }
   }, [user, router]);
 
-  const handlePlanSubmit = async () => {
-    if (!selectedPlan) return;
-    
-    setSubmitting(true);
+  const handlePlanSelect = async (planId: number) => {
+    setLoadingPlanId(planId);
     try {
-      await selectPlan(selectedPlan, selectedInterval);
-      router.push('/user/dashboard');
+      // Directly proceed to payment processing
+      await selectPlan(planId, selectedInterval);
+      // selectPlan should handle the redirect to Stripe checkout
     } catch (error) {
       console.error('Plan selection failed:', error);
-    } finally {
-      setSubmitting(false);
+      setLoadingPlanId(null);
     }
+  };
+
+  const handleEnterpriseContact = () => {
+    // You can customize this to open a modal, redirect to contact page, or mailto
+    window.location.href = 'mailto:enterprise@spacegrow.ai?subject=Enterprise%20Solutions%20Inquiry';
   };
 
   if (loading) {
@@ -62,7 +64,7 @@ export function PlanSelection() {
 
   return (
     <div className="min-h-screen bg-transparent py-12 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
@@ -110,40 +112,26 @@ export function PlanSelection() {
           </div>
         </div>
 
-        {/* Plans Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
+        {/* Plans Grid - Now includes Enterprise */}
+        <div className="grid lg:grid-cols-3 gap-8 mb-12">
           {plans.map((plan) => (
             <PlanCard
               key={plan.id}
               plan={plan}
               interval={selectedInterval}
-              selected={selectedPlan === plan.id}
-              onSelect={() => setSelectedPlan(plan.id)}
+              loading={loadingPlanId === plan.id}
+              onSelect={() => handlePlanSelect(plan.id)}
             />
           ))}
+          
+          {/* Enterprise Plan */}
+          <EnterpriseCard onContact={handleEnterpriseContact} />
         </div>
 
-        {/* Continue Button */}
+        {/* Trust Indicators */}
         <div className="text-center">
-          <Button
-            onClick={handlePlanSubmit}
-            disabled={!selectedPlan || submitting}
-            variant="cosmic"
-            size="xl"
-            className="px-12"
-          >
-            {submitting ? (
-              <>
-                <LoadingSpinner size="sm" />
-                <span className="ml-2">Setting up your account...</span>
-              </>
-            ) : (
-              'Continue to Dashboard'
-            )}
-          </Button>
-          
-          <p className="text-cosmic-text-muted text-sm mt-4">
-            No credit card required • Cancel anytime • 30-day money-back guarantee
+          <p className="text-cosmic-text-muted text-sm">
+            🔒 Secure payment • ⚡ Instant activation • 📞 24/7 support
           </p>
         </div>
 
@@ -159,11 +147,11 @@ export function PlanSelection() {
 interface PlanCardProps {
   plan: Plan;
   interval: 'month' | 'year';
-  selected: boolean;
+  loading: boolean;
   onSelect: () => void;
 }
 
-function PlanCard({ plan, interval, selected, onSelect }: PlanCardProps) {
+function PlanCard({ plan, interval, loading, onSelect }: PlanCardProps) {
   const price = interval === 'month' ? plan.monthly_price : plan.yearly_price;
   const period = interval === 'month' ? 'month' : 'year';
   const isPopular = plan.name === 'Professional';
@@ -181,12 +169,10 @@ function PlanCard({ plan, interval, selected, onSelect }: PlanCardProps) {
 
   return (
     <div
-      onClick={onSelect}
       className={cn(
-        'relative cursor-pointer rounded-2xl p-8 transition-all duration-300',
+        'relative rounded-2xl p-8 transition-all duration-300',
         'bg-space-glass backdrop-blur-md border border-space-border',
         'hover:border-stellar-accent/50 hover:shadow-lg hover:shadow-stellar-accent/10',
-        selected && 'border-stellar-accent bg-stellar-accent/10 shadow-lg shadow-stellar-accent/20',
         isPopular && 'scale-105 border-stellar-accent/70'
       )}
     >
@@ -240,14 +226,92 @@ function PlanCard({ plan, interval, selected, onSelect }: PlanCardProps) {
         )}
       </div>
 
-      {/* Selection Button */}
+      {/* Choose Plan Button */}
       <Button
-        variant={selected ? "cosmic" : "outline"}
+        onClick={onSelect}
+        disabled={loading}
+        variant="cosmic"
         className="w-full"
         size="lg"
       >
-        {selected ? 'Selected' : 'Choose Plan'}
+        {loading ? (
+          <>
+            <LoadingSpinner size="sm" />
+            <span className="ml-2">Processing...</span>
+          </>
+        ) : (
+          'Choose Plan'
+        )}
       </Button>
+    </div>
+  );
+}
+
+function EnterpriseCard({ onContact }: { onContact: () => void }) {
+  return (
+    <div className="relative rounded-2xl p-8 transition-all duration-300 bg-space-glass backdrop-blur-md border border-space-border hover:border-stellar-accent/50 hover:shadow-lg hover:shadow-stellar-accent/10">
+      {/* Enterprise Header */}
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <Building className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-2xl font-bold text-cosmic-text mb-2">Enterprise</h3>
+        <p className="text-cosmic-text-muted">Custom solutions for large organizations</p>
+      </div>
+
+      {/* Custom Pricing */}
+      <div className="text-center mb-6">
+        <div className="flex items-baseline justify-center mb-2">
+          <span className="text-2xl font-bold text-cosmic-text">Custom</span>
+        </div>
+        <div className="text-cosmic-text-muted text-sm">
+          Tailored to your needs
+        </div>
+      </div>
+
+      {/* Enterprise Features */}
+      <div className="space-y-3 mb-8">
+        {[
+          'Unlimited devices',
+          'Dedicated account manager',
+          'Custom integrations',
+          'On-premise deployment',
+          'SLA guarantees',
+          'Priority support',
+          'Custom training',
+          'Volume discounts'
+        ].map((feature, index) => (
+          <div key={index} className="flex items-center text-cosmic-text">
+            <Check className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+            <span className="text-sm">{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Contact Button */}
+      <Button
+        onClick={onContact}
+        variant="outline"
+        className="w-full mb-4"
+        size="lg"
+      >
+        <Mail className="w-4 h-4 mr-2" />
+        Contact Sales
+      </Button>
+
+      {/* Additional Contact Options */}
+      <div className="text-center">
+        <p className="text-cosmic-text-muted text-xs mb-2">
+          Or call us directly:
+        </p>
+        <a 
+          href="tel:+1-555-SPACEGROW" 
+          className="text-stellar-accent hover:text-stellar-accent/80 text-sm font-medium flex items-center justify-center"
+        >
+          <Phone className="w-3 h-3 mr-1" />
+          +1 (555) SPACE-GROW
+        </a>
+      </div>
     </div>
   );
 }
@@ -262,8 +326,28 @@ function FeatureComparison({ plans }: { plans: Plan[] }) {
     'Priority support',
     'Custom integrations',
     'Data export',
-    'White-label options'
+    'White-label options',
+    'On-premise deployment',
+    'Dedicated support'
   ];
+
+  // Add Enterprise to comparison
+  const plansWithEnterprise = [...plans, {
+    id: 999,
+    name: 'Enterprise',
+    features: [
+      'unlimited devices',
+      'dedicated account manager', 
+      'custom integrations',
+      'on-premise deployment',
+      'priority support',
+      'sla guarantees',
+      'custom training',
+      'advanced analytics',
+      'data export',
+      'white-label options'
+    ]
+  }];
 
   return (
     <div className="bg-space-glass backdrop-blur-md border border-space-border rounded-2xl p-8">
@@ -276,7 +360,7 @@ function FeatureComparison({ plans }: { plans: Plan[] }) {
           <thead>
             <tr className="border-b border-space-border">
               <th className="text-left py-4 text-cosmic-text font-medium">Features</th>
-              {plans.map((plan) => (
+              {plansWithEnterprise.map((plan) => (
                 <th key={plan.id} className="text-center py-4 text-cosmic-text font-medium">
                   {plan.name}
                 </th>
@@ -287,7 +371,7 @@ function FeatureComparison({ plans }: { plans: Plan[] }) {
             {allFeatures.map((feature, index) => (
               <tr key={index} className="border-b border-space-border/50">
                 <td className="py-4 text-cosmic-text">{feature}</td>
-                {plans.map((plan) => (
+                {plansWithEnterprise.map((plan) => (
                   <td key={plan.id} className="text-center py-4">
                     {plan.features.some(f => f.toLowerCase().includes(feature.toLowerCase().split(' ')[0])) ? (
                       <Check className="w-5 h-5 text-green-400 mx-auto" />

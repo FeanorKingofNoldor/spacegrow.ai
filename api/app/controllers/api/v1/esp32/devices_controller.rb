@@ -27,18 +27,41 @@ class Api::V1::Esp32::DevicesController < Api::V1::Esp32::BaseController
       
       if result.success?
         device = result.device
-        device.update!(
-          status: 'active',
-          last_connection: Time.current
-        )
+        subscription_result = result.subscription_result
         
-        render json: {
+        device.update!(last_connection: Time.current)
+        
+        # ✅ ENHANCED: Return comprehensive activation status
+        response = {
           status: 'success',
           device_id: device.id,
           name: device.name,
           token: activation_token.token,
-          commands: []
+          commands: [],
+          
+          # ✅ NEW: Subscription and hibernation status
+          device_status: {
+            operational: device.operational?,
+            hibernating: device.hibernating?,
+            in_grace_period: device.in_grace_period?
+          },
+          
+          subscription_status: subscription_result[:subscription_status],
+          message: subscription_result[:message]
         }
+        
+        # ✅ NEW: Include upsell options if over limit
+        if subscription_result[:upsell_options]
+          response[:upsell_options] = subscription_result[:upsell_options]
+          response[:hibernated_device] = subscription_result[:hibernated_device]
+        end
+        
+        # ✅ NEW: Include warnings for no subscription
+        if subscription_result[:warning]
+          response[:warning] = subscription_result[:warning]
+        end
+        
+        render json: response, status: :ok
       else
         render json: { error: result.error }, status: :unprocessable_entity
       end

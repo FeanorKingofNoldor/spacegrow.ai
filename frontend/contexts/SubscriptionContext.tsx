@@ -1,4 +1,4 @@
-// contexts/SubscriptionContext.tsx
+// contexts/SubscriptionContext.tsx - FIXED with smart plan selection
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
@@ -7,9 +7,16 @@ import {
   Plan, 
   SubscriptionContextType,
   SubscriptionResponse,
-  OnboardingResponse 
+  OnboardingResponse,
+  PlanChangePreview,
+  PlanChangeRequest,
+  PlanChangeResult,
+  DeviceSelectionData,
+  PlanChangePreviewResponse,
+  DevicesForSelectionResponse,
+  PlanChangeResponse
 } from '@/types/subscription';
-import { api } from '@/lib/api';
+import { api, subscriptionAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -56,51 +63,37 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     fetchSubscription();
   }, [fetchSubscription]);
 
-  // Select plan (onboarding)
-  const selectPlan = useCallback(async (planId: number, interval: 'month' | 'year') => {
+  // ✅ Preview plan change
+  const previewPlanChange = useCallback(async (planId: number, interval: 'month' | 'year'): Promise<PlanChangePreview> => {
     try {
-      setLoading(true);
-      setError(null);
+      console.log('🔄 Previewing plan change:', { planId, interval });
       
-      console.log('🔄 Selecting plan:', { planId, interval });
+      const response = await subscriptionAPI.previewPlanChange(planId, interval) as PlanChangePreviewResponse;
       
-      const response = await api.post('/api/v1/frontend/onboarding/select_plan', {
-        plan_id: planId,
-        interval
-      }) as OnboardingResponse;
-      
-      // Update local state
-      setSubscription(response.data.subscription);
-      setUser(response.data.user);
-      
-      console.log('✅ Plan selected successfully:', response.message);
+      console.log('✅ Plan change preview:', response.data);
+      return response.data;
       
     } catch (err) {
-      console.error('❌ Failed to select plan:', err);
-      setError(err instanceof Error ? err.message : 'Failed to select plan');
+      console.error('❌ Failed to preview plan change:', err);
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, [setUser]);
+  }, []);
 
-  // Change plan (existing subscription)
-  const changePlan = useCallback(async (planId: number, interval: 'month' | 'year') => {
+  // ✅ Execute plan change
+  const changePlan = useCallback(async (request: PlanChangeRequest): Promise<PlanChangeResult> => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Changing plan:', { planId, interval });
+      console.log('🔄 Executing plan change:', request);
       
-      const response = await api.post('/api/v1/frontend/subscriptions/select_plan', {
-        plan_id: planId,
-        interval
-      });
+      const response = await subscriptionAPI.changePlan(request) as PlanChangeResponse;
       
-      // Refresh subscription data
-      await fetchSubscription();
+      // Update local state with new subscription
+      setSubscription(response.data.updated_subscription);
       
-      console.log('✅ Plan changed successfully');
+      console.log('✅ Plan change completed:', response.data.change_result);
+      return response.data.change_result;
       
     } catch (err) {
       console.error('❌ Failed to change plan:', err);
@@ -109,17 +102,117 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription]);
+  }, []);
+
+  // ✅ FIXED: Smart plan selection - routes to appropriate API based on subscription status
+  const selectPlan = useCallback(async (planId: number, interval: 'month' | 'year') => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 Selecting plan:', { planId, interval, hasSubscription: !!subscription });
+      
+      // ✅ NEW LOGIC: Check if user already has a subscription
+      if (subscription && subscription.status !== 'canceled') {
+        // User has existing subscription - use plan change flow
+        console.log('🔄 User has existing subscription, using plan change flow...');
+        
+        // First preview the change
+        const preview = await previewPlanChange(planId, interval);
+        
+        // Find the best strategy (prefer immediate, fallback to recommended)
+        const immediateStrategy = preview.available_strategies.find(s => s.type === 'immediate');
+        const recommendedStrategy = preview.available_strategies.find(s => s.recommended);
+        const selectedStrategy = immediateStrategy || recommendedStrategy || preview.available_strategies[0];
+        
+        if (!selectedStrategy) {
+          throw new Error('No available strategy for plan change');
+        }
+        
+        // Execute the plan change
+        const request: PlanChangeRequest = {
+          plan_id: planId,
+          interval: interval,
+          strategy: selectedStrategy.type,
+          selected_device_ids: undefined // For simple immediate changes
+        };
+        
+        const result = await changePlan(request);
+        console.log('✅ Plan change completed via selectPlan:', result);
+        
+      } else {
+        // User has no subscription - use onboarding flow
+        console.log('🔄 User has no subscription, using onboarding flow...');
+        
+        const response = await api.onboarding.selectPlan(planId, interval) as OnboardingResponse;
+        
+        setSubscription(response.data.subscription);
+        setUser(response.data.user);
+        
+        console.log('✅ Plan selected via onboarding:', response.message);
+      }
+      
+    } catch (err) {
+      console.error('❌ Failed to select plan:', err);
+      setError(err instanceof Error ? err.message : 'Failed to select plan');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [subscription, setUser, previewPlanChange, changePlan]);
+
+  // ✅ Get devices for selection
+  const getDevicesForSelection = useCallback(async (): Promise<DeviceSelectionData[]> => {
+    try {
+      console.log('🔄 Fetching devices for selection...');
+      
+      const response = await subscriptionAPI.getDevicesForSelection() as DevicesForSelectionResponse;
+      
+      console.log('✅ Devices for selection:', response.data.devices);
+      return response.data.devices;
+      
+    } catch (err) {
+      console.error('❌ Failed to fetch devices for selection:', err);
+      throw err;
+    }
+  }, []);
+
+  // ✅ Schedule plan change
+  const schedulePlanChange = useCallback(async (planId: number, interval: 'month' | 'year') => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 Scheduling plan change:', { planId, interval });
+      
+      const response = await subscriptionAPI.schedulePlanChange(planId, interval);
+      
+      console.log('✅ Plan change scheduled:', response);
+      return response;
+      
+    } catch (err) {
+      console.error('❌ Failed to schedule plan change:', err);
+      setError(err instanceof Error ? err.message : 'Failed to schedule plan change');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Cancel subscription
   const cancelSubscription = useCallback(async () => {
+    if (!subscription) {
+      setError('No subscription to cancel');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
       console.log('🔄 Canceling subscription...');
       
-      await api.delete('/api/v1/frontend/subscriptions/cancel');
+      await api.subscriptions.cancel(subscription.id.toString());
       
       // Refresh subscription data
       await fetchSubscription();
@@ -133,17 +226,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription]);
+  }, [fetchSubscription, subscription]);
 
   // Add device slot
   const addDeviceSlot = useCallback(async () => {
+    if (!subscription) {
+      setError('No subscription found');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
       console.log('🔄 Adding device slot...');
       
-      const response = await api.post('/api/v1/frontend/subscriptions/add_device_slot');
+      await api.subscriptions.addDeviceSlot(subscription.id.toString());
       
       // Refresh subscription data
       await fetchSubscription();
@@ -157,19 +255,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription]);
+  }, [fetchSubscription, subscription]);
 
   // Remove device slot
   const removeDeviceSlot = useCallback(async (deviceId: number) => {
+    if (!subscription) {
+      setError('No subscription found');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
       console.log('🔄 Removing device slot for device:', deviceId);
       
-      await api.delete('/api/v1/frontend/subscriptions/remove_device_slot', {
-        device_id: deviceId
-      });
+      await api.subscriptions.removeDeviceSlot(subscription.id.toString(), deviceId.toString());
       
       // Refresh subscription data
       await fetchSubscription();
@@ -183,23 +284,24 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription]);
+  }, [fetchSubscription, subscription]);
 
-  // Computed properties
-  const canAddDevice = subscription ? 
+  // Computed properties with safe null checks
+  const canAddDevice = subscription && subscription.devices ? 
     subscription.devices.length < subscription.device_limit : false;
 
   const deviceUsage = subscription ? {
-    used: subscription.devices.length,
-    limit: subscription.device_limit,
-    percentage: (subscription.devices.length / subscription.device_limit) * 100
+    used: subscription.devices?.length || 0,
+    limit: subscription.device_limit || 0,
+    percentage: subscription.device_limit ? 
+      ((subscription.devices?.length || 0) / subscription.device_limit) * 100 : 0
   } : {
     used: 0,
     limit: 0,
     percentage: 0
   };
 
-  const nextBillingDate = subscription ? 
+  const nextBillingDate = subscription?.current_period_end ? 
     new Date(subscription.current_period_end) : null;
 
   const isOnTrial = subscription ? 
@@ -216,8 +318,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     
     // Actions
     fetchSubscription,
-    selectPlan,
+    selectPlan, // ✅ Now smart - handles both onboarding and plan changes
+    
+    // Plan change methods
+    previewPlanChange,
     changePlan,
+    getDevicesForSelection,
+    schedulePlanChange,
+    
+    // Existing methods
     cancelSubscription,
     addDeviceSlot,
     removeDeviceSlot,
@@ -250,25 +359,41 @@ export function useSubscriptionGuard() {
   const { subscription, loading } = useSubscription();
   const { user } = useAuth();
 
-  const hasSubscription = !!subscription;
+  // ✅ FIXED: Treat canceled subscriptions as "no active subscription"
+  const hasActiveSubscription = !!subscription && subscription.status !== 'canceled';
+  const hasSubscription = !!subscription; // Keep for backward compatibility
   const subscriptionStatus = subscription?.status || null;
-  const needsOnboarding = user && !subscription;
-  const isBlocked = subscription?.status === 'canceled' || subscription?.status === 'past_due';
+  
+  // ✅ FIXED: Canceled users need onboarding (new plan selection)
+  const needsOnboarding = user && (!subscription || subscription.status === 'canceled');
+  
+  // ✅ FIXED: Only past_due is blocked (canceled should go to onboarding)
+  const isBlocked = subscription?.status === 'past_due';
 
   const canAccessFeature = useCallback((feature: string) => {
-    if (!subscription) return false;
+    // ✅ FIXED: Only allow feature access for active subscriptions
+    if (!subscription || subscription.status === 'canceled') return false;
     
     // Basic feature access logic
     const planFeatures = {
       'Basic': ['basic_monitoring', 'email_alerts', 'api_access'],
-      'Professional': ['basic_monitoring', 'email_alerts', 'api_access', 'advanced_monitoring', 'priority_support', 'custom_integrations', 'data_analytics']
+      'Professional': [
+        'basic_monitoring', 
+        'email_alerts', 
+        'api_access', 
+        'advanced_monitoring', 
+        'priority_support', 
+        'custom_integrations', 
+        'data_analytics'
+      ]
     };
 
-    return planFeatures[subscription.plan.name as keyof typeof planFeatures]?.includes(feature) || false;
+    return planFeatures[subscription.plan?.name as keyof typeof planFeatures]?.includes(feature) || false;
   }, [subscription]);
 
   return {
     hasSubscription,
+    hasActiveSubscription, // ✅ NEW: Distinguish between any subscription and active subscription
     subscriptionStatus,
     needsOnboarding,
     isBlocked,

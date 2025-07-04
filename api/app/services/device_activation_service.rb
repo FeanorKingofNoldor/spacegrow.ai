@@ -16,8 +16,13 @@ class DeviceActivationService
       find_and_validate_token
       create_device
       mark_token_used
+      handle_subscription_limits
 
-      OpenStruct.new(success?: true, device: @device)
+      OpenStruct.new(
+        success?: true, 
+        device: @device,
+        subscription_result: @subscription_result
+      )
     end
   rescue StandardError => e
     OpenStruct.new(success?: false, error: e.message)
@@ -38,15 +43,14 @@ class DeviceActivationService
   def create_device
     user = @activation_token.order.user
 
-    # Enforce device limit
-    raise "Device limit of #{user.device_limit} reached for this user." if user.devices.count >= user.device_limit
-
-    # Proceed to create the device if the limit is not exceeded
+    # ✅ CRITICAL CHANGE: Always create device - never enforce limits here!
+    # The business logic is "Always Accept, Then Upsell"
+    
     @device = Device.new(
       user: user,
       device_type: device_type,
       activation_token: @activation_token,
-      status: 'active',
+      status: 'active',  # Always start as active
       name: DeviceType.suggested_name_for(device_type.name, user),
       order: @activation_token.order
     )
@@ -61,5 +65,25 @@ class DeviceActivationService
       device: @device,
       activated_at: Time.current
     )
+  end
+
+  # ✅ NEW: Handle subscription limits after device creation
+  def handle_subscription_limits
+    user = @device.user
+    subscription = user.subscription
+
+    if subscription&.active?
+      # Use the subscription's business logic
+      @subscription_result = subscription.activate_device!(@device)
+    else
+      # No subscription - device remains active but with warnings
+      @subscription_result = {
+        success: true,
+        operational: true,
+        message: 'Device activated successfully',
+        subscription_status: 'no_subscription',
+        warning: 'Consider subscribing to unlock advanced features'
+      }
+    end
   end
 end

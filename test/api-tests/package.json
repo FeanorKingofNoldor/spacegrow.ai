@@ -1,17 +1,41 @@
 {
   "name": "xspacegrow-api-tests",
   "version": "1.0.0",
-  "description": "Comprehensive API test suite for XSpaceGrow",
-  "main": "test-auth.js",
+  "description": "Comprehensive test suite for XSpaceGrow API including authentication, device management, subscription billing, WebSocket communication, and load testing",
+  "main": "index.js",
   "scripts": {
-    "test": "node test-auth.js",
+    "test": "node index.js all",
     "test:auth": "node test-auth.js",
     "test:devices": "node test-devices.js",
+    "test:subscriptions": "node test-subscriptions.js",
+    "test:hibernation": "node test-hibernation.js",
     "test:websocket": "node test-websocket.js",
     "test:load": "node test-load.js",
-    "test:all": "npm run test:auth && npm run test:devices && npm run test:websocket && npm run test:load",
-    "setup": "npm install"
+    "test:all": "npm run test:auth && npm run test:devices && npm run test:subscriptions && npm run test:hibernation && npm run test:websocket && npm run test:load",
+    "test:enhanced": "../run-all-tests-enhanced.sh",
+    "test:status": "node index.js status",
+    "test:list": "node index.js list",
+    "setup": "npm install && echo 'Test environment ready!'",
+    "clean": "rm -f *-test-results-*.json && echo 'Test results cleaned'",
+    "report": "ls -la *-test-results-*.json 2>/dev/null || echo 'No test results found'",
+    "export": "node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.includes('test-results')); console.log('Available reports:', files.join(', '));\"",
+    "benchmark": "npm run test:load",
+    "validate": "npm run test:status && npm run test:auth"
   },
+  "keywords": [
+    "api",
+    "testing",
+    "xspacegrow",
+    "iot",
+    "subscription",
+    "billing",
+    "websocket",
+    "load-testing",
+    "authentication",
+    "device-management"
+  ],
+  "author": "XSpaceGrow Team",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.10.0",
     "chalk": "^4.1.2",
@@ -23,16 +47,18 @@
   "devDependencies": {
     "autocannon": "^7.15.0",
     "clinic": "^9.1.0",
+    "eslint": "^8.50.0",
     "loadtest": "^8.2.0"
   },
-  "keywords": [
-    "api",
-    "testing",
-    "xspacegrow",
-    "iot",
-    "load-testing",
-    "websocket"
-  ],
-  "author": "XSpaceGrow Team",
-  "license": "MIT"
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xspacegrow/api-tests.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xspacegrow/api-tests/issues"
+  },
+  "homepage": "https://github.com/xspacegrow/api-tests#readme"
 }

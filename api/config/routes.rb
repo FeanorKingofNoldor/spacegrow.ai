@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   # Health check endpoint
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # ✅ TRY DIFFERENT MOUNT SYNTAX: Mount ActionCable for WebSocket connections
+  # Mount ActionCable for WebSocket connections
   mount ActionCable.server, at: '/cable'
 
   # API routes
@@ -71,24 +71,35 @@ Rails.application.routes.draw do
         get 'dashboard/devices', to: 'dashboard#devices'
         get 'dashboard/device/:id', to:'dashboard#device'
         
-        # Device management
+        # Device management with hibernation
         resources :devices, only: [:index, :show, :create, :update, :destroy] do
           member do
             patch :update_status
+            post :hibernate        # ✅ NEW
+            post :wake            # ✅ NEW
           end
           resources :commands, only: [:create]
         end
         
-        # Subscriptions
         resources :subscriptions, only: [:index] do
           collection do
-            get :choose_plan
-            post :select_plan
-          end
-          member do
-            delete :cancel
-            post :add_device_slot
-            delete :remove_device_slot
+            # Plan selection and changes
+            post :select_plan         
+            post :preview_change      
+            post :change_plan         
+            post :schedule_change     
+            get :devices_for_selection 
+            
+            # Subscription management
+            post :cancel              
+            post :add_device_slot     
+            post :remove_device_slot  
+            
+            # Hibernation management
+            get :device_management
+            post :activate_device
+            post :wake_devices
+            post :hibernate_devices
           end
         end
         
@@ -101,12 +112,10 @@ Rails.application.routes.draw do
           end
         end
         
-        # Onboarding
-        resources :onboarding, only: [] do
-          collection do
-            get :choose_plan
-            post :select_plan
-          end
+        # Onboarding routes for new user plan selection
+        namespace :onboarding do
+          get :choose_plan    
+          post :select_plan   
         end
         
         # Static pages/documentation
