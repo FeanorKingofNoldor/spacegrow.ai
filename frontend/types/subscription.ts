@@ -1,4 +1,6 @@
-// types/subscription.ts - ENHANCED with plan change types
+// types/subscription.ts - COMPLETE with hibernation and device management types
+
+import { Device, HibernationPriority, UpsellOption } from './device';
 
 export interface Plan {
   id: number;
@@ -15,6 +17,7 @@ export interface Plan {
   active?: boolean;
 }
 
+// ✅ ENHANCED: Subscription interface with hibernation support
 export interface Subscription {
   id: number;
   plan: Plan;
@@ -26,6 +29,8 @@ export interface Subscription {
   current_period_end: string;
   cancel_at_period_end: boolean;
   stripe_subscription_id?: string;
+  
+  // ✅ NEW: Device hibernation data
   devices?: Array<{
     id: number;
     name: string;
@@ -33,7 +38,19 @@ export interface Subscription {
     status: string;
     alert_status?: string;
     last_connection?: string;
+    hibernated_at?: string | null;
+    hibernating?: boolean;
+    operational?: boolean;
+    in_grace_period?: boolean;
   }>;
+  
+  // ✅ NEW: Device counts with hibernation breakdown
+  device_counts?: {
+    total: number;
+    operational: number;
+    hibernating: number;
+  };
+  
   user_id?: number;
   plan_id?: number;
   stripe_customer_id?: string;
@@ -52,8 +69,57 @@ export interface User {
   subscription?: Subscription;
 }
 
-// ✅ NEW: Plan Change Types
+// ✅ NEW: Device Management Types
+export interface DeviceManagementData {
+  subscription: {
+    id: number;
+    plan: {
+      id: number;
+      name: string;
+      device_limit: number;
+      monthly_price: number;
+      yearly_price: number;
+      features: string[];
+    };
+    status: string;
+    interval: string;
+    device_limit: number;
+    additional_device_slots: number;
+    current_period_start: string;
+    current_period_end: string;
+    device_counts: {
+      total: number;
+      operational: number;
+      hibernating: number;
+    };
+  };
+  device_limits: {
+    total_limit: number;
+    operational_count: number;
+    hibernating_count: number;
+    available_slots: number;
+  };
+  devices: {
+    operational: Device[];
+    hibernating: Device[];
+  };
+  operational_devices: Device[];
+  hibernating_devices: Array<Device & {
+    hibernation_priority_score?: number;
+    in_grace_period: boolean;
+    days_until_grace_period_end?: number;
+  }>;
+  hibernation_priorities: HibernationPriority[];
+  upsell_options: UpsellOption[];
+  over_device_limit: boolean;
+}
 
+export interface DeviceManagementResponse {
+  status: 'success';
+  data: DeviceManagementData;
+}
+
+// ✅ NEW: Plan Change Types (existing but enhanced)
 export interface PlanChangePreview {
   change_type: 'new_subscription' | 'current' | 'upgrade' | 'downgrade_safe' | 'downgrade_warning';
   current_plan: {
@@ -81,6 +147,7 @@ export interface PlanChangePreview {
     requires_device_selection: boolean;
     excess_device_count: number;
     affected_devices: DeviceSelectionData[];
+    hibernating_devices_count?: number; // ✅ NEW
   };
   billing_impact: {
     current_monthly_cost: number;
@@ -95,11 +162,12 @@ export interface PlanChangePreview {
 }
 
 export interface ChangeStrategy {
-  type: 'immediate' | 'immediate_with_selection' | 'end_of_period' | 'pay_for_extra';
+  type: 'immediate' | 'immediate_with_selection' | 'end_of_period' | 'pay_for_extra' | 'hibernate_excess'; // ✅ NEW
   name: string;
   description: string;
   recommended: boolean;
   extra_monthly_cost?: number;
+  devices_to_hibernate?: number; // ✅ NEW
 }
 
 export interface DeviceSelectionData {
@@ -111,29 +179,39 @@ export interface DeviceSelectionData {
   alert_status: string;
   is_offline: boolean;
   priority_reason: string;
-  recommendation: 'recommended_to_disable' | 'consider_disabling' | 'keep_active' | 'has_errors';
+  recommendation: 'recommended_to_disable' | 'consider_disabling' | 'keep_active' | 'has_errors' | 'recommended_to_hibernate'; // ✅ NEW
   offline_duration?: string;
   sensor_count?: number;
   has_errors?: boolean;
   priority_score?: number;
+  hibernated_at?: string | null; // ✅ NEW
+  hibernating?: boolean; // ✅ NEW
+  can_hibernate?: boolean; // ✅ NEW
 }
 
 export interface PlanChangeRequest {
   plan_id: number;
   interval: 'month' | 'year';
-  strategy: 'immediate' | 'immediate_with_selection' | 'end_of_period' | 'pay_for_extra';
+  strategy: 'immediate' | 'immediate_with_selection' | 'end_of_period' | 'pay_for_extra' | 'hibernate_excess'; // ✅ NEW
   selected_device_ids?: number[];
+  devices_to_hibernate?: number[]; // ✅ NEW
 }
 
 export interface PlanChangeResult {
   status: 'completed' | 'scheduled' | 'failed';
   subscription?: Subscription;
   disabled_devices?: number;
+  hibernated_devices?: number; // ✅ NEW
   extra_device_slots?: number;
   extra_monthly_cost?: number;
   effective_date?: string;
   scheduled_change_id?: string;
   message: string;
+  hibernation_summary?: { // ✅ NEW
+    hibernated_count: number;
+    grace_period_days: number;
+    can_wake_immediately: boolean;
+  };
 }
 
 export interface ScheduledPlanChange {
@@ -143,6 +221,53 @@ export interface ScheduledPlanChange {
   scheduled_for: string;
   status: 'pending' | 'completed' | 'canceled' | 'failed';
   created_at: string;
+}
+
+// ✅ ENHANCED: Context types with hibernation methods
+export interface SubscriptionContextType {
+  subscription: Subscription | null;
+  plans: Plan[];
+  loading: boolean;
+  error: string | null;
+  
+  // ✅ NEW: Device management data
+  deviceManagement: DeviceManagementData | null;
+  
+  // Actions
+  fetchSubscription: () => Promise<void>;
+  selectPlan: (planId: number, interval: 'month' | 'year') => Promise<void>;
+  
+  // ✅ NEW: Device management methods
+  fetchDeviceManagement: () => Promise<void>;
+  hibernateDevice: (deviceId: number, reason?: string) => Promise<void>;
+  wakeDevice: (deviceId: number) => Promise<void>;
+  hibernateMultipleDevices: (deviceIds: number[], reason?: string) => Promise<void>;
+  wakeMultipleDevices: (deviceIds: number[]) => Promise<void>;
+  
+  // Plan change methods
+  previewPlanChange: (planId: number, interval: 'month' | 'year') => Promise<PlanChangePreview>;
+  changePlan: (request: PlanChangeRequest) => Promise<PlanChangeResult>;
+  getDevicesForSelection: () => Promise<DeviceSelectionData[]>;
+  schedulePlanChange: (planId: number, interval: 'month' | 'year') => Promise<any>;
+  
+  // Existing methods
+  cancelSubscription: () => Promise<void>;
+  addDeviceSlot: () => Promise<void>;
+  removeDeviceSlot: (deviceId: number) => Promise<void>;
+  
+  // Computed properties
+  canAddDevice: boolean;
+  deviceUsage: DeviceUsage;
+  nextBillingDate: Date | null;
+  isOnTrial: boolean;
+  daysUntilRenewal: number;
+  
+  // ✅ NEW: Hibernation computed properties
+  operationalDevicesCount: number;
+  hibernatingDevicesCount: number;
+  isOverDeviceLimit: boolean;
+  hasHibernatingDevices: boolean;
+  devicesInGracePeriod: number;
 }
 
 // API Response types
@@ -168,6 +293,8 @@ export interface SubscriptionResponse {
       with_warnings: number;
       device_limit: number;
       available_slots: number;
+      operational?: number; // ✅ NEW
+      hibernating?: number; // ✅ NEW
     };
   };
 }
@@ -186,6 +313,7 @@ export interface DevicesForSelectionResponse {
       recommended_to_disable: number;
       consider_disabling: number;
       keep_active: number;
+      recommended_to_hibernate?: number; // ✅ NEW
     };
   };
 }
@@ -215,36 +343,8 @@ export interface DeviceUsage {
   used: number;
   limit: number;
   percentage: number;
-}
-
-// Context types
-export interface SubscriptionContextType {
-  subscription: Subscription | null;
-  plans: Plan[];
-  loading: boolean;
-  error: string | null;
-  
-  // Actions
-  fetchSubscription: () => Promise<void>;
-  selectPlan: (planId: number, interval: 'month' | 'year') => Promise<void>;
-  
-  // ✅ NEW: Plan change methods
-  previewPlanChange: (planId: number, interval: 'month' | 'year') => Promise<PlanChangePreview>;
-  changePlan: (request: PlanChangeRequest) => Promise<PlanChangeResult>;
-  getDevicesForSelection: () => Promise<DeviceSelectionData[]>;
-  schedulePlanChange: (planId: number, interval: 'month' | 'year') => Promise<any>;
-  
-  // Existing methods
-  cancelSubscription: () => Promise<void>;
-  addDeviceSlot: () => Promise<void>;
-  removeDeviceSlot: (deviceId: number) => Promise<void>;
-  
-  // Computed properties
-  canAddDevice: boolean;
-  deviceUsage: DeviceUsage;
-  nextBillingDate: Date | null;
-  isOnTrial: boolean;
-  daysUntilRenewal: number;
+  operational?: number; // ✅ NEW
+  hibernating?: number; // ✅ NEW
 }
 
 // Hook return types
@@ -255,6 +355,7 @@ export interface UseSubscriptionGuardReturn {
   isBlocked: boolean;
   canAccessFeature: (feature: string) => boolean;
   loading?: boolean;
+  hasActiveSubscription?: boolean; // ✅ NEW
 }
 
 // Component Props
@@ -274,10 +375,35 @@ export interface SubscriptionGuardProps {
   allowedWithoutSubscription?: string[];
 }
 
+// ✅ NEW: Device Management Component Props
+export interface DeviceManagementProps {
+  deviceManagement: DeviceManagementData;
+  onHibernateDevice: (deviceId: number, reason?: string) => Promise<void>;
+  onWakeDevice: (deviceId: number) => Promise<void>;
+  onBulkHibernate: (deviceIds: number[], reason?: string) => Promise<void>;
+  onBulkWake: (deviceIds: number[]) => Promise<void>;
+  loading?: boolean;
+}
+
+export interface HibernationControlsProps {
+  device: Device;
+  onHibernate: (reason?: string) => Promise<void>;
+  onWake: () => Promise<void>;
+  loading?: boolean;
+  showReasonDialog?: boolean;
+}
+
+export interface UpsellBannerProps {
+  upsellOptions: UpsellOption[];
+  subscription: Subscription;
+  onSelectOption: (option: UpsellOption) => void;
+  onDismiss?: () => void;
+}
+
 // Utility types
 export type SubscriptionStatus = 'active' | 'pending' | 'canceled' | 'past_due' | 'trialing';
 export type PlanChangeType = 'new_subscription' | 'current' | 'upgrade' | 'downgrade_safe' | 'downgrade_warning';
-export type ChangeStrategyType = 'immediate' | 'immediate_with_selection' | 'end_of_period' | 'pay_for_extra';
+export type ChangeStrategyType = 'immediate' | 'immediate_with_selection' | 'end_of_period' | 'pay_for_extra' | 'hibernate_excess';
 
 // Error types
 export interface SubscriptionError extends Error {

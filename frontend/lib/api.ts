@@ -1,16 +1,27 @@
-// lib/api.ts - ENHANCED with plan change API methods (COMPLETE MERGED VERSION)
+// lib/api.ts - ENHANCED with hibernation endpoints (COMPLETE MERGED VERSION)
 // ✅ Fixed: Use the correct environment variable and default to Rails port 3000
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
-// ✅ ENHANCED: Import subscription types for plan change functionality
+// ✅ ENHANCED: Import both subscription and device types for hibernation functionality
 import { 
   Plan, 
   Subscription, 
   PlanChangePreview,
   PlanChangeRequest,
   PlanChangeResult,
-  DeviceSelectionData 
+  DeviceSelectionData,
+  DeviceManagementData,
+  DeviceManagementResponse
 } from '@/types/subscription';
+
+import {
+  Device,
+  HibernateDeviceRequest,
+  HibernateDeviceResponse,
+  WakeDeviceResponse,
+  BulkHibernationRequest,
+  BulkWakeRequest
+} from '@/types/device';
 
 export interface ApiResponse<T = any> {
   status: {
@@ -160,9 +171,9 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 
-// ✅ ENHANCED: Complete API object with all endpoints including plan change methods
+// ✅ ENHANCED: Complete API object with hibernation endpoints
 export const api = {
-  // ✅ NEW: Direct API method access for flexibility
+  // ✅ Direct API method access for flexibility
   get: apiClient.get.bind(apiClient),
   post: apiClient.post.bind(apiClient),
   put: apiClient.put.bind(apiClient),
@@ -191,7 +202,7 @@ export const api = {
     device: (id: string) => apiClient.get(`/api/v1/frontend/dashboard/device/${id}`),
   },
 
-  // Devices
+  // ✅ ENHANCED: Devices with hibernation support
   devices: {
     list: () => apiClient.get('/api/v1/frontend/devices'),
     get: (id: string) => apiClient.get(`/api/v1/frontend/devices/${id}`),
@@ -202,6 +213,13 @@ export const api = {
       apiClient.patch(`/api/v1/frontend/devices/${id}/update_status`, { device: { status } }),
     sendCommand: (id: string, command: string, args?: any) =>
       apiClient.post(`/api/v1/frontend/devices/${id}/commands`, { command, args }),
+    
+    // ✅ NEW: Hibernation endpoints
+    hibernate: (id: string, request: HibernateDeviceRequest) =>
+      apiClient.post(`/api/v1/frontend/devices/${id}/hibernate`, request) as Promise<HibernateDeviceResponse>,
+    
+    wake: (id: string) =>
+      apiClient.post(`/api/v1/frontend/devices/${id}/wake`) as Promise<WakeDeviceResponse>,
   },
 
   // ✅ Preset Management API
@@ -242,7 +260,7 @@ export const api = {
       }),
   },
 
-  // ✅ NEW: Onboarding (for new subscriptions)
+  // ✅ Onboarding (for new subscriptions)
   onboarding: {
     choosePlan: () => apiClient.get('/api/v1/frontend/onboarding/choose_plan'),
     selectPlan: (planId: number, interval: 'month' | 'year') =>
@@ -252,7 +270,7 @@ export const api = {
       }),
   },
 
-  // ✅ ENHANCED: Subscription management with plan change capabilities
+  // ✅ ENHANCED: Subscription management with hibernation capabilities
   subscriptions: {
     // Get subscription data
     list: () => apiClient.get('/api/v1/frontend/subscriptions'),
@@ -260,7 +278,18 @@ export const api = {
     selectPlan: (plan_id: string, interval?: string) =>
       apiClient.post('/api/v1/frontend/subscriptions/select_plan', { plan_id, interval }),
     
-    // ✅ NEW: Plan change workflow
+    // ✅ NEW: Device management endpoint (your working endpoint!)
+    deviceManagement: () =>
+      apiClient.get('/api/v1/frontend/subscriptions/device_management') as Promise<DeviceManagementResponse>,
+    
+    // ✅ NEW: Bulk hibernation operations
+    hibernateDevices: (request: BulkHibernationRequest) =>
+      apiClient.post('/api/v1/frontend/subscriptions/hibernate_devices', request),
+    
+    wakeDevices: (request: BulkWakeRequest) =>
+      apiClient.post('/api/v1/frontend/subscriptions/wake_devices', request),
+    
+    // Plan change workflow
     previewChange: (planId: number, interval: 'month' | 'year') =>
       apiClient.post('/api/v1/frontend/subscriptions/preview_change', {
         plan_id: planId,
@@ -272,7 +301,8 @@ export const api = {
         plan_id: request.plan_id,
         interval: request.interval,
         strategy: request.strategy,
-        selected_device_ids: request.selected_device_ids || []
+        selected_device_ids: request.selected_device_ids || [],
+        devices_to_hibernate: request.devices_to_hibernate || []
       }),
     
     scheduleChange: (planId: number, interval: 'month' | 'year') =>
@@ -305,11 +335,28 @@ export const api = {
   },
 };
 
-// ✅ NEW: Subscription API helper methods for cleaner usage
+// ✅ ENHANCED: Subscription API helper methods for hibernation
 export const subscriptionAPI = {
   // Plan selection (for new subscriptions)
   selectPlan: (planId: number, interval: 'month' | 'year') =>
     api.onboarding.selectPlan(planId, interval),
+  
+  // ✅ NEW: Device management
+  getDeviceManagement: () => api.subscriptions.deviceManagement(),
+  
+  // ✅ NEW: Individual device hibernation
+  hibernateDevice: (deviceId: number, reason: string = 'user_choice') =>
+    api.devices.hibernate(deviceId.toString(), { reason }),
+  
+  wakeDevice: (deviceId: number) =>
+    api.devices.wake(deviceId.toString()),
+  
+  // ✅ NEW: Bulk hibernation operations  
+  hibernateMultipleDevices: (deviceIds: number[], reason: string = 'user_choice') =>
+    api.subscriptions.hibernateDevices({ device_ids: deviceIds, reason }),
+  
+  wakeMultipleDevices: (deviceIds: number[]) =>
+    api.subscriptions.wakeDevices({ device_ids: deviceIds }),
   
   // Plan change workflow
   previewPlanChange: (planId: number, interval: 'month' | 'year') =>
@@ -332,7 +379,7 @@ export const subscriptionAPI = {
     api.subscriptions.removeDeviceSlot(id, deviceId),
 };
 
-// ✅ NEW: Utility functions for subscription management
+// ✅ ENHANCED: Utility functions with hibernation support
 export const subscriptionUtils = {
   calculateYearlySavings: (monthlyPrice: number, yearlyPrice: number): number => {
     return (monthlyPrice * 12) - yearlyPrice;
@@ -392,4 +439,54 @@ export const subscriptionUtils = {
     
     return (currentDeviceCount + requestedDevices) <= deviceLimit;
   },
+
+  // ✅ NEW: Hibernation utility functions
+  getOperationalDevicesCount: (subscription: Subscription | null): number => {
+    if (!subscription?.devices) return 0;
+    return subscription.devices.filter(d => d.operational !== false && !d.hibernated_at).length;
+  },
+
+  getHibernatingDevicesCount: (subscription: Subscription | null): number => {
+    if (!subscription?.devices) return 0;
+    return subscription.devices.filter(d => d.hibernating === true || d.hibernated_at).length;
+  },
+
+  isOverDeviceLimit: (subscription: Subscription | null): boolean => {
+    if (!subscription) return false;
+    const operationalCount = subscriptionUtils.getOperationalDevicesCount(subscription);
+    return operationalCount > subscription.device_limit;
+  },
+
+  formatHibernationReason: (reason: string | null): string => {
+    if (!reason) return 'No reason provided';
+    
+    const reasonMap: Record<string, string> = {
+      'subscription_limit': 'Over subscription limit',
+      'user_choice': 'User hibernated',
+      'automatic': 'Automatically hibernated',
+      'grace_period_expired': 'Grace period expired',
+      'payment_overdue': 'Payment overdue'
+    };
+
+    return reasonMap[reason] || reason;
+  },
+
+  calculateGracePeriodDays: (gracePeriodEndDate: string | null): number => {
+    if (!gracePeriodEndDate) return 0;
+    const now = new Date();
+    const endDate = new Date(gracePeriodEndDate);
+    const diffTime = endDate.getTime() - now.getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  },
+
+  getHibernationPriorityColor: (score: number): string => {
+    if (score >= 80) return 'text-red-400';
+    if (score >= 60) return 'text-orange-400';
+    return 'text-green-400';
+  },
+
+  formatUpsellCost: (option: any): string => {
+    if (option.cost === 0) return 'Free';
+    return `$${option.cost}/${option.billing}`;
+  }
 };
