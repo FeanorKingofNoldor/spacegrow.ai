@@ -403,32 +403,8 @@ export const subscriptionUtils = {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   },
 
-  getChangeTypeColor: (changeType: string): string => {
-    switch (changeType) {
-      case 'upgrade': return 'text-green-400';
-      case 'downgrade_warning': return 'text-orange-400';
-      case 'downgrade_safe': return 'text-blue-400';
-      case 'current': return 'text-cosmic-text-muted';
-      default: return 'text-cosmic-text';
-    }
-  },
-
-  getChangeTypeIcon: (changeType: string): string => {
-    switch (changeType) {
-      case 'upgrade': return '📈';
-      case 'downgrade_warning': return '⚠️';
-      case 'downgrade_safe': return '📉';
-      case 'current': return '➡️';
-      default: return '🔄';
-    }
-  },
-
   formatDeviceCount: (count: number): string => {
     return `${count} device${count !== 1 ? 's' : ''}`;
-  },
-
-  getStrategyRecommendation: (strategy: any): boolean => {
-    return strategy.recommended || false;
   },
 
   canAddDevices: (subscription: Subscription | null, requestedDevices: number = 1): boolean => {

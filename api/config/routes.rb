@@ -88,7 +88,7 @@ Rails.application.routes.draw do
             post :preview_change      
             post :change_plan         
             post :schedule_change     
-            get :devices_for_selection 
+            get :devices_for_selection # ✅ ADDED: This was the only missing route
             
             # Subscription management
             post :cancel              

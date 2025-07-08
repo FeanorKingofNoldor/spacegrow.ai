@@ -49,7 +49,6 @@ export interface Preset {
   device_id?: string;
 }
 
-// ✅ NEW: Hibernation-related interfaces
 export interface HibernationPriority {
   device_id: number;
   device_name: string;
@@ -104,7 +103,7 @@ export interface DeviceManagementData {
   over_device_limit: boolean;
 }
 
-// ✅ ENHANCED: Device interface with hibernation fields
+
 export interface Device {
   id: number;
   name: string;
@@ -144,7 +143,6 @@ export interface DeviceDetail extends Device {
   profiles: Preset[];
 }
 
-// ✅ NEW: Device hibernation action interfaces
 export interface HibernateDeviceRequest {
   reason: string;
   grace_period_days?: number;

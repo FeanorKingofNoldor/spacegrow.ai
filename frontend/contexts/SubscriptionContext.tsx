@@ -1,4 +1,4 @@
-// contexts/SubscriptionContext.tsx - ENHANCED with hibernation management
+// contexts/SubscriptionContext.tsx - FIXED to use AuthContext subscription data
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
@@ -33,36 +33,48 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   // ✅ NEW: Device management state
   const [deviceManagement, setDeviceManagement] = useState<DeviceManagementData | null>(null);
   
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
 
-  // Fetch subscription data
-  const fetchSubscription = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
+  // ✅ FIXED: Initialize subscription from AuthContext immediately
+  useEffect(() => {
+    if (user?.subscription) {
+      console.log('🔄 Using subscription from AuthContext:', user.subscription);
+      setSubscription(user.subscription);
+      setLoading(false); // ✅ Set loading to false immediately
+    } else if (user && !user.subscription) {
+      console.log('🔄 User loaded but no subscription in AuthContext');
+      setSubscription(null);
+      setLoading(false); // ✅ Set loading to false for users without subscription
     }
+  }, [user]);
+
+  // Fetch additional subscription data (plans, etc.) - but don't block loading
+  const fetchSubscriptionDetails = useCallback(async () => {
+    if (!user) return;
 
     try {
       setError(null);
-      console.log('🔄 Fetching subscription data...');
+      console.log('🔄 Fetching additional subscription details...');
       
       const response = await api.get('/api/v1/frontend/subscriptions') as SubscriptionResponse;
       
-      setSubscription(response.data.current_subscription);
+      // ✅ FIXED: Only update subscription if we don't have it from AuthContext
+      if (!subscription && response.data.current_subscription) {
+        setSubscription(response.data.current_subscription);
+      }
+      
+      // Always update plans
       setPlans(response.data.plans);
       
-      console.log('✅ Subscription data loaded:', {
-        subscription: response.data.current_subscription,
+      console.log('✅ Additional subscription details loaded:', {
         plansCount: response.data.plans.length
       });
       
     } catch (err) {
-      console.error('❌ Failed to fetch subscription:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch subscription data');
-    } finally {
-      setLoading(false);
+      console.error('❌ Failed to fetch subscription details:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch subscription details');
     }
-  }, [user]);
+  }, [user, subscription]);
 
   // ✅ NEW: Fetch device management data
   const fetchDeviceManagement = useCallback(async () => {
@@ -327,7 +339,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       await api.subscriptions.cancel(subscription.id.toString());
       
       // Refresh subscription data
-      await fetchSubscription();
+      await fetchSubscriptionDetails();
       
       console.log('✅ Subscription canceled successfully');
       
@@ -338,7 +350,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription, subscription]);
+  }, [fetchSubscriptionDetails, subscription]);
 
   // Add device slot
   const addDeviceSlot = useCallback(async () => {
@@ -356,7 +368,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       await api.subscriptions.addDeviceSlot(subscription.id.toString());
       
       // Refresh subscription data
-      await fetchSubscription();
+      await fetchSubscriptionDetails();
       await fetchDeviceManagement();
       
       console.log('✅ Device slot added successfully');
@@ -368,7 +380,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription, fetchDeviceManagement, subscription]);
+  }, [fetchSubscriptionDetails, fetchDeviceManagement, subscription]);
 
   // Remove device slot
   const removeDeviceSlot = useCallback(async (deviceId: number) => {
@@ -386,7 +398,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       await api.subscriptions.removeDeviceSlot(subscription.id.toString(), deviceId.toString());
       
       // Refresh subscription data
-      await fetchSubscription();
+      await fetchSubscriptionDetails();
       await fetchDeviceManagement();
       
       console.log('✅ Device slot removed successfully');
@@ -398,12 +410,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [fetchSubscription, fetchDeviceManagement, subscription]);
+  }, [fetchSubscriptionDetails, fetchDeviceManagement, subscription]);
 
-  // Initial load
+  // ✅ FIXED: Initial load - only fetch details, don't wait for them
   useEffect(() => {
-    fetchSubscription();
-  }, [fetchSubscription]);
+    if (user && !authLoading) {
+      fetchSubscriptionDetails(); // Don't await - let it run in background
+    }
+  }, [user, authLoading]); // ✅ Depend on authLoading
 
   // Load device management when subscription changes
   useEffect(() => {
@@ -450,14 +464,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const contextValue: SubscriptionContextType = {
     subscription,
     plans,
-    loading,
+    loading: loading,
     error,
     
     // ✅ NEW: Device management data
     deviceManagement,
     
     // Actions
-    fetchSubscription,
+    fetchSubscription: fetchSubscriptionDetails, // ✅ Renamed for clarity
     selectPlan, // Smart - handles both onboarding and plan changes
     
     // ✅ NEW: Device management methods
@@ -511,22 +525,34 @@ export function useSubscription() {
 // ✅ ENHANCED: Subscription guard hook with hibernation awareness
 export function useSubscriptionGuard() {
   const { subscription, loading } = useSubscription();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+
+  // ✅ FIXED: Use subscription from AuthContext as fallback
+  const effectiveSubscription = subscription || user?.subscription;
+  const effectiveLoading = authLoading;
+
+  console.log('🔒 SubscriptionGuard check:', {
+    user: !!user,
+    authLoading,
+    subscription: !!effectiveSubscription,
+    subscriptionStatus: effectiveSubscription?.status,
+    effectiveLoading
+  });
 
   // ✅ Treat canceled subscriptions as "no active subscription"
-  const hasActiveSubscription = !!subscription && subscription.status !== 'canceled';
-  const hasSubscription = !!subscription; // Keep for backward compatibility
-  const subscriptionStatus = subscription?.status || null;
+  const hasActiveSubscription = !!effectiveSubscription && effectiveSubscription.status !== 'canceled';
+  const hasSubscription = !!effectiveSubscription; // Keep for backward compatibility
+  const subscriptionStatus = effectiveSubscription?.status || null;
   
-  // ✅ Canceled users need onboarding (new plan selection)
-  const needsOnboarding = user && (!subscription || subscription.status === 'canceled');
+  // ✅ FIXED: Only check onboarding need when not loading
+  const needsOnboarding = !effectiveLoading && user && (!effectiveSubscription || effectiveSubscription.status === 'canceled');
   
   // ✅ Only past_due is blocked (canceled should go to onboarding)
-  const isBlocked = subscription?.status === 'past_due';
+  const isBlocked = effectiveSubscription?.status === 'past_due';
 
   const canAccessFeature = useCallback((feature: string) => {
     // ✅ Only allow feature access for active subscriptions
-    if (!subscription || subscription.status === 'canceled') return false;
+    if (!effectiveSubscription || effectiveSubscription.status === 'canceled') return false;
     
     // Basic feature access logic
     const planFeatures = {
@@ -542,8 +568,8 @@ export function useSubscriptionGuard() {
       ]
     };
 
-    return planFeatures[subscription.plan?.name as keyof typeof planFeatures]?.includes(feature) || false;
-  }, [subscription]);
+    return planFeatures[effectiveSubscription.plan?.name as keyof typeof planFeatures]?.includes(feature) || false;
+  }, [effectiveSubscription]);
 
   return {
     hasSubscription,
@@ -552,6 +578,6 @@ export function useSubscriptionGuard() {
     needsOnboarding,
     isBlocked,
     canAccessFeature,
-    loading
+    loading: effectiveLoading // ✅ Return combined loading state
   };
 }

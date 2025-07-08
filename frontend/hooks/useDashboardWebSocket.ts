@@ -38,7 +38,7 @@ export function useDashboardWebSocket({
       // ✅ FIXED: Better WebSocket URL handling with fallback
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${protocol}//${host}/cable`;
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `ws://localhost:3000/cable`;
       
       console.log('🔌 Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);

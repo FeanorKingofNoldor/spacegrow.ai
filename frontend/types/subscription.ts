@@ -173,20 +173,6 @@ export interface ChangeStrategy {
 export interface DeviceSelectionData {
   id: number;
   name: string;
-  device_type: string;
-  status: string;
-  last_connection: string | null;
-  alert_status: string;
-  is_offline: boolean;
-  priority_reason: string;
-  recommendation: 'recommended_to_disable' | 'consider_disabling' | 'keep_active' | 'has_errors' | 'recommended_to_hibernate'; // ✅ NEW
-  offline_duration?: string;
-  sensor_count?: number;
-  has_errors?: boolean;
-  priority_score?: number;
-  hibernated_at?: string | null; // ✅ NEW
-  hibernating?: boolean; // ✅ NEW
-  can_hibernate?: boolean; // ✅ NEW
 }
 
 export interface PlanChangeRequest {

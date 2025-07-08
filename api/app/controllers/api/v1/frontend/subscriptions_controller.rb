@@ -15,7 +15,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     }
   end
 
-  # ✅ ENHANCED: Device management endpoint for hibernation dashboard
   def device_management
     operational_devices = current_user.devices.operational.includes(:device_type)
     hibernating_devices = current_user.devices.hibernating.includes(:device_type)
@@ -34,7 +33,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
           operational: operational_devices.map { |d| device_json(d) },
           hibernating: hibernating_devices.map { |d| device_json(d, include_hibernation: true) }
         },
-        # ✅ ADDED: Additional hibernation data
         operational_devices: operational_devices.map { |d| device_json(d) },
         hibernating_devices: hibernating_devices.map { |d| hibernating_device_json(d) },
         hibernation_priorities: @subscription.hibernation_priorities,
@@ -44,7 +42,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     }
   end
 
-  # ✅ NEW: Activate device endpoint (for ESP32 or manual activation)
   def activate_device
     device_id = params[:device_id]
     device = current_user.devices.find_by(id: device_id)
@@ -63,7 +60,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       }, status: :unprocessable_entity
     end
 
-    # Use the subscription's activation logic
     result = @subscription.activate_device!(device)
     
     render json: {
@@ -73,7 +69,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     }
   end
 
-  # ✅ ENHANCED: Wake up hibernating devices
   def wake_devices
     device_ids = params[:device_ids] || []
     result = @subscription.wake_up_devices!(device_ids)
@@ -84,7 +79,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
         message: "Successfully woke up #{result[:woken_devices].count} device(s)",
         data: {
           woken_devices: result[:woken_devices],
-          # ✅ ADDED: Additional data from both versions
           operational_count: @subscription.operational_devices_count,
           available_slots: [@subscription.device_limit - @subscription.operational_devices_count, 0].max
         }
@@ -97,7 +91,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     end
   end
 
-  # ✅ ENHANCED: Hibernate operational devices
   def hibernate_devices
     device_ids = params[:device_ids] || []
     reason = params[:reason] || 'user_choice'
@@ -109,7 +102,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
         message: "Successfully hibernated #{result[:hibernated_devices].count} device(s)",
         data: {
           hibernated_devices: result[:hibernated_devices],
-          # ✅ ADDED: Additional data from both versions
           operational_count: @subscription.operational_devices_count,
           hibernating_count: @subscription.hibernating_devices_count
         }
@@ -139,9 +131,21 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     render json: {
       status: 'success',
       data: {
-        current_plan: plan_json(current_subscription.plan),
-        target_plan: plan_json(target_plan),
-        analysis: analysis
+        change_type: analysis[:change_type],
+        current_plan: {
+          **plan_json(current_subscription.plan),
+          devices_used: current_subscription.operational_devices_count,
+          device_limit: current_subscription.plan.device_limit,
+          current_interval: current_subscription.interval
+        },
+        target_plan: {
+          **plan_json(target_plan),
+          target_interval: target_interval
+        },
+        device_impact: build_device_impact(analysis, current_subscription, target_plan),
+        billing_impact: build_billing_impact(current_subscription, target_plan, target_interval),
+        available_strategies: build_strategies(analysis, current_subscription, target_plan),
+        warnings: build_warnings(analysis, current_subscription, target_plan)
       }
     }
   rescue ActiveRecord::RecordNotFound
@@ -151,6 +155,7 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     }, status: :not_found
   end
 
+  # ✅ FIXED: Updated change_plan method with corrected strategy names and parameter handling
   def change_plan
     target_plan = Plan.find(params[:plan_id])
     target_interval = params[:interval] || 'month'
@@ -164,18 +169,25 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       }, status: :unprocessable_entity
     end
 
+    # ✅ FIXED: Updated strategy handling to match frontend names
     case strategy
     when 'immediate'
       result = execute_immediate_plan_change(current_subscription, target_plan, target_interval)
-    when 'immediate_with_device_selection'
-      selected_devices = params[:selected_devices] || []
-      result = execute_plan_change_with_device_selection(current_subscription, target_plan, target_interval, selected_devices)
-    when 'pay_for_extra_devices'
+    when 'immediate_with_selection'  # ✅ FIXED: Changed from 'immediate_with_device_selection'
+      selected_device_ids = params[:selected_device_ids] || []  # ✅ FIXED: Changed from selected_devices
+      result = execute_plan_change_with_device_selection(current_subscription, target_plan, target_interval, selected_device_ids)
+    when 'pay_for_extra'  # ✅ FIXED: Changed from 'pay_for_extra_devices'
       result = execute_plan_change_with_extra_devices(current_subscription, target_plan, target_interval)
+    when 'hibernate_excess'  # ✅ NEW: Added missing strategy
+      selected_device_ids = params[:selected_device_ids] || []
+      result = execute_plan_change_with_hibernation(current_subscription, target_plan, target_interval, selected_device_ids)
+    when 'end_of_period'  # ✅ NEW: Added missing strategy
+      selected_device_ids = params[:selected_device_ids] || []
+      result = schedule_plan_change_for_period_end(current_subscription, target_plan, target_interval, selected_device_ids)
     else
       return render json: {
         status: 'error',
-        message: 'Invalid strategy'
+        message: "Invalid strategy: #{strategy}"  # ✅ IMPROVED: Show which strategy was invalid
       }, status: :bad_request
     end
 
@@ -184,7 +196,8 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
         status: 'success',
         message: result[:message],
         data: {
-          subscription: subscription_json(current_user.subscription.reload)
+          change_result: result,
+          updated_subscription: subscription_json(current_user.subscription.reload)
         }
       }
     else
@@ -198,6 +211,26 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       status: 'error',
       message: 'Plan not found'
     }, status: :not_found
+  end
+
+  # ✅ NEW: Added missing devices_for_selection endpoint
+  def devices_for_selection
+    devices = DeviceManagementService.get_devices_for_selection(current_user)
+    
+    recommendations = {
+      recommended_to_disable: devices.count { |d| d[:recommendation] == 'recommended_to_disable' },
+      consider_disabling: devices.count { |d| d[:recommendation] == 'consider_disabling' },
+      keep_active: devices.count { |d| d[:recommendation] == 'keep_active' }
+    }
+    
+    render json: {
+      status: 'success',
+      data: {
+        devices: devices,
+        total_count: devices.count,
+        recommendations: recommendations
+      }
+    }
   end
 
   def schedule_change
@@ -384,8 +417,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       additional_device_slots: subscription.additional_device_slots,
       current_period_start: subscription.current_period_start,
       current_period_end: subscription.current_period_end,
-      
-      # ✅ NEW: Hibernation-aware device counts
       device_counts: {
         total: subscription.total_devices_count,
         operational: subscription.operational_devices_count,
@@ -394,7 +425,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     }
   end
 
-  # ✅ ENHANCED: Device JSON with hibernation info (supports both formats)
   def device_json(device, include_hibernation: false)
     json = {
       id: device.id,
@@ -421,7 +451,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     json
   end
 
-  # ✅ NEW: Enhanced device JSON for hibernation (specific format for hibernating devices)
   def hibernating_device_json(device)
     {
       device_id: device.id,
@@ -437,7 +466,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     }
   end
 
-  # ✅ ENHANCED: Use operational devices for plan analysis (hibernation-aware)
   def analyze_plan_change(current_subscription, target_plan, target_interval)
     current_plan = current_subscription.plan
     
@@ -466,7 +494,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       }
     end
     
-    # ✅ ENHANCED: Count operational devices (not hibernating ones)
     current_operational_devices = current_subscription.operational_devices_count
     
     if current_operational_devices <= target_plan.device_limit
@@ -479,13 +506,162 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       excess_devices = current_operational_devices - target_plan.device_limit
       return {
         change_type: 'downgrade_warning',
-        available_strategies: ['immediate_with_device_selection', 'pay_for_extra_devices'],
+        available_strategies: ['immediate_with_selection', 'pay_for_extra', 'hibernate_excess', 'end_of_period'],
         description: "Downgrade requires action - #{excess_devices} operational devices exceed new limit",
         excess_devices: excess_devices,
         current_device_count: current_operational_devices,
         new_device_limit: target_plan.device_limit
       }
     end
+  end
+
+  def build_device_impact(analysis, current_subscription, target_plan)
+    current_operational_devices = current_subscription.operational_devices_count
+    target_device_limit = target_plan.device_limit
+    
+    requires_device_selection = analysis[:change_type] == 'downgrade_warning'
+    excess_devices = [current_operational_devices - target_device_limit, 0].max
+    
+    affected_devices = []
+    if requires_device_selection
+      affected_devices = current_user.devices.operational.map do |device|
+        {
+          id: device.id,
+          name: device.name
+        }
+      end
+    end
+
+    {
+      requires_device_selection: requires_device_selection,
+      current_device_count: current_operational_devices,
+      target_device_limit: target_device_limit,
+      device_difference: target_device_limit - current_subscription.plan.device_limit,
+      excess_device_count: excess_devices,
+      affected_devices: affected_devices
+    }
+  end
+
+  def build_billing_impact(current_subscription, target_plan, target_interval)
+    current_monthly_cost = current_subscription.plan.monthly_price + 
+                          (current_subscription.additional_device_slots * 5)
+    
+    target_monthly_cost = if target_interval == 'month'
+                           target_plan.monthly_price
+                         else
+                           (target_plan.yearly_price / 12.0).round(2)
+                         end
+    
+    cost_difference = target_monthly_cost - current_monthly_cost
+    
+    {
+      current_monthly_cost: current_monthly_cost,
+      target_monthly_cost: target_monthly_cost,
+      cost_difference: cost_difference,
+      no_refund_policy: true,
+      extra_device_cost_per_month: 5.0,
+      potential_extra_cost: [current_subscription.operational_devices_count - target_plan.device_limit, 0].max * 5
+    }
+  end
+
+  def build_strategies(analysis, current_subscription, target_plan)
+    strategies = []
+    
+    case analysis[:change_type]
+    when 'current'
+      strategies << {
+        type: 'none',
+        name: 'No Change Needed',
+        description: 'You are already on this plan and billing interval',
+        recommended: true
+      }
+    
+    when 'upgrade', 'interval_change'
+      strategies << {
+        type: 'immediate',
+        name: 'Change Immediately',
+        description: 'Your plan will be updated right away and billed on your next cycle',
+        recommended: true
+      }
+    
+    when 'downgrade_safe'
+      strategies << {
+        type: 'immediate',
+        name: 'Change Immediately',
+        description: 'Safe to change now - all your devices will remain active',
+        recommended: true
+      }
+      
+      strategies << {
+        type: 'end_of_period',
+        name: 'Change at End of Period',
+        description: 'Wait until your current billing period ends',
+        recommended: false
+      }
+    
+    when 'downgrade_warning'
+      excess_devices = analysis[:excess_devices] || 0
+      
+      strategies << {
+        type: 'immediate_with_selection',
+        name: 'Choose Devices to Keep',
+        description: "Select which #{target_plan.device_limit} devices to keep active",
+        recommended: true
+      }
+      
+      strategies << {
+        type: 'hibernate_excess',
+        name: 'Hibernate Extra Devices',
+        description: "Hibernate #{excess_devices} devices (can wake them later)",
+        recommended: false,
+        devices_to_hibernate: excess_devices
+      }
+      
+      strategies << {
+        type: 'pay_for_extra',
+        name: 'Pay for Extra Devices',
+        description: "Keep all devices active (+$#{excess_devices * 5}/month)",
+        recommended: false,
+        extra_monthly_cost: excess_devices * 5
+      }
+      
+      strategies << {
+        type: 'end_of_period',
+        name: 'Schedule for Later',
+        description: 'Schedule the change for the end of your billing period',
+        recommended: false
+      }
+    end
+    
+    strategies
+  end
+
+  def build_warnings(analysis, current_subscription, target_plan)
+    warnings = []
+    
+    case analysis[:change_type]
+    when 'downgrade_warning'
+      excess_count = analysis[:excess_devices] || 0
+      warnings << "You have #{excess_count} more operational devices than the #{target_plan.name} plan allows"
+      warnings << "Excess devices will need to be hibernated or you'll pay extra fees"
+    
+    when 'downgrade_safe'
+      warnings << "This is a downgrade but all your devices will remain active"
+    
+    when 'upgrade'
+      if target_plan.monthly_price > current_subscription.plan.monthly_price
+        increase = target_plan.monthly_price - current_subscription.plan.monthly_price
+        warnings << "Your monthly cost will increase by $#{increase}"
+      end
+    end
+    
+    warnings << "No refunds will be issued for the current billing period"
+    
+    if current_subscription.additional_device_slots > 0
+      warnings << "Your additional device slots will be reset"
+    end
+    
+    warnings
   end
 
   def execute_immediate_plan_change(subscription, target_plan, target_interval)
@@ -499,15 +675,15 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     { success: false, error: e.message }
   end
 
-  def execute_plan_change_with_device_selection(subscription, target_plan, target_interval, selected_devices)
-    device_ids = selected_devices.is_a?(Array) ? selected_devices : []
+  # ✅ FIXED: Updated to use selected_device_ids parameter
+  def execute_plan_change_with_device_selection(subscription, target_plan, target_interval, selected_device_ids)
+    device_ids = selected_device_ids.is_a?(Array) ? selected_device_ids : []
     
     if device_ids.length > target_plan.device_limit
       return { success: false, error: "Too many devices selected for #{target_plan.name} plan" }
     end
     
     ActiveRecord::Base.transaction do
-      # ✅ ENHANCED: Hibernate operational devices not in selection
       excess_devices = current_user.devices.operational.where.not(id: device_ids)
       excess_devices.each { |device| device.hibernate!(reason: 'plan_change') }
       
@@ -524,7 +700,6 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
   end
 
   def execute_plan_change_with_extra_devices(subscription, target_plan, target_interval)
-    # ✅ ENHANCED: Count operational devices for extra slot calculation
     current_operational_devices = subscription.operational_devices_count
     extra_slots_needed = current_operational_devices - target_plan.device_limit
     
@@ -535,6 +710,74 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
     )
     
     { success: true, message: "Plan changed with #{extra_slots_needed} additional device slots" }
+  rescue => e
+    { success: false, error: e.message }
+  end
+
+  # ✅ NEW: Added hibernate_excess strategy handler
+  def execute_plan_change_with_hibernation(subscription, target_plan, target_interval, selected_device_ids)
+    device_ids = selected_device_ids.is_a?(Array) ? selected_device_ids : []
+    
+    ActiveRecord::Base.transaction do
+      # Hibernate the selected excess devices
+      devices_to_hibernate = current_user.devices.operational.where(id: device_ids)
+      devices_to_hibernate.each { |device| device.hibernate!(reason: 'plan_change_hibernation') }
+      
+      subscription.update!(
+        plan: target_plan,
+        interval: target_interval,
+        additional_device_slots: 0
+      )
+    end
+    
+    { 
+      success: true, 
+      message: "Plan changed with #{device_ids.length} devices hibernated",
+      hibernated_devices: device_ids.length,
+      hibernation_summary: {
+        hibernated_count: device_ids.length,
+        grace_period_days: 7,
+        can_wake_immediately: true
+      }
+    }
+  rescue => e
+    { success: false, error: e.message }
+  end
+
+  # ✅ NEW: Added end_of_period strategy handler
+  def schedule_plan_change_for_period_end(subscription, target_plan, target_interval, selected_device_ids)
+    effective_date = subscription.current_period_end
+    
+    # Create scheduled plan change
+    scheduled_change = ScheduledPlanChange.create!(
+      subscription: subscription,
+      target_plan: target_plan,
+      target_interval: target_interval,
+      scheduled_for: effective_date,
+      status: 'pending',
+      notes: "Plan change with device hibernation scheduled for period end"
+    )
+    
+    # If devices need to be hibernated, schedule that too
+    if selected_device_ids.present?
+      DeviceManagementService.schedule_device_changes(
+        current_user, 
+        selected_device_ids, 
+        effective_date
+      )
+    end
+    
+    # Schedule the job
+    ScheduledPlanChangeJob.set(wait_until: effective_date)
+                         .perform_later(subscription.id, target_plan.id, target_interval)
+    
+    { 
+      success: true, 
+      message: "Plan change scheduled for #{effective_date.strftime('%B %d, %Y')}",
+      status: 'scheduled',
+      effective_date: effective_date,
+      scheduled_change_id: scheduled_change.id
+    }
   rescue => e
     { success: false, error: e.message }
   end

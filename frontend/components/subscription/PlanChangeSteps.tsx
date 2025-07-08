@@ -272,13 +272,13 @@ export function PreviewStep({ preview, selectedPlan, selectedInterval, loading }
           <div>
             <div className="text-sm text-cosmic-text-muted mb-1">Current Monthly Cost</div>
             <div className="text-xl font-bold text-cosmic-text">
-              ${billing_impact.current_monthly_cost.toFixed(2)}
+              ${(Number(billing_impact.current_monthly_cost) || 0).toFixed(2)}
             </div>
           </div>
           <div>
             <div className="text-sm text-cosmic-text-muted mb-1">New Monthly Cost</div>
             <div className="text-xl font-bold text-cosmic-text">
-              ${billing_impact.target_monthly_cost.toFixed(2)}
+              ${(Number(billing_impact.target_monthly_cost) || 0).toFixed(2)}
             </div>
           </div>
         </div>
@@ -290,12 +290,12 @@ export function PreviewStep({ preview, selectedPlan, selectedInterval, loading }
               "font-semibold",
               billing_impact.cost_difference >= 0 ? "text-red-400" : "text-green-400"
             )}>
-              {billing_impact.cost_difference >= 0 ? '+' : ''}${billing_impact.cost_difference.toFixed(2)}
+              {billing_impact.cost_difference >= 0 ? '+' : ''}${(Number(billing_impact.cost_difference) || 0).toFixed(2)}
             </span>
           </div>
           {billing_impact.cost_difference < 0 && (
             <p className="text-green-400 text-sm mt-2">
-              💰 You'll save ${Math.abs(billing_impact.cost_difference).toFixed(2)}/month with this change!
+              💰 You'll save ${Math.abs(Number(billing_impact.cost_difference) || 0).toFixed(2)}/month with this change!
             </p>
           )}
         </div>
@@ -414,7 +414,9 @@ export function StrategyStep({ strategies, selectedStrategy, onStrategySelect, p
   );
 }
 
-// Step 4: Device Selection
+// In PlanChangeSteps.tsx - REPLACE the DeviceSelectionStep component
+
+// Step 4: Device Selection (SIMPLIFIED)
 interface DeviceSelectionStepProps {
   devices: DeviceSelectionData[];
   selectedDevices: number[];
@@ -438,10 +440,6 @@ export function DeviceSelectionStep({
     }
   };
 
-  const recommendedToKeep = devices.filter(d => d.recommendation === 'keep_active');
-  const recommendedToDisable = devices.filter(d => d.recommendation === 'recommended_to_disable');
-  const others = devices.filter(d => !['keep_active', 'recommended_to_disable'].includes(d.recommendation));
-
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -453,73 +451,23 @@ export function DeviceSelectionStep({
         </p>
       </div>
 
-      {/* Recommended to Keep */}
-      {recommendedToKeep.length > 0 && (
-        <div>
-          <h4 className="text-sm font-medium text-green-400 mb-3 flex items-center">
-            <CheckCircle size={16} className="mr-2" />
-            Recommended to Keep Active
-          </h4>
-          <div className="space-y-2">
-            {recommendedToKeep.map(device => (
-              <DeviceSelectionCard
-                key={device.id}
-                device={device}
-                isSelected={selectedDevices.includes(device.id)}
-                onToggle={() => handleDeviceToggle(device.id)}
-                disabled={!selectedDevices.includes(device.id) && selectedDevices.length >= targetLimit}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recommended to Disable */}
-      {recommendedToDisable.length > 0 && (
-        <div>
-          <h4 className="text-sm font-medium text-orange-400 mb-3 flex items-center">
-            <AlertTriangle size={16} className="mr-2" />
-            Recommended to Disable
-          </h4>
-          <div className="space-y-2">
-            {recommendedToDisable.map(device => (
-              <DeviceSelectionCard
-                key={device.id}
-                device={device}
-                isSelected={selectedDevices.includes(device.id)}
-                onToggle={() => handleDeviceToggle(device.id)}
-                disabled={!selectedDevices.includes(device.id) && selectedDevices.length >= targetLimit}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Other Devices */}
-      {others.length > 0 && (
-        <div>
-          <h4 className="text-sm font-medium text-cosmic-text mb-3 flex items-center">
-            <Settings size={16} className="mr-2" />
-            Other Devices
-          </h4>
-          <div className="space-y-2">
-            {others.map(device => (
-              <DeviceSelectionCard
-                key={device.id}
-                device={device}
-                isSelected={selectedDevices.includes(device.id)}
-                onToggle={() => handleDeviceToggle(device.id)}
-                disabled={!selectedDevices.includes(device.id) && selectedDevices.length >= targetLimit}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ✅ SIMPLIFIED: Just a clean list of devices */}
+      <div className="space-y-3">
+        {devices.map(device => (
+          <DeviceSelectionCard
+            key={device.id}
+            device={device}
+            isSelected={selectedDevices.includes(device.id)}
+            onToggle={() => handleDeviceToggle(device.id)}
+            disabled={!selectedDevices.includes(device.id) && selectedDevices.length >= targetLimit}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
-// Device Selection Card Component
+// ✅ SIMPLIFIED: Clean device selection card
 interface DeviceSelectionCardProps {
   device: DeviceSelectionData;
   isSelected: boolean;
@@ -528,63 +476,26 @@ interface DeviceSelectionCardProps {
 }
 
 function DeviceSelectionCard({ device, isSelected, onToggle, disabled }: DeviceSelectionCardProps) {
-  const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation) {
-      case 'keep_active': return 'border-green-500/50 bg-green-500/10';
-      case 'recommended_to_disable': return 'border-orange-500/50 bg-orange-500/10';
-      case 'has_errors': return 'border-red-500/50 bg-red-500/10';
-      default: return 'border-space-border bg-space-secondary';
-    }
-  };
-
-  const getStatusIcon = (isOffline: boolean, hasErrors: boolean) => {
-    if (hasErrors) return <AlertTriangle size={16} className="text-red-400" />;
-    if (isOffline) return <WifiOff size={16} className="text-orange-400" />;
-    return <Wifi size={16} className="text-green-400" />;
-  };
-
   return (
     <div
       onClick={disabled ? undefined : onToggle}
       className={cn(
-        'rounded-lg p-4 border transition-all duration-200',
+        'rounded-lg p-4 border transition-all duration-200 cursor-pointer',
         isSelected 
           ? 'border-stellar-accent bg-stellar-accent/10' 
-          : getRecommendationColor(device.recommendation),
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-stellar-accent/50'
+          : 'border-space-border bg-space-secondary',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-stellar-accent/50'
       )}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-start space-x-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-cosmic rounded-lg flex items-center justify-center">
             <Settings size={20} className="text-white" />
           </div>
           
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
-              <h4 className="font-medium text-cosmic-text">{device.name}</h4>
-              {getStatusIcon(device.is_offline, device.has_errors || false)}
-            </div>
-            <p className="text-cosmic-text-muted text-sm">{device.device_type}</p>
-            
-            {/* Status Information */}
-            <div className="mt-2 space-y-1">
-              {device.is_offline && device.offline_duration && (
-                <p className="text-orange-400 text-xs">
-                  📡 Offline: {device.offline_duration}
-                </p>
-              )}
-              {device.has_errors && (
-                <p className="text-red-400 text-xs">
-                  ⚠️ Has sensor errors
-                </p>
-              )}
-              {device.priority_reason && (
-                <p className="text-cosmic-text-muted text-xs">
-                  {device.priority_reason}
-                </p>
-              )}
-            </div>
+          <div>
+            <h4 className="font-medium text-cosmic-text">{device.name}</h4>
+            <p className="text-cosmic-text-muted text-sm">Device ID: {device.id}</p>
           </div>
         </div>
 
@@ -603,6 +514,9 @@ function DeviceSelectionCard({ device, isSelected, onToggle, disabled }: DeviceS
 }
 
 // Step 5: Confirmation
+// In PlanChangeSteps.tsx - REPLACE the ConfirmationStep component
+
+// Step 5: Confirmation (SIMPLIFIED)
 interface ConfirmationStepProps {
   preview: PlanChangePreview;
   selectedPlan: Plan;
@@ -620,8 +534,9 @@ export function ConfirmationStep({
   selectedDevices,
   availableDevices
 }: ConfirmationStepProps) {
+  // ✅ SIMPLIFIED: Just basic filtering by selected IDs
   const devicesToKeep = availableDevices.filter(d => selectedDevices.includes(d.id));
-  const devicesToDisable = availableDevices.filter(d => !selectedDevices.includes(d.id));
+  const devicesToHibernate = availableDevices.filter(d => !selectedDevices.includes(d.id));
 
   return (
     <div className="space-y-6">
@@ -660,7 +575,7 @@ export function ConfirmationStep({
         </div>
       </div>
 
-      {/* Device Changes */}
+      {/* ✅ SIMPLIFIED: Device Changes (if applicable) */}
       {selectedStrategy.type === 'immediate_with_selection' && (
         <div className="bg-space-secondary rounded-xl p-6">
           <h4 className="font-semibold text-cosmic-text mb-4">Device Changes</h4>
@@ -673,22 +588,20 @@ export function ConfirmationStep({
                   <div key={device.id} className="flex items-center space-x-2 text-sm">
                     <CheckCircle size={16} className="text-green-400" />
                     <span className="text-cosmic-text">{device.name}</span>
-                    <span className="text-cosmic-text-muted">({device.device_type})</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {devicesToDisable.length > 0 && (
+          {devicesToHibernate.length > 0 && (
             <div>
-              <h5 className="text-sm font-medium text-orange-400 mb-2">Devices to Disable:</h5>
+              <h5 className="text-sm font-medium text-orange-400 mb-2">Devices to Hibernate:</h5>
               <div className="space-y-2">
-                {devicesToDisable.map(device => (
+                {devicesToHibernate.map(device => (
                   <div key={device.id} className="flex items-center space-x-2 text-sm">
                     <AlertTriangle size={16} className="text-orange-400" />
                     <span className="text-cosmic-text">{device.name}</span>
-                    <span className="text-cosmic-text-muted">({device.device_type})</span>
                   </div>
                 ))}
               </div>
@@ -697,7 +610,7 @@ export function ConfirmationStep({
         </div>
       )}
 
-      {/* Billing Impact */}
+      {/* Billing Impact - Keep this unchanged */}
       <div className="bg-space-secondary rounded-xl p-6">
         <h4 className="font-semibold text-cosmic-text mb-4">Billing Impact</h4>
         
@@ -705,7 +618,7 @@ export function ConfirmationStep({
           <div className="flex items-center justify-between">
             <span className="text-cosmic-text">New Monthly Cost:</span>
             <span className="font-medium text-cosmic-text">
-              ${preview.billing_impact.target_monthly_cost.toFixed(2)}
+              ${(Number(preview.billing_impact.target_monthly_cost) || 0).toFixed(2)}
             </span>
           </div>
           <div className="flex items-center justify-between">
@@ -714,7 +627,7 @@ export function ConfirmationStep({
               "font-medium",
               preview.billing_impact.cost_difference >= 0 ? "text-red-400" : "text-green-400"
             )}>
-              {preview.billing_impact.cost_difference >= 0 ? '+' : ''}${preview.billing_impact.cost_difference.toFixed(2)}
+              {preview.billing_impact.cost_difference >= 0 ? '+' : ''}${(Number(preview.billing_impact.cost_difference) || 0).toFixed(2)}
             </span>
           </div>
           {selectedStrategy.extra_monthly_cost && (
@@ -728,7 +641,7 @@ export function ConfirmationStep({
         </div>
       </div>
 
-      {/* What Happens Next */}
+      {/* What Happens Next - Keep this unchanged */}
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
         <h4 className="font-semibold text-blue-400 mb-3">What happens next:</h4>
         <ul className="space-y-2 text-blue-300 text-sm">
@@ -743,24 +656,11 @@ export function ConfirmationStep({
             <>
               <li>• Your plan will change immediately</li>
               <li>• Selected devices will remain active</li>
-              <li>• {devicesToDisable.length} devices will be disabled</li>
-              <li>• You can reactivate disabled devices later</li>
+              <li>• {devicesToHibernate.length} devices will be hibernated</li>
+              <li>• You can wake hibernated devices later</li>
             </>
           )}
-          {selectedStrategy.type === 'end_of_period' && (
-            <>
-              <li>• Change will be scheduled for your next billing period</li>
-              <li>• All devices remain active until then</li>
-              <li>• You'll choose devices to keep closer to the date</li>
-            </>
-          )}
-          {selectedStrategy.type === 'pay_for_extra' && (
-            <>
-              <li>• Your plan will change immediately</li>
-              <li>• All devices remain active</li>
-              <li>• Additional device slots will be charged monthly</li>
-            </>
-          )}
+          {/* Add other strategy types as needed */}
           <li>• No refund for the current billing period</li>
         </ul>
       </div>
