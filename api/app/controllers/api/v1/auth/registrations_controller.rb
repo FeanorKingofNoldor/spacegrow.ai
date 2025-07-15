@@ -14,9 +14,16 @@ class Api::V1::Auth::RegistrationsController < Api::V1::Auth::BaseController
         Rails.application.credentials.secret_key_base
       )
 
+      # ✅ ENHANCED: Include display_name and subscription data
+      user_data = UserSerializer.new(user).serializable_hash[:data][:attributes]
+      
+      # Add display_name and timezone if they exist
+      user_data[:display_name] = user.display_name if user.respond_to?(:display_name)
+      user_data[:timezone] = user.timezone if user.respond_to?(:timezone)
+
       render json: {
         status: { code: 200, message: 'Signed up successfully.' },
-        data: UserSerializer.new(user).serializable_hash[:data][:attributes],
+        data: user_data,
         token: token
       }, status: :created
     else
@@ -28,7 +35,8 @@ class Api::V1::Auth::RegistrationsController < Api::V1::Auth::BaseController
 
   private
 
+  # ✅ UPDATED: Include display_name in signup params
   def sign_up_params
-    params.require(:user).permit(:email, :password, :password_confirmation, :role, :timezone)
+    params.require(:user).permit(:email, :password, :password_confirmation, :role, :timezone, :display_name)
   end
 end

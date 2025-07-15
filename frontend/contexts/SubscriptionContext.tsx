@@ -93,8 +93,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       
       console.log('✅ Device management data loaded:', {
         operationalDevices: response.data.device_limits.operational_count,
-        hibernatingDevices: response.data.device_limits.hibernating_count,
-        hibernationPriorities: response.data.hibernation_priorities.length,
+        suspendedDevices: response.data.device_limits.suspended_count,
+        suspensionPriorities: response.data.suspension_priorities.length,
         upsellOptions: response.data.upsell_options.length
       });
       
@@ -104,22 +104,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [user, subscription]);
 
-  // ✅ NEW: Hibernate single device
-  const hibernateDevice = useCallback(async (deviceId: number, reason: string = 'user_choice') => {
+  // ✅ NEW: suspend single device
+  const suspendedevice = useCallback(async (deviceId: number, reason: string = 'user_choice') => {
     try {
       setError(null);
-      console.log('🔄 Hibernating device:', deviceId, 'Reason:', reason);
+      console.log('🔄 suspended device:', deviceId, 'Reason:', reason);
       
-      await subscriptionAPI.hibernateDevice(deviceId, reason);
+      await subscriptionAPI.suspendDevice(deviceId, reason);
       
       // Refresh device management data
       await fetchDeviceManagement();
       
-      console.log('✅ Device hibernated successfully');
+      console.log('✅ Device suspended successfully');
       
     } catch (err) {
-      console.error('❌ Failed to hibernate device:', err);
-      setError(err instanceof Error ? err.message : 'Failed to hibernate device');
+      console.error('❌ Failed to suspend device:', err);
+      setError(err instanceof Error ? err.message : 'Failed to suspend device');
       throw err;
     }
   }, [fetchDeviceManagement]);
@@ -144,22 +144,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [fetchDeviceManagement]);
 
-  // ✅ NEW: Hibernate multiple devices
-  const hibernateMultipleDevices = useCallback(async (deviceIds: number[], reason: string = 'user_choice') => {
+  // ✅ NEW: suspend multiple devices
+  const suspendMultipleDevices = useCallback(async (deviceIds: number[], reason: string = 'user_choice') => {
     try {
       setError(null);
-      console.log('🔄 Hibernating multiple devices:', deviceIds, 'Reason:', reason);
+      console.log('🔄 suspended multiple devices:', deviceIds, 'Reason:', reason);
       
-      await subscriptionAPI.hibernateMultipleDevices(deviceIds, reason);
+      await subscriptionAPI.suspendMultipleDevices(deviceIds, reason);
       
       // Refresh device management data
       await fetchDeviceManagement();
       
-      console.log('✅ Multiple devices hibernated successfully');
+      console.log('✅ Multiple devices suspended successfully');
       
     } catch (err) {
-      console.error('❌ Failed to hibernate multiple devices:', err);
-      setError(err instanceof Error ? err.message : 'Failed to hibernate devices');
+      console.error('❌ Failed to suspend multiple devices:', err);
+      setError(err instanceof Error ? err.message : 'Failed to suspend devices');
       throw err;
     }
   }, [fetchDeviceManagement]);
@@ -213,7 +213,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       // Update local state with new subscription
       setSubscription(response.data.updated_subscription);
       
-      // Refresh device management data to get updated hibernation states
+      // Refresh device management data to get updated suspension states
       await fetchDeviceManagement();
       
       console.log('✅ Plan change completed:', response.data.change_result);
@@ -436,13 +436,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     percentage: subscription.device_limit ? 
       ((subscription.devices?.length || 0) / subscription.device_limit) * 100 : 0,
     operational: deviceManagement?.device_limits.operational_count || 0,
-    hibernating: deviceManagement?.device_limits.hibernating_count || 0
+    suspended: deviceManagement?.device_limits.suspended_count || 0
   } : {
     used: 0,
     limit: 0,
     percentage: 0,
     operational: 0,
-    hibernating: 0
+    suspended: 0
   };
 
   const nextBillingDate = subscription?.current_period_end ? 
@@ -454,12 +454,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const daysUntilRenewal = nextBillingDate ? 
     Math.ceil((nextBillingDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
 
-  // ✅ NEW: Hibernation computed properties
+  // ✅ NEW: suspension computed properties
   const operationalDevicesCount = deviceManagement?.device_limits.operational_count || 0;
-  const hibernatingDevicesCount = deviceManagement?.device_limits.hibernating_count || 0;
+  const suspendedDevicesCount = deviceManagement?.device_limits.suspended_count || 0;
   const isOverDeviceLimit = deviceManagement?.over_device_limit || false;
-  const hasHibernatingDevices = hibernatingDevicesCount > 0;
-  const devicesInGracePeriod = deviceManagement?.hibernating_devices?.filter(d => d.in_grace_period).length || 0;
+  const hassuspendedDevices = suspendedDevicesCount > 0;
+  const devicesInGracePeriod = deviceManagement?.suspended_devices?.filter(d => d.in_grace_period).length || 0;
 
   const contextValue: SubscriptionContextType = {
     subscription,
@@ -476,9 +476,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     
     // ✅ NEW: Device management methods
     fetchDeviceManagement,
-    hibernateDevice,
+    suspendedevice,
     wakeDevice,
-    hibernateMultipleDevices,
+    suspendMultipleDevices,
     wakeMultipleDevices,
     
     // Plan change methods
@@ -499,11 +499,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     isOnTrial,
     daysUntilRenewal,
     
-    // ✅ NEW: Hibernation computed properties
+    // ✅ NEW: suspension computed properties
     operationalDevicesCount,
-    hibernatingDevicesCount,
+    suspendedDevicesCount,
     isOverDeviceLimit,
-    hasHibernatingDevices,
+    hassuspendedDevices,
     devicesInGracePeriod,
   };
 
@@ -522,7 +522,7 @@ export function useSubscription() {
   return context;
 }
 
-// ✅ ENHANCED: Subscription guard hook with hibernation awareness
+// ✅ ENHANCED: Subscription guard hook with suspension awareness
 export function useSubscriptionGuard() {
   const { subscription, loading } = useSubscription();
   const { user, loading: authLoading } = useAuth();

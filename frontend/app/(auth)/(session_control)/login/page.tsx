@@ -6,36 +6,57 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { CosmicButton, GhostButton } from '@/components/ui/ButtonVariants';
-import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Loader2, User } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState(''); // ✅ NEW: Display name for signup
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   
-  const { login } = useAuth();
+  const { login, signup } = useAuth(); // ✅ UPDATED: Import both login and signup
   const router = useRouter();
 
+  // ✅ UPDATED: Handle both login and signup
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        router.push('/dashboard');
+      if (isSignUp) {
+        // Handle signup
+        const success = await signup(email, password, password, displayName || undefined);
+        if (success) {
+          router.push('/onboarding/choose-plan'); // Redirect to onboarding for new users
+        } else {
+          setError('Account creation failed. Please try again.');
+        }
       } else {
-        setError('Invalid email or password');
+        // Handle login
+        const success = await login(email, password);
+        if (success) {
+          router.push('/user'); // Redirect to user dashboard (will auto-redirect to appropriate page)
+        } else {
+          setError('Invalid email or password');
+        }
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ NEW: Reset form when switching between login/signup
+  const handleToggleMode = () => {
+    setIsSignUp(!isSignUp);
+    setError('');
+    setDisplayName('');
+    setPassword('');
   };
 
   return (
@@ -91,6 +112,36 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* ✅ NEW: Display Name Field (only for signup) */}
+            {isSignUp && (
+              <div>
+                <label htmlFor="displayName" className="block text-sm font-medium text-white mb-2">
+                  Display Name
+                  <span className="text-gray-400 text-xs ml-2">(optional)</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    maxLength={50}
+                    className="
+                      w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20
+                      px-4 py-3 pl-12 text-white placeholder-gray-400
+                      focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent
+                      transition-all duration-200
+                    "
+                    placeholder="How should we call you?"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave blank to use your email username
+                </p>
+              </div>
+            )}
+
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
@@ -103,13 +154,14 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={isSignUp ? 6 : undefined} // ✅ NEW: Minimum length for signup
                   className="
                     w-full rounded-lg bg-white/10 backdrop-blur-sm border border-white/20
                     px-4 py-3 pr-12 text-white placeholder-gray-400
                     focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent
                     transition-all duration-200
                   "
-                  placeholder="Enter your password"
+                  placeholder={isSignUp ? "Create a strong password (min 6 chars)" : "Enter your password"}
                 />
                 <button
                   type="button"
@@ -144,7 +196,7 @@ export default function LoginPage() {
             <p className="text-gray-300">
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={handleToggleMode} // ✅ UPDATED: Use new handler
                 className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
               >
                 {isSignUp ? 'Sign in' : 'Sign up'}
@@ -161,6 +213,18 @@ export default function LoginPage() {
               >
                 Forgot your password?
               </Link>
+            </div>
+          )}
+
+          {/* ✅ NEW: Terms notice for signup */}
+          {isSignUp && (
+            <div className="mt-4 text-center">
+              <p className="text-xs text-gray-400">
+                By creating an account, you agree to our{' '}
+                <Link href="/terms" className="text-yellow-400 hover:underline">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="text-yellow-400 hover:underline">Privacy Policy</Link>
+              </p>
             </div>
           )}
         </div>

@@ -13694,7 +13694,7 @@ herokuapp.com
 heyflow.page
 heyflow.site
 
-// Hibernating Rhinos
+// suspended Rhinos
 // Submitted by Oren Eini <oren@ravendb.net>
 ravendb.cloud
 ravendb.community

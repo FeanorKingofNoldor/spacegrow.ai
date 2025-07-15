@@ -6,7 +6,7 @@ class Api::V1::Frontend::CommandsController < Api::V1::Frontend::ProtectedContro
     command = params[:command]
     args = params[:args] || {}
     
-    result = CommandService.new(@device).execute(command, args)
+    result = DeviceCommunication::CommandService.new(@device).execute(command, args)
     
     if result.success?
       render json: {

@@ -18,14 +18,20 @@ Rails.application.routes.draw do
         # Additional auth endpoints
         get 'auth/me', to: 'auth/sessions#me'
         post 'auth/refresh', to: 'auth/sessions#refresh'
+        patch 'auth/update_profile', to: 'auth/sessions#update_profile'
         post 'auth/forgot_password', to: 'auth/passwords#create'
         put 'auth/reset_password', to: 'auth/passwords#update'
+        patch 'auth/change_password', to: 'auth/sessions#change_password'
+        get 'auth/sessions', to: 'auth/sessions#index'
+        delete 'auth/sessions/:jti', to: 'auth/sessions#destroy_session'
+        delete 'auth/sessions/logout_all', to: 'auth/sessions#logout_all' 
       end
 
       # ESP32 device routes (device authentication required)
       namespace :esp32 do
         post 'devices/register', to: 'devices#register'
         post 'devices/validate', to: 'devices#validate'
+        get 'devices/status', to: 'devices#status'                    # ✅ ADD THIS
         get 'devices/commands', to: 'devices#commands'
         post 'devices/commands/:command_id/status', to: 'devices#update_command_status'
         post 'sensor_data', to: 'sensor_data#create'
@@ -57,8 +63,13 @@ Rails.application.routes.draw do
           get :cancel
         end
         
-        # Orders (auth required)
-        resources :orders, only: [:index, :show]
+        # Orders (auth required) - ✅ UPDATED: Added create and update actions
+        resources :orders, only: [:index, :show, :create, :update] do
+          member do
+            post :mark_paid        # For testing - mark order as paid
+            post :generate_tokens  # Manually generate activation tokens
+          end
+        end
         
         # Stripe webhooks (public webhook endpoint)
         post 'webhooks/stripe', to: 'stripe_webhooks#create'
@@ -71,11 +82,11 @@ Rails.application.routes.draw do
         get 'dashboard/devices', to: 'dashboard#devices'
         get 'dashboard/device/:id', to:'dashboard#device'
         
-        # Device management with hibernation
+        # Device management with suspension
         resources :devices, only: [:index, :show, :create, :update, :destroy] do
           member do
             patch :update_status
-            post :hibernate        # ✅ NEW
+            post :suspend        # ✅ NEW
             post :wake            # ✅ NEW
           end
           resources :commands, only: [:create]
@@ -88,18 +99,23 @@ Rails.application.routes.draw do
             post :preview_change      
             post :change_plan         
             post :schedule_change     
-            get :devices_for_selection # ✅ ADDED: This was the only missing route
+            get :devices_for_selection
             
             # Subscription management
             post :cancel              
             post :add_device_slot     
             post :remove_device_slot  
             
-            # Hibernation management
+            # ✅ NEW: Device slot management routes
+            get :slot_overview        # Get current slot usage
+            post :purchase_extra_slot # Buy additional slots
+            delete 'extra_slots/:slot_id', to: 'subscriptions#cancel_extra_slot' # Cancel specific slot
+            
+            # Device state management
             get :device_management
             post :activate_device
             post :wake_devices
-            post :hibernate_devices
+            post :suspend_devices
           end
         end
         

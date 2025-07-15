@@ -1,4 +1,4 @@
-// hooks/useDeviceWebSocket.ts - PRODUCTION READY VERSION
+// hooks/useDeviceWebSocket.ts - CLEANED VERSION
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -33,7 +33,6 @@ export function useDeviceWebSocket({
 }: UseDeviceWebSocketProps) {
   const { user } = useAuth();
   
-  // ✅ FIXED: Comprehensive WebSocket state management
   const [state, setState] = useState<WebSocketState>({
     isConnected: false,
     isConnecting: false,
@@ -42,7 +41,6 @@ export function useDeviceWebSocket({
     connectionAttempts: 0
   });
 
-  // ✅ FIXED: Use refs to prevent stale closures
   const connectionRef = useRef<any>(null);
   const callbacksRef = useRef({
     onChartDataUpdate,
@@ -64,12 +62,10 @@ export function useDeviceWebSocket({
    */
   const connect = useCallback(async () => {
     if (!user || !autoConnect) {
-      console.log('🔌 Skipping WebSocket connection - no user or autoConnect disabled');
       return false;
     }
 
     if (state.isConnecting) {
-      console.log('🔌 Connection already in progress');
       return false;
     }
 
@@ -81,18 +77,13 @@ export function useDeviceWebSocket({
     }));
 
     try {
-      console.log('🔌 Setting up WebSocket connection for user:', user.id);
-      
-      // ✅ FIXED: Get JWT token for authentication
       const token = localStorage.getItem('auth_token');
       if (!token) {
         throw new Error('No authentication token available');
       }
 
-      // Connect to ActionCable with authentication
       connectionRef.current = await actionCable.connect(user.id, token);
       
-      // Set up message handlers
       setupMessageHandlers();
       
       setState(prev => ({ 
@@ -102,12 +93,10 @@ export function useDeviceWebSocket({
         connectionError: null
       }));
 
-      console.log('✅ WebSocket connection established');
       return true;
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown connection error';
-      console.error('❌ WebSocket connection failed:', errorMessage);
       
       setState(prev => ({ 
         ...prev, 
@@ -116,10 +105,9 @@ export function useDeviceWebSocket({
         connectionError: errorMessage
       }));
 
-      // ✅ FIXED: Retry logic with exponential backoff
+      // Retry logic with exponential backoff
       if (reconnectOnError && state.connectionAttempts < 5) {
         const delay = Math.min(Math.pow(2, state.connectionAttempts) * 1000, 30000);
-        console.log(`🔄 Retrying connection in ${delay}ms`);
         
         setTimeout(() => {
           connect();
@@ -134,11 +122,8 @@ export function useDeviceWebSocket({
    * Set up message handlers
    */
   const setupMessageHandlers = useCallback(() => {
-    console.log('📡 Setting up WebSocket message handlers');
-
-    // ✅ FIXED: Chart data updates
+    // Chart data updates
     actionCable.on('chart_data_update', (data: WebSocketMessage) => {
-      console.log('📊 Chart data update received:', data);
       setState(prev => ({ ...prev, lastMessage: data }));
       
       if (callbacksRef.current.onChartDataUpdate && data.type === 'chart_data_update') {
@@ -146,9 +131,8 @@ export function useDeviceWebSocket({
       }
     });
 
-    // ✅ FIXED: Device status updates
+    // Device status updates
     actionCable.on('device_status_update', (data: WebSocketMessage) => {
-      console.log('📱 Device status update received:', data);
       setState(prev => ({ ...prev, lastMessage: data }));
       
       if (callbacksRef.current.onDeviceStatusUpdate && data.type === 'device_status_update') {
@@ -156,9 +140,8 @@ export function useDeviceWebSocket({
       }
     });
 
-    // ✅ FIXED: Sensor status updates
+    // Sensor status updates
     actionCable.on('sensor_status_update', (data: WebSocketMessage) => {
-      console.log('🔬 Sensor status update received:', data);
       setState(prev => ({ ...prev, lastMessage: data }));
       
       if (callbacksRef.current.onSensorStatusUpdate && data.type === 'sensor_status_update') {
@@ -166,14 +149,12 @@ export function useDeviceWebSocket({
       }
     });
 
-    // ✅ FIXED: Connection monitoring
+    // Connection monitoring
     actionCable.on('welcome', () => {
-      console.log('👋 ActionCable welcome received');
       setState(prev => ({ ...prev, isConnected: true, connectionError: null }));
     });
 
     actionCable.on('disconnect', () => {
-      console.log('👋 ActionCable disconnected');
       setState(prev => ({ 
         ...prev, 
         isConnected: false, 
@@ -187,8 +168,6 @@ export function useDeviceWebSocket({
    * Disconnect from WebSocket
    */
   const disconnect = useCallback(() => {
-    console.log('🔌 Disconnecting WebSocket');
-    
     // Clean up message handlers
     actionCable.off('chart_data_update');
     actionCable.off('device_status_update');
@@ -216,17 +195,14 @@ export function useDeviceWebSocket({
    */
   const sendCommand = useCallback(async (command: string, args: Record<string, any> = {}) => {
     if (!state.isConnected) {
-      console.error('❌ Cannot send command: WebSocket not connected');
       throw new Error('WebSocket not connected');
     }
 
     if (!actionCable.isConnected()) {
-      console.error('❌ Cannot send command: ActionCable not ready');
       throw new Error('ActionCable not ready');
     }
 
     try {
-      console.log('📤 Sending command:', command, args);
       actionCable.sendCommand(command, args);
       
       return {
@@ -237,22 +213,7 @@ export function useDeviceWebSocket({
       };
       
     } catch (error) {
-      console.error('❌ Failed to send command:', error);
       throw error;
-    }
-  }, [state.isConnected]);
-
-  /**
-   * Health check
-   */
-  const healthCheck = useCallback(async (): Promise<boolean> => {
-    if (!state.isConnected) return false;
-    
-    try {
-      return await actionCable.healthCheck();
-    } catch (error) {
-      console.error('❌ Health check failed:', error);
-      return false;
     }
   }, [state.isConnected]);
 
@@ -260,7 +221,6 @@ export function useDeviceWebSocket({
    * Reconnect manually
    */
   const reconnect = useCallback(async () => {
-    console.log('🔄 Manual reconnection requested');
     disconnect();
     
     // Wait a bit before reconnecting
@@ -269,10 +229,9 @@ export function useDeviceWebSocket({
     return connect();
   }, [disconnect, connect]);
 
-  // ✅ FIXED: Auto-connect when user is available
+  // Auto-connect when user is available
   useEffect(() => {
     if (user && autoConnect && !state.isConnected && !state.isConnecting) {
-      console.log('🔌 Auto-connecting WebSocket for user:', user.id);
       connect();
     }
     
@@ -283,28 +242,12 @@ export function useDeviceWebSocket({
     };
   }, [user, autoConnect, connect, disconnect, state.isConnected, state.isConnecting]);
 
-  // ✅ FIXED: Cleanup on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('🔌 Component unmounting, cleaning up WebSocket');
       disconnect();
     };
   }, [disconnect]);
-
-  // ✅ FIXED: Monitor connection health
-  useEffect(() => {
-    if (!state.isConnected) return;
-
-    const healthCheckInterval = setInterval(async () => {
-      const isHealthy = await healthCheck();
-      if (!isHealthy && reconnectOnError) {
-        console.log('💔 Health check failed, attempting reconnection');
-        reconnect();
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(healthCheckInterval);
-  }, [state.isConnected, healthCheck, reconnect, reconnectOnError]);
 
   return {
     // Connection state
@@ -323,9 +266,6 @@ export function useDeviceWebSocket({
     
     // Commands
     sendCommand,
-    
-    // Health monitoring
-    healthCheck,
     
     // Connection info
     connectionState: actionCable.getConnectionState()

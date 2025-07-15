@@ -536,7 +536,7 @@ export function ConfirmationStep({
 }: ConfirmationStepProps) {
   // ✅ SIMPLIFIED: Just basic filtering by selected IDs
   const devicesToKeep = availableDevices.filter(d => selectedDevices.includes(d.id));
-  const devicesToHibernate = availableDevices.filter(d => !selectedDevices.includes(d.id));
+  const devicesTosuspend = availableDevices.filter(d => !selectedDevices.includes(d.id));
 
   return (
     <div className="space-y-6">
@@ -594,11 +594,11 @@ export function ConfirmationStep({
             </div>
           )}
 
-          {devicesToHibernate.length > 0 && (
+          {devicesTosuspend.length > 0 && (
             <div>
-              <h5 className="text-sm font-medium text-orange-400 mb-2">Devices to Hibernate:</h5>
+              <h5 className="text-sm font-medium text-orange-400 mb-2">Devices to suspend:</h5>
               <div className="space-y-2">
-                {devicesToHibernate.map(device => (
+                {devicesTosuspend.map(device => (
                   <div key={device.id} className="flex items-center space-x-2 text-sm">
                     <AlertTriangle size={16} className="text-orange-400" />
                     <span className="text-cosmic-text">{device.name}</span>
@@ -656,8 +656,8 @@ export function ConfirmationStep({
             <>
               <li>• Your plan will change immediately</li>
               <li>• Selected devices will remain active</li>
-              <li>• {devicesToHibernate.length} devices will be hibernated</li>
-              <li>• You can wake hibernated devices later</li>
+              <li>• {devicesTosuspend.length} devices will be suspended</li>
+              <li>• You can wake suspended devices later</li>
             </>
           )}
           {/* Add other strategy types as needed */}

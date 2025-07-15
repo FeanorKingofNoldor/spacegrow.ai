@@ -51,7 +51,7 @@ class Api::V1::Frontend::OnboardingController < Api::V1::Frontend::ProtectedCont
       }, status: :unprocessable_entity
     end
 
-    subscription = SubscriptionService.create_subscription(
+    subscription = SubscriptionManagement::SubscriptionManagement::SubscriptionManagement::SubscriptionService.create_subscription(
       user: current_user,
       plan: plan,
       interval: interval

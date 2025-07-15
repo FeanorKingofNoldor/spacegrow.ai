@@ -1,4 +1,4 @@
-// types/device.ts - ENHANCED with hibernation support
+// types/device.ts - PHASE 6: Complete suspended terminology replacement (COMPLETE VERSION)
 export interface SensorType {
   id: number;
   name: string;
@@ -49,7 +49,8 @@ export interface Preset {
   device_id?: string;
 }
 
-export interface HibernationPriority {
+// ✅ UPDATED: Suspension priority (was suspensionPriority)
+export interface SuspensionPriority {
   device_id: number;
   device_name: string;
   score: number;
@@ -57,7 +58,7 @@ export interface HibernationPriority {
   created_at: string;
   alert_status: string;
   priority_reason?: string;
-  recommendation?: 'recommended_to_hibernate' | 'consider_hibernating' | 'keep_active';
+  recommendation?: 'recommended_to_suspend' | 'consider_suspending' | 'keep_active';
 }
 
 export interface UpsellOption {
@@ -71,6 +72,7 @@ export interface UpsellOption {
   savings?: number;
 }
 
+// ✅ UPDATED: Device management data with suspended terminology
 export interface DeviceManagementData {
   subscription: {
     id: number;
@@ -85,29 +87,29 @@ export interface DeviceManagementData {
     device_counts: {
       total: number;
       operational: number;
-      hibernating: number;
+      suspended: number;
     };
   };
   device_limits: {
     total_limit: number;
     operational_count: number;
-    hibernating_count: number;
+    suspended_count: number;
     available_slots: number;
   };
   devices: {
     operational: Device[];
-    hibernating: Device[];
+    suspended: Device[];
   };
-  hibernation_priorities: HibernationPriority[];
+  suspension_priorities: SuspensionPriority[];
   upsell_options: UpsellOption[];
   over_device_limit: boolean;
 }
 
-
+// ✅ UPDATED: Device interface with suspended status
 export interface Device {
   id: number;
   name: string;
-  status: 'active' | 'pending' | 'disabled';
+  status: 'pending' | 'active' | 'suspended' | 'disabled';
   alert_status: 'normal' | 'warning' | 'error' | 'no_data';
   device_type: string;
   last_connection: string | null;
@@ -115,16 +117,16 @@ export interface Device {
   updated_at: string;
   sensors?: DeviceSensor[];
   
-  // ✅ NEW: Hibernation fields
-  hibernated_at: string | null;
-  hibernated_reason: string | null;
+  // ✅ UPDATED: Suspension fields
+  suspended_at: string | null;
+  suspended_reason: string | null;
   grace_period_ends_at: string | null;
   
-  // ✅ NEW: Computed hibernation properties
+  // ✅ UPDATED: Computed suspension properties
   operational?: boolean;
-  hibernating?: boolean;
+  suspended?: boolean;
   in_grace_period?: boolean;
-  hibernation_priority_score?: number;
+
   
   // Optional properties from detailed API responses
   sensor_groups?: Record<string, DeviceSensor[]>;
@@ -134,7 +136,7 @@ export interface Device {
   profiles?: Preset[];
 }
 
-// Extended device interface for detailed views (backwards compatibility)
+// Extended device interface for detailed views
 export interface DeviceDetail extends Device {
   sensors: DeviceSensor[];
   latest_readings: Record<string, SensorReading>;
@@ -143,17 +145,18 @@ export interface DeviceDetail extends Device {
   profiles: Preset[];
 }
 
-export interface HibernateDeviceRequest {
+// ✅ UPDATED: Suspension request/response types
+export interface SuspendDeviceRequest {
   reason: string;
   grace_period_days?: number;
 }
 
-export interface HibernateDeviceResponse {
+export interface SuspendDeviceResponse {
   status: 'success';
   message: string;
   data: {
     device: Device;
-    hibernated_at: string;
+    suspended_at: string;
     grace_period_ends_at: string;
   };
 }
@@ -166,7 +169,7 @@ export interface WakeDeviceResponse {
   };
 }
 
-export interface BulkHibernationRequest {
+export interface BulkSuspensionRequest {
   device_ids: number[];
   reason: string;
 }
@@ -193,20 +196,20 @@ export interface DeviceManagementResponse {
   data: DeviceManagementData;
 }
 
-// WebSocket message types for device updates
+// ✅ UPDATED: WebSocket message types with suspended terminology
 export interface DeviceStatusUpdate {
   device_id: string | number;
   alert_status?: 'normal' | 'warning' | 'error' | 'no_data';
-  status?: 'active' | 'pending' | 'disabled';
+  status?: 'pending' | 'active' | 'suspended' | 'disabled';
   last_connection?: string;
   status_class?: string;
   
-  // ✅ NEW: Hibernation status updates
-  hibernated_at?: string | null;
-  hibernated_reason?: string | null;
+  // ✅ UPDATED: Suspension status updates
+  suspended_at?: string | null;
+  suspended_reason?: string | null;
   grace_period_ends_at?: string | null;
   operational?: boolean;
-  hibernating?: boolean;
+  suspended?: boolean;
   in_grace_period?: boolean;
 }
 
@@ -228,47 +231,62 @@ export interface DashboardUpdate {
     warning: number;
     error: number;
     operational?: number;
-    hibernating?: number;
+    suspended?: number;
   };
 }
 
-// ✅ NEW: Hibernation utility functions
+// ✅ COMPLETELY UPDATED: Device utilities with suspended terminology and status-based logic
 export const deviceUtils = {
-  isHibernating: (device: Device): boolean => {
-    return !!device.hibernated_at;
+  isSuspended: (device: Device): boolean => {
+    return device.status === 'suspended';
   },
 
   isOperational: (device: Device): boolean => {
-    return device.status === 'active' && !device.hibernated_at;
+    return device.status === 'active';
+  },
+
+  isPending: (device: Device): boolean => {
+    return device.status === 'pending';
+  },
+
+  isDisabled: (device: Device): boolean => {
+    return device.status === 'disabled';
   },
 
   isInGracePeriod: (device: Device): boolean => {
-    if (!device.hibernated_at || !device.grace_period_ends_at) return false;
+    if (!device.grace_period_ends_at) return false;
     return new Date(device.grace_period_ends_at) > new Date();
   },
 
-  getHibernationStatus: (device: Device): 'operational' | 'hibernating' | 'grace_period' => {
-    if (!device.hibernated_at) return 'operational';
-    if (deviceUtils.isInGracePeriod(device)) return 'grace_period';
-    return 'hibernating';
+  getSuspensionStatus: (device: Device): 'operational' | 'suspended' | 'grace_period' | 'pending' | 'disabled' => {
+    if (device.status === 'pending') return 'pending';
+    if (device.status === 'disabled') return 'disabled';
+    if (device.status === 'suspended') {
+      return deviceUtils.isInGracePeriod(device) ? 'grace_period' : 'suspended';
+    }
+    return 'operational';
   },
 
-  getHibernationDisplayText: (device: Device): string => {
-    const status = deviceUtils.getHibernationStatus(device);
+  getSuspensionDisplayText: (device: Device): string => {
+    const status = deviceUtils.getSuspensionStatus(device);
     switch (status) {
       case 'operational': return 'Operational';
+      case 'pending': return 'Pending Activation';
+      case 'disabled': return 'Disabled';
       case 'grace_period': return 'Grace Period';
-      case 'hibernating': return 'Hibernating';
+      case 'suspended': return 'Suspended';
       default: return 'Unknown';
     }
   },
 
-  getHibernationColor: (device: Device): string => {
-    const status = deviceUtils.getHibernationStatus(device);
+  getSuspensionColor: (device: Device): string => {
+    const status = deviceUtils.getSuspensionStatus(device);
     switch (status) {
       case 'operational': return 'text-green-400 bg-green-500/20';
+      case 'pending': return 'text-yellow-400 bg-yellow-500/20';
+      case 'disabled': return 'text-gray-400 bg-gray-500/20';
       case 'grace_period': return 'text-orange-400 bg-orange-500/20';
-      case 'hibernating': return 'text-blue-400 bg-blue-500/20';
+      case 'suspended': return 'text-blue-400 bg-blue-500/20';
       default: return 'text-gray-400 bg-gray-500/20';
     }
   },
@@ -282,28 +300,65 @@ export const deviceUtils = {
   },
 
   canWakeDevice: (device: Device): boolean => {
-    return deviceUtils.isHibernating(device);
+    return deviceUtils.isSuspended(device);
   },
 
-  canHibernateDevice: (device: Device): boolean => {
+  canSuspendDevice: (device: Device): boolean => {
     return deviceUtils.isOperational(device);
   },
 
-  formatHibernationReason: (reason: string | null): string => {
+  canEnableDevice: (device: Device): boolean => {
+    return device.status === 'disabled';
+  },
+
+  canDisableDevice: (device: Device): boolean => {
+    return device.status === 'active' || device.status === 'suspended';
+  },
+
+  formatSuspensionReason: (reason: string | null): string => {
     if (!reason) return 'No reason provided';
     
     const reasonMap: Record<string, string> = {
       'subscription_limit': 'Over subscription limit',
-      'user_choice': 'User hibernated',
-      'automatic': 'Automatically hibernated',
+      'user_choice': 'User suspended',
+      'automatic': 'Automatically suspended',
       'grace_period_expired': 'Grace period expired',
-      'payment_overdue': 'Payment overdue'
+      'payment_overdue': 'Payment overdue',
+      'plan_downgrade': 'Plan downgrade'
     };
 
-    return reasonMap[reason] || reason;
+    return reasonMap[reason] || reason.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   },
 
-  getPriorityRecommendation: (priority: HibernationPriority): {
+  getAlertColor: (alertStatus: string): string => {
+    switch (alertStatus) {
+      case 'normal': return 'text-green-400 bg-green-500/20';
+      case 'warning': return 'text-yellow-400 bg-yellow-500/20';
+      case 'error': return 'text-red-400 bg-red-500/20';
+      case 'no_data': return 'text-gray-400 bg-gray-500/20';
+      default: return 'text-gray-400 bg-gray-500/20';
+    }
+  },
+
+  getStatusIcon: (device: Device): string => {
+    const status = deviceUtils.getSuspensionStatus(device);
+    switch (status) {
+      case 'operational': return '🟢';
+      case 'pending': return '🟡';
+      case 'disabled': return '⚫';
+      case 'grace_period': return '🟠';
+      case 'suspended': return '🔵';
+      default: return '❓';
+    }
+  },
+
+  // ✅ NEW: Helper for subscription limit checks
+  isOverSubscriptionLimit: (device: Device): boolean => {
+    return device.suspended_reason === 'subscription_limit';
+  },
+
+  // ✅ UPDATED: Get priority recommendation with suspended terminology
+  getPriorityRecommendation: (priority: SuspensionPriority): {
     color: string;
     text: string;
     icon: string;
@@ -311,13 +366,13 @@ export const deviceUtils = {
     if (priority.score >= 80) {
       return {
         color: 'text-red-400',
-        text: 'Recommended to hibernate',
+        text: 'Recommended to suspend',
         icon: '🔴'
       };
     } else if (priority.score >= 60) {
       return {
         color: 'text-orange-400',
-        text: 'Consider hibernating',
+        text: 'Consider suspending',
         icon: '🟠'
       };
     } else {
@@ -330,10 +385,10 @@ export const deviceUtils = {
   }
 };
 
-// Utility types for type safety
+// ✅ UPDATED: Utility types for type safety
 export type AlertStatus = 'normal' | 'warning' | 'error' | 'no_data';
-export type DeviceConnectionStatus = 'active' | 'pending' | 'disabled';
+export type DeviceConnectionStatus = 'pending' | 'active' | 'suspended' | 'disabled';
 export type SensorStatus = 'ok' | 'warning' | 'error' | 'no_data' | 'warning_high' | 'warning_low' | 'error_high' | 'error_low';
 export type SensorZone = 'normal' | 'warning_low' | 'warning_high' | 'error_low' | 'error_high' | 'error_out_of_range';
 export type ConnectionStatus = 'online' | 'offline';
-export type HibernationStatus = 'operational' | 'hibernating' | 'grace_period';
+export type SuspensionStatus = 'operational' | 'suspended' | 'grace_period' | 'pending' | 'disabled';

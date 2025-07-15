@@ -40,6 +40,8 @@ class Api::V1::Auth::PasswordsController < Api::V1::Auth::BaseController
         data: {
           id: user.id,
           email: user.email,
+          display_name: user.display_name, # NEW: Include display_name
+          timezone: user.timezone, # NEW: Include timezone
           role: user.role,
           created_at: user.created_at,
           devices_count: user.devices_count

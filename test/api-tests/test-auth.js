@@ -91,7 +91,7 @@ async function test(name, testFn, category = 'auth') {
 }
 
 // Authentication helper functions
-async function createUser(email, password = 'password123', role = 'user') {
+async function createUser(email, password = 'Password123!', role = 'user') {
   const response = await api.post('/api/v1/auth/signup', {
     user: { email, password, password_confirmation: password }
   });

@@ -1,3 +1,4 @@
+# app/models/sensor_datum.rb
 class SensorDatum < ApplicationRecord
   belongs_to :device_sensor
   has_one :sensor_type, through: :device_sensor
@@ -22,16 +23,8 @@ class SensorDatum < ApplicationRecord
   # Automatically assign status and zone before saving
   before_save :assign_status_and_zone
 
-  # Automatically broadcast chart updates when new sensor data is created
-  after_create_commit :broadcast_chart_update
-
-  # Index zone for better filtering
-  after_initialize do
-    ActiveRecord::Base.connection.execute(<<~SQL) unless ActiveRecord::Base.connection.index_exists?(:sensor_data, [:device_sensor_id, :zone])
-      CREATE INDEX IF NOT EXISTS index_sensor_data_on_device_sensor_and_zone 
-      ON sensor_data (device_sensor_id, zone);
-    SQL
-  end
+  # ✅ UPDATED: Use ThrottledBroadcaster instead of immediate broadcasting
+  after_create_commit :broadcast_chart_update_throttled
 
   private
 
@@ -39,8 +32,21 @@ class SensorDatum < ApplicationRecord
     self.zone = sensor_type.determine_zone(value)
   end
 
-  def broadcast_chart_update
-    DeviceChannel.broadcast_chart_data(device_sensor.device.id, device_sensor.id)
+  # ✅ NEW: Throttled broadcasting method
+  def broadcast_chart_update_throttled
+    Rails.logger.info "📊 [SensorDatum##{id}] Queuing throttled broadcast for device #{device.id}, sensor #{device_sensor.id}"
+    
+    # Create data point for batching
+    data_point = {
+      sensor_id: device_sensor.id,
+      value: value,
+      timestamp: timestamp.iso8601,
+      zone: zone,
+      is_valid: is_valid
+    }
+    
+    # Use ThrottledBroadcaster for batched updates
+    WebsocketBroadcasting::ThrottledBroadcaster.broadcast_sensor_data(device_sensor.id, data_point)
   end
 
   def value_within_sensor_range

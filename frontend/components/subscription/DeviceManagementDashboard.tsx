@@ -1,9 +1,9 @@
-// components/subscription/DeviceManagementDashboard.tsx - NEW hibernation management component
+// components/subscription/DeviceManagementDashboard.tsx - NEW suspension management component
 'use client';
 
 import { useState } from 'react';
 import { DeviceManagementData, UpsellOption } from '@/types/device';
-import { Device, deviceUtils, HibernationPriority } from '@/types/device';
+import { Device, deviceUtils, suspensionPriority } from '@/types/device';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -26,9 +26,9 @@ import { cn } from '@/lib/utils';
 
 interface DeviceManagementDashboardProps {
   deviceManagement: DeviceManagementData;
-  onHibernateDevice: (deviceId: number, reason?: string) => Promise<void>;
+  onsuspendedevice: (deviceId: number, reason?: string) => Promise<void>;
   onWakeDevice: (deviceId: number) => Promise<void>;
-  onBulkHibernate: (deviceIds: number[], reason?: string) => Promise<void>;
+  onBulksuspend: (deviceIds: number[], reason?: string) => Promise<void>;
   onBulkWake: (deviceIds: number[]) => Promise<void>;
   onSelectUpsellOption: (option: UpsellOption) => void;
   loading?: boolean;
@@ -36,23 +36,23 @@ interface DeviceManagementDashboardProps {
 
 export function DeviceManagementDashboard({
   deviceManagement,
-  onHibernateDevice,
+  onsuspendedevice,
   onWakeDevice,
-  onBulkHibernate,
+  onBulksuspend,
   onBulkWake,
   onSelectUpsellOption,
   loading = false
 }: DeviceManagementDashboardProps) {
   const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
-  const [showBulkHibernateModal, setShowBulkHibernateModal] = useState(false);
-  const [bulkHibernationReason, setBulkHibernationReason] = useState('user_choice');
+  const [showBulksuspendModal, setShowBulksuspendModal] = useState(false);
+  const [bulksuspensionReason, setBulksuspensionReason] = useState('user_choice');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const {
     subscription,
     device_limits,
     devices,
-    hibernation_priorities,
+    suspension_priorities,
     upsell_options,
     over_device_limit
   } = deviceManagement;
@@ -72,10 +72,10 @@ export function DeviceManagementDashboard({
     setSelectedDevices(operationalIds);
   };
 
-  // Select all hibernating devices
-  const selectAllHibernating = () => {
-    const hibernatingIds = devices.hibernating.map(d => d.id);
-    setSelectedDevices(hibernatingIds);
+  // Select all suspended devices
+  const selectAllsuspended = () => {
+    const suspendedIds = devices.suspended.map(d => d.id);
+    setSelectedDevices(suspendedIds);
   };
 
   // Clear selection
@@ -83,17 +83,17 @@ export function DeviceManagementDashboard({
     setSelectedDevices([]);
   };
 
-  // Handle bulk hibernation
-  const handleBulkHibernate = async () => {
+  // Handle bulk suspension
+  const handleBulksuspend = async () => {
     if (selectedDevices.length === 0) return;
     
-    setActionLoading('bulk_hibernate');
+    setActionLoading('bulk_suspend');
     try {
-      await onBulkHibernate(selectedDevices, bulkHibernationReason);
+      await onBulksuspend(selectedDevices, bulksuspensionReason);
       setSelectedDevices([]);
-      setShowBulkHibernateModal(false);
+      setShowBulksuspendModal(false);
     } catch (error) {
-      console.error('Failed to hibernate devices:', error);
+      console.error('Failed to suspend devices:', error);
     } finally {
       setActionLoading(null);
     }
@@ -115,7 +115,7 @@ export function DeviceManagementDashboard({
   };
 
   // Get priority recommendation styling
-  const getPriorityRecommendation = (priority: HibernationPriority) => {
+  const getPriorityRecommendation = (priority: suspensionPriority) => {
     return deviceUtils.getPriorityRecommendation(priority);
   };
 
@@ -127,7 +127,7 @@ export function DeviceManagementDashboard({
           <div>
             <h2 className="text-2xl font-bold text-cosmic-text">Device Management</h2>
             <p className="text-cosmic-text-muted">
-              {subscription.plan.name} Plan • {device_limits.operational_count} operational, {device_limits.hibernating_count} hibernating
+              {subscription.plan.name} Plan • {device_limits.operational_count} operational, {device_limits.suspended_count} suspended
             </p>
           </div>
           <div className="text-right">
@@ -168,7 +168,7 @@ export function DeviceManagementDashboard({
                 <h3 className="font-semibold text-red-400 mb-1">Over Device Limit</h3>
                 <p className="text-red-300 text-sm">
                   You have {device_limits.operational_count} operational devices but your plan only includes {subscription.plan.device_limit}. 
-                  Consider hibernating some devices or upgrading your plan.
+                  Consider suspended some devices or upgrading your plan.
                 </p>
               </div>
             </div>
@@ -261,7 +261,7 @@ export function DeviceManagementDashboard({
                   <div className="pl-8">
                     <CompactDeviceCard
                       device={device}
-                      onHibernate={onHibernateDevice}
+                      onsuspend={onsuspendedevice}
                       className={cn(
                         selectedDevices.includes(device.id) && 'ring-2 ring-stellar-accent'
                       )}
@@ -277,35 +277,35 @@ export function DeviceManagementDashboard({
               </div>
               <h4 className="font-medium text-cosmic-text mb-2">No Operational Devices</h4>
               <p className="text-cosmic-text-muted text-sm">
-                All your devices are currently hibernating
+                All your devices are currently suspended
               </p>
             </div>
           )}
         </div>
 
-        {/* Hibernating Devices */}
+        {/* suspended Devices */}
         <div className="bg-space-glass backdrop-blur-md border border-space-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Moon className="w-5 h-5 text-blue-400" />
               <h3 className="text-lg font-semibold text-cosmic-text">
-                Hibernating Devices ({devices.hibernating.length})
+                suspended Devices ({devices.suspended.length})
               </h3>
             </div>
-            {devices.hibernating.length > 0 && (
+            {devices.suspended.length > 0 && (
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={selectAllHibernating}
+                onClick={selectAllsuspended}
               >
                 Select All
               </Button>
             )}
           </div>
 
-          {devices.hibernating.length > 0 ? (
+          {devices.suspended.length > 0 ? (
             <div className="space-y-3">
-              {devices.hibernating.map((device) => {
+              {devices.suspended.map((device) => {
                 const isInGracePeriod = deviceUtils.isInGracePeriod(device);
                 const gracePeriodDays = deviceUtils.getDaysUntilGracePeriodEnd(device);
                 
@@ -348,7 +348,7 @@ export function DeviceManagementDashboard({
               <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Moon className="w-8 h-8 text-blue-400" />
               </div>
-              <h4 className="font-medium text-cosmic-text mb-2">No Hibernating Devices</h4>
+              <h4 className="font-medium text-cosmic-text mb-2">No suspended Devices</h4>
               <p className="text-cosmic-text-muted text-sm">
                 All your devices are currently operational
               </p>
@@ -357,19 +357,19 @@ export function DeviceManagementDashboard({
         </div>
       </div>
 
-      {/* Hibernation Priorities */}
-      {hibernation_priorities.length > 0 && (
+      {/* suspension Priorities */}
+      {suspension_priorities.length > 0 && (
         <div className="bg-space-glass backdrop-blur-md border border-space-border rounded-xl p-6">
           <div className="flex items-center space-x-2 mb-4">
             <Star className="w-5 h-5 text-stellar-accent" />
-            <h3 className="text-lg font-semibold text-cosmic-text">Hibernation Priorities</h3>
+            <h3 className="text-lg font-semibold text-cosmic-text">suspension Priorities</h3>
             <div className="text-cosmic-text-muted text-sm">
-              (Devices ranked by hibernation recommendation)
+              (Devices ranked by suspension recommendation)
             </div>
           </div>
 
           <div className="space-y-3">
-            {hibernation_priorities.map((priority) => {
+            {suspension_priorities.map((priority) => {
               const recommendation = getPriorityRecommendation(priority);
               return (
                 <div 
@@ -420,11 +420,11 @@ export function DeviceManagementDashboard({
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setShowBulkHibernateModal(true)}
-              disabled={actionLoading === 'bulk_hibernate'}
+              onClick={() => setShowBulksuspendModal(true)}
+              disabled={actionLoading === 'bulk_suspend'}
             >
               <Moon className="w-4 h-4 mr-2" />
-              Hibernate Selected
+              suspend Selected
             </Button>
             
             <Button 
@@ -452,11 +452,11 @@ export function DeviceManagementDashboard({
         </div>
       )}
 
-      {/* Bulk Hibernation Modal */}
+      {/* Bulk suspension Modal */}
       <Modal
-        isOpen={showBulkHibernateModal}
-        onClose={() => setShowBulkHibernateModal(false)}
-        title="Hibernate Multiple Devices"
+        isOpen={showBulksuspendModal}
+        onClose={() => setShowBulksuspendModal(false)}
+        title="suspend Multiple Devices"
         size="md"
       >
         <div className="space-y-6">
@@ -466,7 +466,7 @@ export function DeviceManagementDashboard({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-cosmic-text mb-2">
-                Hibernate {selectedDevices.length} Device{selectedDevices.length > 1 ? 's' : ''}?
+                suspend {selectedDevices.length} Device{selectedDevices.length > 1 ? 's' : ''}?
               </h3>
               <p className="text-cosmic-text-muted text-sm">
                 The selected devices will stop processing data and go into sleep mode. 
@@ -475,14 +475,14 @@ export function DeviceManagementDashboard({
             </div>
           </div>
 
-          {/* Hibernation Reason Selection */}
+          {/* suspension Reason Selection */}
           <div>
             <label className="block text-sm font-medium text-cosmic-text mb-2">
-              Reason for hibernation:
+              Reason for suspension:
             </label>
             <select
-              value={bulkHibernationReason}
-              onChange={(e) => setBulkHibernationReason(e.target.value)}
+              value={bulksuspensionReason}
+              onChange={(e) => setBulksuspensionReason(e.target.value)}
               className="w-full bg-space-secondary border border-space-border rounded-lg px-3 py-2 text-cosmic-text focus:outline-none focus:ring-2 focus:ring-stellar-accent"
             >
               <option value="user_choice">User choice</option>
@@ -497,27 +497,27 @@ export function DeviceManagementDashboard({
           <div className="flex space-x-3">
             <Button 
               variant="ghost"
-              onClick={() => setShowBulkHibernateModal(false)}
-              disabled={actionLoading === 'bulk_hibernate'}
+              onClick={() => setShowBulksuspendModal(false)}
+              disabled={actionLoading === 'bulk_suspend'}
               className="flex-1"
             >
               Cancel
             </Button>
             <Button 
               variant="cosmic"
-              onClick={handleBulkHibernate}
-              disabled={actionLoading === 'bulk_hibernate'}
+              onClick={handleBulksuspend}
+              disabled={actionLoading === 'bulk_suspend'}
               className="flex-1 bg-blue-500 hover:bg-blue-600"
             >
-              {actionLoading === 'bulk_hibernate' ? (
+              {actionLoading === 'bulk_suspend' ? (
                 <>
                   <LoadingSpinner size="sm" />
-                  <span className="ml-2">Hibernating...</span>
+                  <span className="ml-2">suspended...</span>
                 </>
               ) : (
                 <>
                   <Moon size={16} className="mr-2" />
-                  Hibernate {selectedDevices.length} Device{selectedDevices.length > 1 ? 's' : ''}
+                  suspend {selectedDevices.length} Device{selectedDevices.length > 1 ? 's' : ''}
                 </>
               )}
             </Button>

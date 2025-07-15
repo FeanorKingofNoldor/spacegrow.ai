@@ -1,4 +1,4 @@
-// app/(dashboard)/user/devices/page.tsx - ENHANCED with hibernation management
+// app/(dashboard)/user/devices/page.tsx - ENHANCED with suspension management
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -124,7 +124,7 @@ export default function MyDevicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'operational' | 'hibernating' | 'grace_period' | 'active' | 'pending' | 'disabled'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'operational' | 'suspended' | 'grace_period' | 'active' | 'pending' | 'disabled'>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'management'>('cards');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
@@ -137,9 +137,9 @@ export default function MyDevicesPage() {
     subscription, 
     deviceManagement, 
     fetchDeviceManagement,
-    hibernateDevice,
+    suspendedevice,
     wakeDevice,
-    hibernateMultipleDevices,
+    suspendMultipleDevices,
     wakeMultipleDevices,
     loading: subscriptionLoading
   } = useSubscription();
@@ -176,14 +176,14 @@ export default function MyDevicesPage() {
     console.log('✅ Preset applied successfully:', preset.name);
   };
 
-  // ✅ NEW: Handle hibernation with refresh
-  const handleHibernateDevice = async (deviceId: number, reason?: string) => {
+  // ✅ NEW: Handle suspension with refresh
+  const handlesuspendedevice = async (deviceId: number, reason?: string) => {
     try {
-      await hibernateDevice(deviceId, reason);
-      // Refresh devices list to show updated hibernation state
+      await suspendedevice(deviceId, reason);
+      // Refresh devices list to show updated suspension state
       await fetchDevicesData();
     } catch (error) {
-      console.error('Failed to hibernate device:', error);
+      console.error('Failed to suspend device:', error);
       throw error;
     }
   };
@@ -200,13 +200,13 @@ export default function MyDevicesPage() {
     }
   };
 
-  // ✅ NEW: Handle bulk hibernation
-  const handleBulkHibernate = async (deviceIds: number[], reason?: string) => {
+  // ✅ NEW: Handle bulk suspension
+  const handleBulksuspend = async (deviceIds: number[], reason?: string) => {
     try {
-      await hibernateMultipleDevices(deviceIds, reason);
+      await suspendMultipleDevices(deviceIds, reason);
       await fetchDevicesData();
     } catch (error) {
-      console.error('Failed to hibernate devices:', error);
+      console.error('Failed to suspend devices:', error);
       throw error;
     }
   };
@@ -310,15 +310,15 @@ export default function MyDevicesPage() {
     }
   }, [subscription, fetchDeviceManagement]);
 
-  // ✅ ENHANCED: Filter devices with hibernation awareness
+  // ✅ ENHANCED: Filter devices with suspension awareness
   const filteredDevices = devices.filter(device => {
     const matchesSearch = device.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     let matchesStatus = true;
     if (filterStatus === 'operational') {
       matchesStatus = deviceUtils.isOperational(device);
-    } else if (filterStatus === 'hibernating') {
-      matchesStatus = deviceUtils.isHibernating(device);
+    } else if (filterStatus === 'suspended') {
+      matchesStatus = deviceUtils.issuspended(device);
     } else if (filterStatus === 'grace_period') {
       matchesStatus = deviceUtils.isInGracePeriod(device);
     } else if (filterStatus !== 'all') {
@@ -358,11 +358,11 @@ export default function MyDevicesPage() {
     }
   };
 
-  // ✅ ENHANCED: Calculate stats with hibernation breakdown
+  // ✅ ENHANCED: Calculate stats with suspension breakdown
   const stats = {
     total: devices.length,
     operational: devices.filter(d => deviceUtils.isOperational(d)).length,
-    hibernating: devices.filter(d => deviceUtils.isHibernating(d)).length,
+    suspended: devices.filter(d => deviceUtils.issuspended(d)).length,
     grace_period: devices.filter(d => deviceUtils.isInGracePeriod(d)).length,
     active: devices.filter(d => d.status === 'active').length,
     warning: devices.filter(d => d.alert_status === 'warning').length,
@@ -394,7 +394,7 @@ export default function MyDevicesPage() {
                   <h1 className="text-2xl font-bold text-cosmic-text">My Devices</h1>
                   {tierInfo && (
                     <p className="text-cosmic-text-muted">
-                      {stats.operational} operational, {stats.hibernating} hibernating • {tierInfo.planName} Plan
+                      {stats.operational} operational, {stats.suspended} suspended • {tierInfo.planName} Plan
                       {tierInfo.additionalSlots > 0 && (
                         <span className="text-stellar-accent"> (+{tierInfo.additionalSlots} extra)</span>
                       )}
@@ -466,16 +466,16 @@ export default function MyDevicesPage() {
         {viewMode === 'management' && deviceManagement ? (
           <DeviceManagementDashboard
             deviceManagement={deviceManagement}
-            onHibernateDevice={handleHibernateDevice}
+            onsuspendedevice={handlesuspendedevice}
             onWakeDevice={handleWakeDevice}
-            onBulkHibernate={handleBulkHibernate}
+            onBulksuspend={handleBulksuspend}
             onBulkWake={handleBulkWake}
             onSelectUpsellOption={handleSelectUpsellOption}
             loading={subscriptionLoading}
           />
         ) : (
           <>
-            {/* ✅ ENHANCED: Stats Cards with Hibernation */}
+            {/* ✅ ENHANCED: Stats Cards with suspension */}
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="bg-space-glass backdrop-blur-md border border-space-border rounded-xl p-4">
                 <div className="flex items-center space-x-2">
@@ -507,8 +507,8 @@ export default function MyDevicesPage() {
                     <Moon size={16} className="text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-blue-400">{stats.hibernating}</p>
-                    <p className="text-xs text-cosmic-text-muted">Hibernating</p>
+                    <p className="text-2xl font-bold text-blue-400">{stats.suspended}</p>
+                    <p className="text-xs text-cosmic-text-muted">suspended</p>
                   </div>
                 </div>
               </div>
@@ -552,7 +552,7 @@ export default function MyDevicesPage() {
               </div>
             </div>
 
-            {/* ✅ ENHANCED: Search and Filter with Hibernation Options */}
+            {/* ✅ ENHANCED: Search and Filter with suspension Options */}
             <div className="bg-space-glass backdrop-blur-md border border-space-border rounded-xl p-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
@@ -575,7 +575,7 @@ export default function MyDevicesPage() {
                   >
                     <option value="all">All Devices</option>
                     <option value="operational">Operational</option>
-                    <option value="hibernating">Hibernating</option>
+                    <option value="suspended">suspended</option>
                     {stats.grace_period > 0 && (
                       <option value="grace_period">Grace Period</option>
                     )}
@@ -587,7 +587,7 @@ export default function MyDevicesPage() {
               </div>
             </div>
 
-            {/* ✅ ENHANCED: Devices List with Hibernation Controls */}
+            {/* ✅ ENHANCED: Devices List with suspension Controls */}
             {filteredDevices.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredDevices.map((device) => (
@@ -595,9 +595,9 @@ export default function MyDevicesPage() {
                     key={device.id} 
                     device={device}
                     onConfigure={handleConfigure}
-                    onHibernate={handleHibernateDevice}
+                    onsuspend={handlesuspendedevice}
                     onWake={handleWakeDevice}
-                    showHibernationControls={true}
+                    showsuspensionControls={true}
                   />
                 ))}
               </div>
@@ -634,17 +634,17 @@ export default function MyDevicesPage() {
           </div>
         )}
 
-        {/* ✅ NEW: Hibernation Info Panel */}
-        {stats.hibernating > 0 && viewMode === 'cards' && (
+        {/* ✅ NEW: suspension Info Panel */}
+        {stats.suspended > 0 && viewMode === 'cards' && (
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
             <div className="flex items-start space-x-3">
               <Info size={20} className="text-blue-400 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="font-semibold text-blue-400 mb-2">Hibernation Information</h3>
+                <h3 className="font-semibold text-blue-400 mb-2">suspension Information</h3>
                 <p className="text-cosmic-text-muted text-sm mb-3">
-                  You have {stats.hibernating} hibernating device{stats.hibernating > 1 ? 's' : ''}
+                  You have {stats.suspended} suspended device{stats.suspended > 1 ? 's' : ''}
                   {stats.grace_period > 0 && ` (${stats.grace_period} in grace period)`}. 
-                  Hibernating devices don't count toward your subscription limit but won't process data.
+                  suspended devices don't count toward your subscription limit but won't process data.
                 </p>
                 {deviceManagement && (
                   <Button 
@@ -653,7 +653,7 @@ export default function MyDevicesPage() {
                     onClick={() => setViewMode('management')}
                   >
                     <Users size={16} className="mr-2" />
-                    Manage Hibernated Devices
+                    Manage suspended Devices
                   </Button>
                 )}
               </div>

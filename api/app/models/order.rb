@@ -3,6 +3,7 @@
 class Order < ApplicationRecord
   belongs_to :user
   has_many :line_items, dependent: :destroy
+  has_many :devices, dependent: :nullify
   has_many :products, through: :line_items
   has_many :device_activation_tokens, dependent: :destroy
 
@@ -57,7 +58,7 @@ class Order < ApplicationRecord
     # Reserve stock when payment is confirmed
     if items_available?
       reserve_stock!
-      DeviceActivationTokenService.generate_for_order(self)
+      DeviceManagement::DeviceManagement::DeviceManagement::ActivationTokenService.generate_for_order(self)
     else
       # Handle out of stock scenario
       update!(status: 'pending')

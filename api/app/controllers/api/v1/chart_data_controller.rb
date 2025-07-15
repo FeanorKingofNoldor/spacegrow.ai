@@ -10,8 +10,8 @@ class Api::V1::ChartDataController < Api::V1::BaseController
       return render json: { error: 'Sensor ID(s) required' }, status: :bad_request
     end
 
-    # Fetch data for each sensor using ChartDataService
-    data = sensor_ids.map { |id| ChartDataService.new(id, mode: mode).fetch_data_points }
+    # Fetch data for each sensor using DataVisualization::ChartDataService
+    data = sensor_ids.map { |id| DataVisualization::ChartDataService.new(id, mode: mode).fetch_data_points }
 
     # Handle response based on number of sensors
     if sensor_ids.length == 1

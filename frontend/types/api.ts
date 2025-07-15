@@ -7,6 +7,8 @@ import { Plan, Subscription } from './subscription';
 export interface User {
   id: number;
   email: string;
+  display_name: string;
+  timezone?: string;
   role: 'user' | 'pro' | 'admin';
   created_at: string;
   devices_count: number;

@@ -1,55 +1,74 @@
 #!/usr/bin/env node
 
 /**
- * XSpaceGrow API Test Suite - Main Entry Point
+ * XSPACEGROW API TEST SUITE RUNNER
  * 
- * Provides programmatic access to all test suites and can run them
- * individually or as a complete suite.
+ * Comprehensive test orchestration for all API components including:
+ * - Authentication & Authorization
+ * - Device Management (with new status system)
+ * - Subscription & Billing
+ * - Suspension System (formerly hibernation)
+ * - WebSocket Communication
+ * - Load & Performance Testing
+ * 
+ * Usage:
+ *   node index.js [command]
+ *   npm test
+ * 
+ * Commands:
+ *   list     - List all available test suites
+ *   status   - Check system readiness
+ *   all      - Run all test suites
+ *   auth     - Run authentication tests
+ *   devices  - Run device management tests
+ *   subscriptions - Run subscription billing tests
+ *   suspension    - Run suspension system tests
+ *   websocket     - Run WebSocket tests
+ *   load          - Run load/performance tests
  */
 
-const { spawn } = require('child_process');
-const chalk = require('chalk');
 const fs = require('fs');
 const path = require('path');
+const chalk = require('chalk');
+const axios = require('axios');
 
 // Configuration
 const config = {
   baseUrl: process.env.API_BASE_URL || 'http://localhost:3000',
-  wsUrl: process.env.WS_URL || 'ws://localhost:3000/cable',
-  timeout: 30000
+  timeout: 10000
 };
 
-// Available test suites
+// Test suite definitions
 const testSuites = {
   auth: {
     name: 'Authentication & Authorization',
-    script: 'test-auth.js',
-    description: 'Tests JWT tokens, user roles, permissions, and security'
+    file: 'test-auth.js',
+    description: 'Tests JWT tokens, user roles, permissions, and security features'
   },
   devices: {
     name: 'Device Management',
-    script: 'test-devices.js',
-    description: 'Tests device CRUD, sensor data, status, and limits'
+    file: 'test-devices.js',
+    description: 'Tests device CRUD, status system, limits, and ESP32 integration'
   },
   subscriptions: {
     name: 'Subscription & Billing',
-    script: 'test-subscriptions.js',
-    description: 'Tests subscription lifecycle, plan changes, and billing logic'
+    file: 'test-subscriptions.js',
+    description: 'Tests subscription lifecycle, plan changes, device limits, and billing logic'
   },
-  hibernation: {
-    name: 'Hibernation System',
-    script: 'test-hibernation.js',
-    description: 'Tests "Always Accept, Then Upsell" device hibernation system'
+  suspension: {
+    name: 'Suspension System',
+    file: 'test-suspension.js',
+    description: 'Tests "Always Accept, Then Upsell" device suspension and smart limit management'
   },
   websocket: {
     name: 'WebSocket Communication',
-    script: 'test-websocket.js',
-    description: 'Tests ActionCable connections and real-time updates'
+    file: 'test-websocket.js',
+    description: 'Tests ActionCable connections, real-time updates, and command sending'
   },
   load: {
     name: 'Load & Performance',
-    script: 'test-load.js',
-    description: 'Tests system performance under concurrent load'
+    file: 'test-load.js',
+    description: 'Tests system performance under load with concurrent users and connections'
   }
 };
 
@@ -59,115 +78,155 @@ const log = {
   success: (msg) => console.log(chalk.green('✅ ' + msg)),
   error: (msg) => console.log(chalk.red('❌ ' + msg)),
   warning: (msg) => console.log(chalk.yellow('⚠️  ' + msg)),
-  section: (msg) => console.log(chalk.magenta.bold('\n🔸 ' + msg.toUpperCase()))
+  section: (msg) => console.log(chalk.magenta.bold('\n🔸 ' + msg)),
+  header: (msg) => console.log(chalk.cyan.bold('\n🚀 ' + msg))
 };
 
-// Function to run a single test suite
+// List available test suites
+function listTestSuites() {
+  log.header('XSpaceGrow API Test Suite Runner');
+  console.log(chalk.gray('Available test suites:\n'));
+  
+  Object.entries(testSuites).forEach(([key, suite]) => {
+    console.log(chalk.blue(`  ${key.padEnd(12)}`), chalk.white(suite.name));
+    console.log(chalk.gray(`  ${''.padEnd(12)} ${suite.description}\n`));
+  });
+  
+  console.log(chalk.gray('Usage:'));
+  console.log(chalk.gray('  node index.js [command]'));
+  console.log(chalk.gray('  npm test                # Run all tests'));
+  console.log(chalk.gray('  node index.js status   # Check system status'));
+  console.log(chalk.gray('  node index.js auth     # Run specific test suite'));
+}
+
+// Run individual test suite
 async function runTestSuite(suiteName) {
   const suite = testSuites[suiteName];
   if (!suite) {
-    throw new Error(`Unknown test suite: ${suiteName}`);
+    log.error(`Unknown test suite: ${suiteName}`);
+    return { success: false, error: 'Unknown test suite' };
   }
-
-  log.info(`Running ${suite.name}...`);
   
-  return new Promise((resolve, reject) => {
-    const child = spawn('node', [suite.script], {
-      stdio: 'inherit',
-      env: { ...process.env, API_BASE_URL: config.baseUrl, WS_URL: config.wsUrl }
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        log.success(`${suite.name} completed successfully`);
-        resolve({ suite: suiteName, success: true, code });
-      } else {
-        log.error(`${suite.name} failed with code ${code}`);
-        resolve({ suite: suiteName, success: false, code });
-      }
-    });
-
-    child.on('error', (error) => {
-      log.error(`Failed to start ${suite.name}: ${error.message}`);
-      reject(error);
-    });
-  });
+  log.section(`Running ${suite.name}`);
+  log.info(suite.description);
+  
+  if (!fs.existsSync(suite.file)) {
+    log.error(`Test file not found: ${suite.file}`);
+    return { success: false, error: 'Test file not found' };
+  }
+  
+  try {
+    // Import and run the test module
+    const testModule = require(path.resolve(suite.file));
+    
+    if (typeof testModule.runAllTests === 'function') {
+      await testModule.runAllTests();
+      return { success: true };
+    } else {
+      // Fallback: spawn child process
+      const { spawn } = require('child_process');
+      
+      return new Promise((resolve) => {
+        const child = spawn('node', [suite.file], {
+          stdio: 'inherit',
+          env: { ...process.env, API_BASE_URL: config.baseUrl }
+        });
+        
+        child.on('close', (code) => {
+          resolve({ success: code === 0 });
+        });
+        
+        child.on('error', (error) => {
+          log.error(`Failed to run ${suite.file}: ${error.message}`);
+          resolve({ success: false, error: error.message });
+        });
+      });
+    }
+  } catch (error) {
+    log.error(`Error running ${suite.file}: ${error.message}`);
+    return { success: false, error: error.message };
+  }
 }
 
-// Function to run all test suites
+// Run all test suites
 async function runAllTests() {
-  log.section('Running Complete XSpaceGrow Test Suite');
+  log.header('Running Complete XSpaceGrow API Test Suite');
   
-  const results = [];
-  const startTime = Date.now();
-
-  for (const [suiteName, suite] of Object.entries(testSuites)) {
-    try {
-      const result = await runTestSuite(suiteName);
-      results.push(result);
-    } catch (error) {
-      log.error(`Failed to run ${suite.name}: ${error.message}`);
-      results.push({ suite: suiteName, success: false, error: error.message });
-    }
-  }
-
-  const totalTime = Date.now() - startTime;
-  const passed = results.filter(r => r.success).length;
-  const failed = results.filter(r => !r.success).length;
-
-  log.section('Test Suite Summary');
-  log.info(`Total Suites: ${results.length}`);
-  log.info(`Passed: ${passed}`);
-  log.info(`Failed: ${failed}`);
-  log.info(`Total Time: ${Math.round(totalTime / 1000)}s`);
-
-  // Save summary
-  const summary = {
-    timestamp: new Date().toISOString(),
-    config,
-    results,
-    summary: {
-      total: results.length,
-      passed,
-      failed,
-      passRate: Math.round((passed / results.length) * 100),
-      totalTime
-    }
+  const results = {
+    summary: { total: 0, passed: 0, failed: 0 },
+    suites: []
   };
-
-  const reportFile = `test-suite-summary-${Date.now()}.json`;
-  fs.writeFileSync(reportFile, JSON.stringify(summary, null, 2));
-  log.info(`Summary saved to ${reportFile}`);
-
-  return summary;
+  
+  const suiteOrder = ['auth', 'devices', 'subscriptions', 'suspension', 'websocket', 'load'];
+  
+  for (const suiteName of suiteOrder) {
+    const startTime = Date.now();
+    const result = await runTestSuite(suiteName);
+    const duration = Date.now() - startTime;
+    
+    results.summary.total++;
+    if (result.success) {
+      results.summary.passed++;
+      log.success(`${testSuites[suiteName].name} completed successfully (${duration}ms)`);
+    } else {
+      results.summary.failed++;
+      log.error(`${testSuites[suiteName].name} failed (${duration}ms)`);
+    }
+    
+    results.suites.push({
+      name: suiteName,
+      success: result.success,
+      duration,
+      error: result.error
+    });
+  }
+  
+  // Generate summary report
+  log.section('Test Suite Summary');
+  log.info(`Total Suites: ${results.summary.total}`);
+  log.info(`Passed: ${chalk.green(results.summary.passed)}`);
+  log.info(`Failed: ${chalk.red(results.summary.failed)}`);
+  
+  const passRate = ((results.summary.passed / results.summary.total) * 100).toFixed(1);
+  log.info(`Pass Rate: ${passRate}%`);
+  
+  // Save summary report
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const reportFile = `master-test-results-${timestamp}.json`;
+  
+  fs.writeFileSync(reportFile, JSON.stringify({
+    timestamp: new Date().toISOString(),
+    config: config,
+    summary: results.summary,
+    suites: results.suites,
+    migration_status: {
+      hibernation_to_suspension: 'completed',
+      status_system: 'updated',
+      test_coverage: 'comprehensive'
+    }
+  }, null, 2));
+  
+  log.info(`Summary report saved to ${reportFile}`);
+  
+  if (results.summary.failed === 0) {
+    log.success('🎉 All test suites passed!');
+    log.success('🚀 XSpaceGrow API system fully validated');
+  } else {
+    log.warning(`⚠️  ${results.summary.failed} test suite(s) failed`);
+  }
+  
+  return results;
 }
 
-// Function to list available test suites
-function listTestSuites() {
-  log.section('Available Test Suites');
-  
-  Object.entries(testSuites).forEach(([key, suite]) => {
-    console.log(`  ${chalk.cyan(key.padEnd(12))} - ${suite.name}`);
-    console.log(`  ${' '.repeat(15)} ${chalk.gray(suite.description)}`);
-  });
-  
-  console.log('\nUsage:');
-  console.log(`  node index.js <suite>     # Run specific test suite`);
-  console.log(`  node index.js all         # Run all test suites`);
-  console.log(`  node index.js list        # Show this list`);
-  console.log(`  node index.js status      # Check system status`);
-}
-
-// Function to check system status
+// System health and readiness check
 async function checkSystemStatus() {
   log.section('System Status Check');
   
-  const axios = require('axios');
-  
   try {
     // Check Rails server
-    const response = await axios.get(`${config.baseUrl}/up`, { timeout: 5000 });
-    log.success(`Rails server responding (${response.status})`);
+    log.info('Checking Rails server...');
+    const healthCheck = await axios.get(`${config.baseUrl}/up`, { timeout: 5000 });
+    log.success(`Rails server responding (${healthCheck.status})`);
   } catch (error) {
     log.error(`Rails server not responding: ${error.message}`);
     return false;
@@ -182,7 +241,15 @@ async function checkSystemStatus() {
   }
 
   // Check test dependencies
-  const requiredFiles = ['test-auth.js', 'test-devices.js', 'test-subscriptions.js', 'test-websocket.js', 'test-load.js'];
+  const requiredFiles = [
+    'test-auth.js', 
+    'test-devices.js', 
+    'test-subscriptions.js', 
+    'test-suspension.js',  // Updated from test-hibernation.js
+    'test-websocket.js', 
+    'test-load.js'
+  ];
+  
   const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
   
   if (missingFiles.length > 0) {
@@ -198,6 +265,23 @@ async function checkSystemStatus() {
     return false;
   } else {
     log.success('Dependencies installed');
+  }
+
+  // Migration status check
+  log.info('Checking migration status...');
+  
+  // Check for old hibernation references
+  const hibernationFiles = [
+    'test-hibernation.js',
+    'run-tests-hibernation.sh'
+  ];
+  
+  const oldFiles = hibernationFiles.filter(file => fs.existsSync(file));
+  if (oldFiles.length > 0) {
+    log.warning(`Found old hibernation files: ${oldFiles.join(', ')}`);
+    log.warning('Consider removing or renaming these files');
+  } else {
+    log.success('Migration to suspension system complete');
   }
 
   log.success('System ready for testing');

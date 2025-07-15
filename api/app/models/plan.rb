@@ -19,13 +19,28 @@ class Plan < ApplicationRecord
       'Email alerts',
       'API access'
     ],
-    'PRO' => [
+    'Professional' => [
       'Advanced monitoring',
       'Priority support',
       'API access',
       'Custom integrations',
       'Data analytics'
+    ],
+    'Enterprise' => [
+      'Advanced monitoring',
+      'Priority support', 
+      'API access',
+      'Custom integrations',
+      'Data analytics',
+      'Enterprise features TBD'
     ]
+  }.freeze
+
+  # ✅ NEW: Role mapping for plan sync (minimal addition)
+  PLAN_ROLES = {
+    'Basic' => 'user',
+    'Professional' => 'pro',
+    'Enterprise' => 'enterprise'
   }.freeze
 
   def self.default_plan
@@ -38,5 +53,14 @@ class Plan < ApplicationRecord
 
   def pro?
     name.downcase == 'pro'
+  end
+
+  # ✅ NEW: Minimal additions for role sync
+  def user_role
+    PLAN_ROLES[name] || 'user'
+  end
+
+  def enterprise?
+    name.downcase.include?('enterprise')
   end
 end

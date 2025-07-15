@@ -1,15 +1,15 @@
 # Generate this migration:
-# rails generate migration AddHibernationToDevices hibernated_at:datetime hibernated_reason:string grace_period_ends_at:datetime
+# rails generate migration AddsuspensionToDevices suspended_at:datetime suspended_reason:string grace_period_ends_at:datetime
 
-class AddHibernationToDevices < ActiveRecord::Migration[7.1]
+class AddsuspensionToDevices < ActiveRecord::Migration[7.1]
   def change
-    add_column :devices, :hibernated_at, :datetime
-    add_column :devices, :hibernated_reason, :string
+    add_column :devices, :suspended_at, :datetime
+    add_column :devices, :suspended_reason, :string
     add_column :devices, :grace_period_ends_at, :datetime
     
     # Add indexes for better query performance
-    add_index :devices, :hibernated_at
-    add_index :devices, [:user_id, :hibernated_at]
+    add_index :devices, :suspended_at
+    add_index :devices, [:user_id, :suspended_at]
     add_index :devices, :grace_period_ends_at
     
     # Also add disabled tracking fields if not already present

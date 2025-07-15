@@ -15,7 +15,7 @@ module RuboCop
       #   # bad
       #   if status == :active
       #     perform_action
-      #   elsif status == :inactive || status == :hibernating
+      #   elsif status == :inactive || status == :suspended
       #     check_timeout
       #   elsif status == :invalid
       #     report_invalid
@@ -27,7 +27,7 @@ module RuboCop
       #   case status
       #   when :active
       #     perform_action
-      #   when :inactive, :hibernating
+      #   when :inactive, :suspended
       #     check_timeout
       #   when :invalid
       #     report_invalid
@@ -39,7 +39,7 @@ module RuboCop
       #   # good
       #   if status == :active
       #     perform_action
-      #   elsif status == :inactive || status == :hibernating
+      #   elsif status == :inactive || status == :suspended
       #     check_timeout
       #   elsif status == :invalid
       #     report_invalid

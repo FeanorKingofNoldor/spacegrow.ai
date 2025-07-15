@@ -1,4 +1,4 @@
-// components/dashboard/DeviceCard.tsx - ENHANCED with hibernation support
+// components/dashboard/DeviceCard.tsx - ENHANCED with suspension support (FIXED)
 'use client';
 
 import { Device, deviceUtils } from '@/types/device';
@@ -24,33 +24,33 @@ import { cn } from '@/lib/utils';
 interface DeviceCardProps {
   device: Device;
   onConfigure?: (device: Device) => void;
-  onHibernate?: (deviceId: number, reason?: string) => Promise<void>;
+  onSuspend?: (deviceId: number, reason?: string) => Promise<void>;
   onWake?: (deviceId: number) => Promise<void>;
   className?: string;
-  showHibernationControls?: boolean;
+  showSuspensionControls?: boolean;
   loading?: boolean;
 }
 
 export function DeviceCard({ 
   device, 
   onConfigure, 
-  onHibernate,
+  onSuspend,
   onWake,
   className,
-  showHibernationControls = true,
+  showSuspensionControls = true,
   loading = false
 }: DeviceCardProps) {
-  const [showHibernateModal, setShowHibernateModal] = useState(false);
-  const [hibernationReason, setHibernationReason] = useState('user_choice');
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [suspensionReason, setSuspensionReason] = useState('user_choice');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Check if device is online (connected in last 10 minutes)
   const isOnline = device.last_connection && 
     new Date(device.last_connection).getTime() > Date.now() - (10 * 60 * 1000);
 
-  // Get hibernation status
-  const hibernationStatus = deviceUtils.getHibernationStatus(device);
-  const isHibernating = deviceUtils.isHibernating(device);
+  // Get suspension status - FIXED: correct method names
+  const suspensionStatus = deviceUtils.getSuspensionStatus(device);
+  const isSuspended = deviceUtils.isSuspended(device);
   const isOperational = deviceUtils.isOperational(device);
   const isInGracePeriod = deviceUtils.isInGracePeriod(device);
   const gracePeriodDays = deviceUtils.getDaysUntilGracePeriodEnd(device);
@@ -65,12 +65,12 @@ export function DeviceCard({
   // Get device status from alert_status field
   const deviceStatus = device.alert_status || 'no_data';
 
-  // ✅ ENHANCED: Get status-based card styling with hibernation awareness
-  const getCardStyling = (status: string, hibernationStatus: string) => {
-    if (hibernationStatus === 'hibernating') {
+  // ✅ ENHANCED: Get status-based card styling with suspension awareness
+  const getCardStyling = (status: string, suspensionStatus: string) => {
+    if (suspensionStatus === 'suspended') {
       return 'hover:border-blue-500/50 hover:shadow-blue-500/10 border-blue-500/20';
     }
-    if (hibernationStatus === 'grace_period') {
+    if (suspensionStatus === 'grace_period') {
       return 'hover:border-orange-500/50 hover:shadow-orange-500/10 border-orange-500/20';
     }
     
@@ -86,15 +86,15 @@ export function DeviceCard({
     }
   };
 
-  const handleHibernate = async () => {
-    if (!onHibernate) return;
+  const handleSuspend = async () => {
+    if (!onSuspend) return;
     
-    setActionLoading('hibernate');
+    setActionLoading('suspend');
     try {
-      await onHibernate(device.id, hibernationReason);
-      setShowHibernateModal(false);
+      await onSuspend(device.id, suspensionReason);
+      setShowSuspendModal(false);
     } catch (error) {
-      console.error('Failed to hibernate device:', error);
+      console.error('Failed to suspend device:', error);
     } finally {
       setActionLoading(null);
     }
@@ -117,7 +117,7 @@ export function DeviceCard({
     <>
       <div className={cn(
         'bg-space-glass backdrop-blur-md border border-space-border rounded-xl p-6 transition-all duration-200',
-        getCardStyling(deviceStatus, hibernationStatus),
+        getCardStyling(deviceStatus, suspensionStatus),
         loading && 'opacity-50 pointer-events-none',
         className
       )}>
@@ -127,7 +127,7 @@ export function DeviceCard({
             {/* Device Avatar */}
             <div className={cn(
               'w-12 h-12 rounded-xl flex items-center justify-center',
-              isHibernating ? 'bg-blue-500/20' : 'bg-gradient-cosmic'
+              isSuspended ? 'bg-blue-500/20' : 'bg-gradient-cosmic'
             )}>
               <div className="text-white font-bold text-lg">
                 {device.name.charAt(0).toUpperCase()}
@@ -141,11 +141,11 @@ export function DeviceCard({
             </div>
           </div>
           
-          {/* ✅ ENHANCED: Hibernation Status or Connection Status */}
-          {isHibernating ? (
+          {/* ✅ ENHANCED: Suspension Status or Connection Status */}
+          {isSuspended ? (
             <div className={cn(
               'flex items-center space-x-1 px-2 py-1 rounded-full border',
-              deviceUtils.getHibernationColor(device)
+              deviceUtils.getSuspensionColor(device)
             )}>
               {isInGracePeriod ? (
                 <Clock size={14} className="text-orange-400" />
@@ -156,7 +156,7 @@ export function DeviceCard({
                 'text-xs font-medium',
                 isInGracePeriod ? 'text-orange-400' : 'text-blue-400'
               )}>
-                {isInGracePeriod ? `Grace: ${gracePeriodDays}d` : 'Hibernating'}
+                {isInGracePeriod ? `Grace: ${gracePeriodDays}d` : 'Suspended'}
               </span>
             </div>
           ) : (
@@ -179,8 +179,8 @@ export function DeviceCard({
           )}
         </div>
 
-        {/* ✅ NEW: Hibernation Info Banner */}
-        {isHibernating && (
+        {/* ✅ NEW: Suspension Info Banner */}
+        {isSuspended && (
           <div className={cn(
             'mb-4 p-3 rounded-lg border',
             isInGracePeriod 
@@ -198,12 +198,12 @@ export function DeviceCard({
                   'font-medium',
                   isInGracePeriod ? 'text-orange-400' : 'text-blue-400'
                 )}>
-                  {isInGracePeriod ? 'Grace Period Active' : 'Device Hibernating'}
+                  {isInGracePeriod ? 'Grace Period Active' : 'Device Suspended'}
                 </p>
                 <p className="text-cosmic-text-muted text-xs mt-1">
                   {isInGracePeriod 
                     ? `${gracePeriodDays} days remaining to reactivate`
-                    : `Reason: ${deviceUtils.formatHibernationReason(device.hibernated_reason)}`
+                    : `Reason: ${deviceUtils.formatSuspensionReason(device.suspended_reason)}`
                   }
                 </p>
               </div>
@@ -223,7 +223,7 @@ export function DeviceCard({
           </div>
           
           {/* Alert Status - Only show for operational devices */}
-          {!isHibernating && (
+          {!isSuspended && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-cosmic-text-muted">Sensors:</span>
               <StatusIndicator 
@@ -234,28 +234,28 @@ export function DeviceCard({
             </div>
           )}
 
-          {/* ✅ NEW: Hibernation Status Display */}
+          {/* ✅ NEW: Suspension Status Display */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-cosmic-text-muted">Mode:</span>
             <span className={cn(
               'text-xs font-medium px-2 py-1 rounded-full',
-              isHibernating 
+              isSuspended 
                 ? (isInGracePeriod ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400')
                 : 'bg-green-500/20 text-green-400'
             )}>
-              {deviceUtils.getHibernationDisplayText(device)}
+              {deviceUtils.getSuspensionDisplayText(device)}
             </span>
           </div>
         </div>
 
         {/* Last Connection Info - Only for operational devices */}
-        {!isHibernating && device.last_connection && (
+        {!isSuspended && device.last_connection && (
           <div className="text-xs text-cosmic-text-muted mb-4">
             Last seen: {new Date(device.last_connection).toLocaleString()}
           </div>
         )}
 
-        {/* ✅ ENHANCED: Action Buttons with Hibernation Controls */}
+        {/* ✅ ENHANCED: Action Buttons with Suspension Controls */}
         <div className="flex space-x-2">
           <Link href={`/user/devices/${device.id}`} className="flex-1">
             <Button variant="cosmic" size="sm" className="w-full">
@@ -274,19 +274,19 @@ export function DeviceCard({
             <Settings size={16} />
           </Button>
 
-          {/* ✅ NEW: Hibernation Controls */}
-          {showHibernationControls && (
+          {/* ✅ NEW: Suspension Controls */}
+          {showSuspensionControls && (
             <>
-              {isOperational && onHibernate && (
+              {isOperational && onSuspend && (
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => setShowHibernateModal(true)}
-                  title="Hibernate Device"
-                  disabled={loading || actionLoading === 'hibernate'}
+                  onClick={() => setShowSuspendModal(true)}
+                  title="Suspend Device"
+                  disabled={loading || actionLoading === 'suspend'}
                   className="text-blue-400 hover:text-blue-300"
                 >
-                  {actionLoading === 'hibernate' ? (
+                  {actionLoading === 'suspend' ? (
                     <LoadingSpinner size="sm" />
                   ) : (
                     <Moon size={16} />
@@ -294,7 +294,7 @@ export function DeviceCard({
                 </Button>
               )}
 
-              {isHibernating && onWake && (
+              {isSuspended && onWake && (
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -322,11 +322,11 @@ export function DeviceCard({
         )}
       </div>
 
-      {/* ✅ NEW: Hibernation Confirmation Modal */}
+      {/* ✅ NEW: Suspension Confirmation Modal */}
       <Modal
-        isOpen={showHibernateModal}
-        onClose={() => setShowHibernateModal(false)}
-        title="Hibernate Device"
+        isOpen={showSuspendModal}
+        onClose={() => setShowSuspendModal(false)}
+        title="Suspend Device"
         size="sm"
       >
         <div className="space-y-6">
@@ -336,7 +336,7 @@ export function DeviceCard({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-cosmic-text mb-2">
-                Hibernate "{device.name}"?
+                Suspend "{device.name}"?
               </h3>
               <p className="text-cosmic-text-muted text-sm">
                 This device will stop processing data and go into sleep mode. 
@@ -345,14 +345,14 @@ export function DeviceCard({
             </div>
           </div>
 
-          {/* Hibernation Reason Selection */}
+          {/* Suspension Reason Selection */}
           <div>
             <label className="block text-sm font-medium text-cosmic-text mb-2">
-              Reason for hibernation:
+              Reason for suspension:
             </label>
             <select
-              value={hibernationReason}
-              onChange={(e) => setHibernationReason(e.target.value)}
+              value={suspensionReason}
+              onChange={(e) => setSuspensionReason(e.target.value)}
               className="w-full bg-space-secondary border border-space-border rounded-lg px-3 py-2 text-cosmic-text focus:outline-none focus:ring-2 focus:ring-stellar-accent"
             >
               <option value="user_choice">User choice</option>
@@ -371,7 +371,7 @@ export function DeviceCard({
                 <p className="text-blue-400 font-medium">Grace Period: 7 days</p>
                 <p className="text-cosmic-text-muted mt-1">
                   You can wake this device anytime within 7 days. After that, 
-                  it will remain hibernated until manually activated.
+                  it will remain suspended until manually activated.
                 </p>
               </div>
             </div>
@@ -381,27 +381,27 @@ export function DeviceCard({
           <div className="flex space-x-3">
             <Button 
               variant="ghost"
-              onClick={() => setShowHibernateModal(false)}
-              disabled={actionLoading === 'hibernate'}
+              onClick={() => setShowSuspendModal(false)}
+              disabled={actionLoading === 'suspend'}
               className="flex-1"
             >
               Cancel
             </Button>
             <Button 
               variant="cosmic"
-              onClick={handleHibernate}
-              disabled={actionLoading === 'hibernate'}
+              onClick={handleSuspend}
+              disabled={actionLoading === 'suspend'}
               className="flex-1 bg-blue-500 hover:bg-blue-600"
             >
-              {actionLoading === 'hibernate' ? (
+              {actionLoading === 'suspend' ? (
                 <>
                   <LoadingSpinner size="sm" />
-                  <span className="ml-2">Hibernating...</span>
+                  <span className="ml-2">Suspending...</span>
                 </>
               ) : (
                 <>
                   <Moon size={16} className="mr-2" />
-                  Hibernate Device
+                  Suspend Device
                 </>
               )}
             </Button>
@@ -413,8 +413,13 @@ export function DeviceCard({
 }
 
 // ✅ ENHANCED: Compact device card variant for lists
-export function CompactDeviceCard({ device, onHibernate, onWake, className }: DeviceCardProps) {
-  const isHibernating = deviceUtils.isHibernating(device);
+export function CompactDeviceCard({ 
+  device, 
+  onSuspend, 
+  onWake, 
+  className 
+}: DeviceCardProps) {
+  const isSuspended = deviceUtils.isSuspended(device);
   const isInGracePeriod = deviceUtils.isInGracePeriod(device);
   const gracePeriodDays = deviceUtils.getDaysUntilGracePeriodEnd(device);
 
@@ -426,7 +431,7 @@ export function CompactDeviceCard({ device, onHibernate, onWake, className }: De
       <div className="flex items-center space-x-3">
         <div className={cn(
           'w-10 h-10 rounded-lg flex items-center justify-center',
-          isHibernating ? 'bg-blue-500/20' : 'bg-gradient-cosmic'
+          isSuspended ? 'bg-blue-500/20' : 'bg-gradient-cosmic'
         )}>
           <div className="text-white font-bold text-sm">
             {device.name.charAt(0).toUpperCase()}
@@ -442,24 +447,24 @@ export function CompactDeviceCard({ device, onHibernate, onWake, className }: De
         {/* Status Badge */}
         <span className={cn(
           'px-2 py-1 text-xs font-medium rounded-full',
-          isHibernating 
+          isSuspended 
             ? (isInGracePeriod ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400')
             : (device.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400')
         )}>
-          {isHibernating 
-            ? (isInGracePeriod ? `Grace: ${gracePeriodDays}d` : 'Hibernating')
+          {isSuspended 
+            ? (isInGracePeriod ? `Grace: ${gracePeriodDays}d` : 'Suspended')
             : device.status
           }
         </span>
 
         {/* Quick Action Button */}
-        {isHibernating && onWake ? (
+        {isSuspended && onWake ? (
           <Button variant="ghost" size="sm" onClick={() => onWake(device.id)}>
             <Sun size={14} className="text-green-400" />
           </Button>
         ) : (
-          onHibernate && (
-            <Button variant="ghost" size="sm" onClick={() => onHibernate(device.id, 'user_choice')}>
+          onSuspend && (
+            <Button variant="ghost" size="sm" onClick={() => onSuspend(device.id, 'user_choice')}>
               <Moon size={14} className="text-blue-400" />
             </Button>
           )

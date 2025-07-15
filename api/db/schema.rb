@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_15_123553) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -80,24 +80,42 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
     t.string "disabled_reason"
     t.datetime "disabled_at"
     t.string "previous_status"
-    t.datetime "hibernated_at", precision: nil
-    t.string "hibernated_reason"
+    t.datetime "suspended_at", precision: nil
+    t.string "suspended_reason"
     t.datetime "grace_period_ends_at", precision: nil
+    t.string "uuid"
+    t.string "api_key"
     t.index ["activation_token_id"], name: "index_devices_on_activation_token_id"
     t.index ["alert_status"], name: "index_devices_on_alert_status"
+    t.index ["api_key"], name: "index_devices_on_api_key", unique: true
     t.index ["current_preset_id"], name: "index_devices_on_current_preset_id"
     t.index ["device_type_id", "status"], name: "index_devices_on_device_type_id_and_status"
     t.index ["device_type_id"], name: "index_devices_on_device_type_id"
     t.index ["disabled_reason"], name: "index_devices_on_disabled_reason"
-    t.index ["hibernated_at"], name: "index_devices_on_hibernated_at"
     t.index ["last_connection"], name: "index_devices_on_last_connection"
+    t.index ["order_id"], name: "index_devices_on_order_id"
     t.index ["status", "disabled_at"], name: "index_devices_on_status_and_disabled_at"
     t.index ["status"], name: "index_devices_on_status"
+    t.index ["suspended_at"], name: "index_devices_on_suspended_at"
     t.index ["user_id", "alert_status"], name: "index_devices_on_user_id_and_alert_status"
-    t.index ["user_id", "hibernated_at"], name: "index_devices_on_user_id_and_hibernated_at"
     t.index ["user_id", "name"], name: "index_devices_on_user_id_and_name", unique: true
     t.index ["user_id", "status"], name: "index_devices_on_user_id_and_status"
+    t.index ["user_id", "suspended_at"], name: "index_devices_on_user_id_and_suspended_at"
     t.index ["user_id"], name: "index_devices_on_user_id"
+    t.index ["uuid"], name: "index_devices_on_uuid", unique: true
+  end
+
+  create_table "extra_device_slots", force: :cascade do |t|
+    t.bigint "subscription_id", null: false
+    t.decimal "monthly_cost", precision: 10, scale: 2, default: "5.0", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "activated_at", null: false
+    t.datetime "cancelled_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["activated_at"], name: "index_extra_device_slots_on_activated_at"
+    t.index ["subscription_id", "status"], name: "index_extra_device_slots_on_subscription_id_and_status"
+    t.index ["subscription_id"], name: "index_extra_device_slots_on_subscription_id"
   end
 
   create_table "jwt_denylists", force: :cascade do |t|
@@ -180,41 +198,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
     t.index ["stock_quantity"], name: "index_products_on_stock_quantity"
   end
 
-  create_table "scheduled_device_changes", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.json "device_ids", null: false
-    t.string "action", null: false
-    t.datetime "scheduled_for", null: false
-    t.string "status", default: "pending", null: false
-    t.string "reason"
-    t.datetime "completed_at"
-    t.datetime "canceled_at"
-    t.text "error_message"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["scheduled_for", "status"], name: "index_scheduled_device_changes_on_scheduled_for_and_status"
-    t.index ["user_id", "status"], name: "index_scheduled_device_changes_on_user_id_and_status"
-    t.index ["user_id"], name: "index_scheduled_device_changes_on_user_id"
-  end
-
-  create_table "scheduled_plan_changes", force: :cascade do |t|
-    t.bigint "subscription_id", null: false
-    t.bigint "target_plan_id", null: false
-    t.string "target_interval", default: "month", null: false
-    t.datetime "scheduled_for", null: false
-    t.string "status", default: "pending", null: false
-    t.datetime "completed_at"
-    t.datetime "canceled_at"
-    t.text "error_message"
-    t.text "notes"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["scheduled_for", "status"], name: "index_scheduled_plan_changes_on_scheduled_for_and_status"
-    t.index ["subscription_id", "status"], name: "index_scheduled_plan_changes_on_subscription_id_and_status"
-    t.index ["subscription_id"], name: "index_scheduled_plan_changes_on_subscription_id"
-    t.index ["target_plan_id"], name: "index_scheduled_plan_changes_on_target_plan_id"
-  end
-
   create_table "sensor_data", force: :cascade do |t|
     t.bigint "device_sensor_id", null: false
     t.datetime "timestamp", null: false
@@ -252,17 +235,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
     t.index ["name"], name: "index_sensor_types_on_name", unique: true
   end
 
-  create_table "subscription_devices", force: :cascade do |t|
-    t.bigint "subscription_id", null: false
-    t.bigint "device_id", null: false
-    t.decimal "monthly_cost", precision: 10, scale: 2, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["device_id"], name: "index_subscription_devices_on_device_id"
-    t.index ["subscription_id", "device_id"], name: "index_subscription_devices_on_subscription_id_and_device_id", unique: true
-    t.index ["subscription_id"], name: "index_subscription_devices_on_subscription_id"
-  end
-
   create_table "subscriptions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "plan_id", null: false
@@ -274,8 +246,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
     t.string "interval", default: "month"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "additional_device_slots", default: 0, null: false
-    t.boolean "cancel_at_period_end", default: false
     t.index ["current_period_end"], name: "index_subscriptions_on_current_period_end"
     t.index ["plan_id"], name: "index_subscriptions_on_plan_id"
     t.index ["status"], name: "index_subscriptions_on_status"
@@ -283,6 +253,23 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
     t.index ["stripe_subscription_id"], name: "index_subscriptions_on_stripe_subscription_id", unique: true
     t.index ["user_id", "status"], name: "index_subscriptions_on_user_id_and_status"
     t.index ["user_id"], name: "index_subscriptions_on_user_id"
+  end
+
+  create_table "user_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "jti", null: false
+    t.text "device_info"
+    t.string "ip_address"
+    t.datetime "created_at", null: false
+    t.datetime "last_active_at", null: false
+    t.datetime "expires_at", null: false
+    t.boolean "is_current", default: false
+    t.index ["expires_at"], name: "index_user_sessions_on_expires_at"
+    t.index ["ip_address"], name: "index_user_sessions_on_ip_address"
+    t.index ["jti"], name: "index_user_sessions_on_jti", unique: true
+    t.index ["last_active_at"], name: "index_user_sessions_on_last_active_at"
+    t.index ["user_id", "is_current"], name: "index_user_sessions_on_user_id_and_is_current"
+    t.index ["user_id"], name: "index_user_sessions_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -301,6 +288,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "timezone", default: "UTC", null: false
+    t.string "display_name", limit: 50
+    t.index ["display_name"], name: "index_users_on_display_name"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"
@@ -315,8 +304,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
   add_foreign_key "device_sensors", "sensor_types"
   add_foreign_key "devices", "device_activation_tokens", column: "activation_token_id", on_delete: :nullify
   add_foreign_key "devices", "device_types"
+  add_foreign_key "devices", "orders", on_delete: :nullify
   add_foreign_key "devices", "presets", column: "current_preset_id"
   add_foreign_key "devices", "users"
+  add_foreign_key "extra_device_slots", "subscriptions"
   add_foreign_key "line_items", "orders"
   add_foreign_key "line_items", "products"
   add_foreign_key "orders", "users"
@@ -324,12 +315,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_04_175519) do
   add_foreign_key "presets", "devices"
   add_foreign_key "presets", "users"
   add_foreign_key "products", "device_types"
-  add_foreign_key "scheduled_device_changes", "users"
-  add_foreign_key "scheduled_plan_changes", "plans", column: "target_plan_id"
-  add_foreign_key "scheduled_plan_changes", "subscriptions"
   add_foreign_key "sensor_data", "device_sensors"
-  add_foreign_key "subscription_devices", "devices"
-  add_foreign_key "subscription_devices", "subscriptions"
   add_foreign_key "subscriptions", "plans"
   add_foreign_key "subscriptions", "users"
+  add_foreign_key "user_sessions", "users"
 end

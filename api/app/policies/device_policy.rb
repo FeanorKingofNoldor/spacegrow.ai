@@ -20,7 +20,7 @@ class DevicePolicy < ApplicationPolicy
     user_owns_device?
   end
 
-  def hibernate?
+  def suspend?
     user_owns_device?
   end
 

@@ -4,10 +4,12 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { api } from '@/lib/api' // ✅ Import the new API client
 import { Subscription } from '@/types/subscription'
 
-// Types for our auth system
+// ✅ UPDATED: Types for our auth system with display_name
 interface User {
   id: number
   email: string
+  display_name: string // ✅ NEW: Added display_name
+  timezone?: string    // ✅ NEW: Added timezone
   role: 'user' | 'pro' | 'admin'
   created_at: string
   devices_count: number
@@ -23,15 +25,17 @@ interface AuthResponse {
   token: string
 }
 
+// ✅ UPDATED: AuthContextType with display_name support
 interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<boolean>
-  signup: (email: string, password: string, passwordConfirmation: string) => Promise<boolean>
+  signup: (email: string, password: string, passwordConfirmation: string, displayName?: string) => Promise<boolean> // ✅ NEW: Optional display_name
   logout: () => void
   refreshToken: () => Promise<boolean>
   getCurrentUser: () => Promise<boolean>
   setUser: (user: User | null) => void
+  updateProfile: (updates: { display_name?: string; timezone?: string }) => Promise<boolean> // ✅ NEW: Profile update method
   isAuthenticated: boolean
 }
 
@@ -115,13 +119,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Signup function
-  const signup = async (email: string, password: string, passwordConfirmation: string): Promise<boolean> => {
+  // ✅ UPDATED: Signup function with display_name support
+  const signup = async (
+    email: string, 
+    password: string, 
+    passwordConfirmation: string,
+    displayName?: string // ✅ NEW: Optional display name
+  ): Promise<boolean> => {
     try {
       console.log('🔐 Attempting signup for:', email)
       
-      // ✅ Use the new API client
-      const data = await api.auth.signup(email, password, passwordConfirmation) as AuthResponse
+      // ✅ Use the new API client with display_name
+      const data = await api.auth.signup(email, password, passwordConfirmation, displayName) as AuthResponse
       console.log('🔐 Signup response:', data)
       
       if (data.data && data.token) {
@@ -135,6 +144,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('🚨 Signup failed:', error)
+      return false
+    }
+  }
+
+  // ✅ NEW: Profile update function
+  const updateProfile = async (updates: { display_name?: string; timezone?: string }): Promise<boolean> => {
+    try {
+      console.log('🔐 Updating profile:', updates)
+      
+      const data = await api.auth.updateProfile(updates) as AuthResponse
+      console.log('🔐 Profile update response:', data)
+      
+      if (data.data) {
+        setUser(data.data)
+        console.log('✅ Profile updated successfully')
+        return true
+      } else {
+        console.error('🚨 Profile update failed: Invalid response structure')
+        return false
+      }
+    } catch (error) {
+      console.error('🚨 Profile update failed:', error)
       return false
     }
   }
@@ -228,6 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  // ✅ UPDATED: Context value with new methods
   const value: AuthContextType = {
     user,
     loading,
@@ -237,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshToken,
     getCurrentUser,
     setUser,
+    updateProfile, // ✅ NEW: Profile update method
     isAuthenticated: !!user,
   }
 
