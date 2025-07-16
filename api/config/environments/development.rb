@@ -1,3 +1,4 @@
+# config/environments/development.rb - UPDATED
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
@@ -33,10 +34,24 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
-
+  # Email configuration for Postal
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: '192.168.0.153',
+    port: 25,
+    domain: 'spacegrow.local',
+    user_name: 'spacegrow_app',
+    password: 'YpI71RPd9ULkElwqdL4Cwi8L',
+    authentication: 'plain'
+  }
+  
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
   config.action_mailer.perform_caching = false
+
+  # ✅ NEW: App host configuration for email templates
+  config.app_host = 'http://192.168.0.153:3000'  # Your home server address
+  config.action_mailer.default_url_options = { host: '192.168.0.153:3000' }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -55,7 +70,6 @@ Rails.application.configure do
 
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
-
 
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true

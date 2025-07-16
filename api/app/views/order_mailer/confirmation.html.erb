@@ -1,0 +1,110 @@
+<!-- app/views/order_mailer/confirmation.html.erb -->
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+  <!-- Header -->
+  <div style="background-color: #1f2937; color: white; padding: 24px; text-align: center;">
+    <h1 style="margin: 0; font-size: 24px;">XSpaceGrow</h1>
+    <p style="margin: 8px 0 0 0; opacity: 0.8;">Order Confirmation</p>
+  </div>
+
+  <!-- Main Content -->
+  <div style="padding: 32px 24px;">
+    <!-- Thank You Message -->
+    <div style="text-align: center; margin-bottom: 32px;">
+      <h2 style="color: #1f2937; margin: 0 0 16px 0;">Thank you for your order!</h2>
+      <p style="color: #6b7280; margin: 0; font-size: 16px;">
+        Hi <%= @user.display_name || @user.email.split('@').first.capitalize %>, we've received your order and are preparing it for fulfillment.
+      </p>
+    </div>
+
+    <!-- Order Details Box -->
+    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+      <h3 style="margin: 0 0 16px 0; color: #1f2937;">Order #<%= @order_number %></h3>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span style="color: #6b7280;">Order Date:</span>
+        <span style="color: #1f2937;"><%= @order.created_at.strftime("%B %d, %Y at %I:%M %p") %></span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span style="color: #6b7280;">Status:</span>
+        <span style="color: #059669; font-weight: 600;">Paid</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: #6b7280;">Total:</span>
+        <span style="color: #1f2937; font-weight: 600; font-size: 18px;">$<%= sprintf("%.2f", @total) %></span>
+      </div>
+    </div>
+
+    <!-- Order Items -->
+    <div style="margin-bottom: 32px;">
+      <h3 style="color: #1f2937; margin: 0 0 16px 0;">Items Ordered</h3>
+      <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+        <% @line_items.each_with_index do |item, index| %>
+          <div style="padding: 16px; <%= 'border-top: 1px solid #e5e7eb;' if index > 0 %>">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="flex: 1;">
+                <h4 style="margin: 0 0 4px 0; color: #1f2937; font-size: 16px;"><%= item.product.name %></h4>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;"><%= item.product.description %></p>
+                <% if item.product.device? %>
+                  <div style="margin-top: 8px; padding: 4px 8px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; display: inline-block; font-size: 12px;">
+                    🔌 Device - Activation Required
+                  </div>
+                <% end %>
+              </div>
+              <div style="text-align: right; margin-left: 16px;">
+                <div style="color: #6b7280; font-size: 14px;">Qty: <%= item.quantity %></div>
+                <div style="color: #1f2937; font-weight: 600;">$<%= sprintf("%.2f", item.subtotal) %></div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Device Activation Notice -->
+    <% if @device_items.any? %>
+      <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 32px;">
+        <div style="display: flex; align-items: center;">
+          <div style="font-size: 20px; margin-right: 12px;">📱</div>
+          <div>
+            <h4 style="margin: 0 0 4px 0; color: #92400e;">Device Activation Required</h4>
+            <p style="margin: 0; color: #92400e; font-size: 14px;">
+              You'll receive separate emails with activation instructions for each device in your order.
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Next Steps -->
+    <div style="margin-bottom: 32px;">
+      <h3 style="color: #1f2937; margin: 0 0 16px 0;">What's Next?</h3>
+      <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px;">
+        <ol style="margin: 0; padding-left: 20px; color: #166534;">
+          <li style="margin-bottom: 8px;">Your payment has been processed successfully</li>
+          <% if @device_items.any? %>
+            <li style="margin-bottom: 8px;">You'll receive device activation instructions via email shortly</li>
+            <li style="margin-bottom: 8px;">Follow the activation instructions to connect your devices</li>
+          <% end %>
+          <li style="margin-bottom: 8px;">Access your dashboard to monitor your devices</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Support -->
+    <div style="text-align: center; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+      <p style="color: #6b7280; margin: 0 0 8px 0;">Need help? We're here for you.</p>
+      <p style="margin: 0;">
+        <a href="mailto:support@spacegrow.local" style="color: #2563eb; text-decoration: none;">support@spacegrow.local</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+    <p style="margin: 0; color: #6b7280; font-size: 14px;">
+      © <%= Date.current.year %> XSpaceGrow. All rights reserved.
+    </p>
+    <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
+      This email was sent regarding your order. You cannot unsubscribe from transactional emails.
+    </p>
+  </div>
+</div>

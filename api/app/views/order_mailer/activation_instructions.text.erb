@@ -1,0 +1,68 @@
+# app/views/order_mailer/activation_instructions.text.erb
+
+XSpaceGrow - Device Activation Instructions
+===========================================
+
+Hi <%= @user.display_name || @user.email.split('@').first.capitalize %>,
+
+Your <%= @device_name %> is ready to be activated and connected to your XSpaceGrow dashboard!
+
+YOUR ACTIVATION TOKEN
+=====================
+<%= @token %>
+
+IMPORTANT: This token expires on <%= @expires_at.strftime("%B %d, %Y at %I:%M %p") %>
+
+ACTIVATION STEPS
+================
+
+1. POWER ON YOUR DEVICE
+   Connect your <%= @device_name %> to power and ensure it's within range of your WiFi network.
+
+2. ENTER ACTIVATION TOKEN
+   Use the device interface or web portal to enter your activation token:
+   <%= @token %>
+
+3. CONFIGURE WIFI
+   Follow the on-device prompts to connect to your WiFi network and complete the setup.
+
+4. MONITOR YOUR DEVICE
+   Once activated, your device will appear in your XSpaceGrow dashboard for monitoring and control.
+
+YOUR <%= @device_name.upcase %> FEATURES
+<% if @device_type.name == 'Environmental Monitor V1' %>
+========================================
+- Temperature monitoring (°C)
+- Humidity monitoring (%)
+- Pressure monitoring (Bar)
+- Light control automation
+- Spray cycle management
+<% elsif @device_type.name == 'Liquid Monitor V1' %>
+===================================
+- pH monitoring (pH)
+- EC monitoring (mS/cm)
+- Temperature monitoring (°C)
+- 5-pump nutrient dosing system
+- Automated dosing schedules
+<% else %>
+===================
+Check your device documentation for specific features and capabilities.
+<% end %>
+
+QUICK ACCESS
+============
+Dashboard: <%= Rails.application.config.app_host || 'http://localhost:3000' %>/dashboard
+
+NEED HELP?
+==========
+If you need assistance with device activation:
+Email: support@spacegrow.local
+Setup Guide: <%= Rails.application.config.app_host || 'http://localhost:3000' %>/support
+
+IMPORTANT REMINDER
+==================
+Your activation token expires on <%= @expires_at.strftime("%B %d, %Y") %>.
+Please activate your device before this date to ensure proper functionality.
+
+---
+© <%= Date.current.year %> XSpaceGrow. All rights reserved.

@@ -1,6 +1,7 @@
-# Update your Order model to handle inventory
-# app/models/order.rb
+# app/models/order.rb - UPDATED with Emailable concern
 class Order < ApplicationRecord
+  include Emailable  # ✅ NEW: Email tracking concern
+
   belongs_to :user
   has_many :line_items, dependent: :destroy
   has_many :devices, dependent: :nullify
@@ -9,9 +10,11 @@ class Order < ApplicationRecord
 
   validates :status, inclusion: { in: %w[pending paid completed refunded] }
 
+  # ✅ NEW: Add email tracking callbacks
   after_update :handle_paid_status, if: :paid?
   after_update :handle_refunded_status, if: :refunded?
   after_update :handle_completed_status, if: :completed?
+  after_update_commit :send_order_emails, if: :just_became_paid?
 
   def total
     line_items.sum(&:subtotal)
@@ -27,6 +30,27 @@ class Order < ApplicationRecord
 
   def refunded?
     status == 'refunded'
+  end
+
+  def pending?
+    status == 'pending'
+  end
+
+  # ✅ NEW: Email-related helper methods
+  def has_devices?
+    line_items.joins(:product).where.not(products: { device_type_id: nil }).exists?
+  end
+
+  def device_count
+    line_items.joins(:product).where.not(products: { device_type_id: nil }).sum(:quantity)
+  end
+
+  def just_became_paid?
+    saved_change_to_status? && status == 'paid' && status_before_last_save != 'paid'
+  end
+
+  def needs_device_activation?
+    paid? && has_devices? && device_activation_tokens.any?
   end
 
   # Check if all items are available in stock
@@ -55,67 +79,54 @@ class Order < ApplicationRecord
   private
 
   def handle_paid_status
+    Rails.logger.info "💳 [Order##{id}] Order status changed to paid, processing payment workflow"
+    
     # Reserve stock when payment is confirmed
     if items_available?
       reserve_stock!
-      DeviceManagement::DeviceManagement::DeviceManagement::ActivationTokenService.generate_for_order(self)
+      
+      # Generate activation tokens for device products
+      device_line_items = line_items.joins(:product).where.not(products: { device_type_id: nil })
+      if device_line_items.any?
+        DeviceManagement::ActivationTokenService.generate_for_order(self)
+        Rails.logger.info "💳 [Order##{id}] Generated activation tokens for #{device_line_items.sum(:quantity)} device(s)"
+      end
     else
       # Handle out of stock scenario
       update!(status: 'pending')
-      # You might want to send a notification here
-      Rails.logger.error "Order #{id} failed: Items out of stock"
+      Rails.logger.error "💳 [Order##{id}] Payment failed: Items out of stock"
     end
   end
 
   def handle_completed_status
-    # Order is complete, stock is already reduced
-    Rails.logger.info "Order #{id} completed successfully"
+    Rails.logger.info "✅ [Order##{id}] Order completed successfully"
   end
 
   def handle_refunded_status
+    Rails.logger.info "↩️ [Order##{id}] Order refunded, releasing stock and expiring tokens"
+    
     # Return stock to inventory
     release_stock!
     
-    line_items.each do |line_item|
-      device_activation_tokens.each do |token|
-        if token.device.present? && token.device.activation_token == token && token.device.active?
-          raise "Cannot refund order: Device #{token.device.name} is already activated"
-        end
-
-        token.update!(expires_at: Time.current)
-        token.device&.destroy
+    # Expire activation tokens and handle activated devices
+    device_activation_tokens.each do |token|
+      if token.device.present? && token.device.activation_token == token && token.device.active?
+        raise "Cannot refund order: Device #{token.device.name} is already activated"
       end
+
+      token.update!(expires_at: Time.current)
+      token.device&.destroy
     end
   end
-end
 
-# Update your LineItem model too
-# app/models/line_item.rb
-class LineItem < ApplicationRecord
-  belongs_to :order
-  belongs_to :product
-
-  validates :quantity, presence: true, numericality: { greater_than: 0 }
-  validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validate :sufficient_stock, on: :create
-
-  before_validation :set_price, on: :create
-
-  def subtotal
-    quantity * price
-  end
-
-  private
-
-  def set_price
-    self.price = product.price if price.nil? && product
-  end
-
-  def sufficient_stock
-    return unless product && quantity
-
-    unless product.can_purchase?(quantity)
-      errors.add(:quantity, "Not enough stock available. Only #{product.stock_quantity} left.")
-    end
+  # ✅ NEW: Email workflow triggered after order becomes paid
+  def send_order_emails
+    Rails.logger.info "📧 [Order##{id}] Triggering order email workflow"
+    
+    # Use the EmailManagement service for all email logic
+    EmailManagement::OrderEmailService.send_complete_order_flow
+  rescue => e
+    Rails.logger.error "📧 [Order##{id}] Failed to send order emails: #{e.message}"
+    # Don't raise - email failures shouldn't break order processing
   end
 end

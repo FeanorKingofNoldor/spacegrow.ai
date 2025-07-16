@@ -1,0 +1,53 @@
+# app/views/order_mailer/confirmation.text.erb
+
+XSpaceGrow - Order Confirmation
+================================
+
+Hi <%= @user.display_name || @user.email.split('@').first.capitalize %>,
+
+Thank you for your order! We've received your payment and are preparing your order for fulfillment.
+
+ORDER DETAILS
+-------------
+Order Number: #<%= @order_number %>
+Order Date: <%= @order.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+Status: Paid
+Total: $<%= sprintf("%.2f", @total) %>
+
+ITEMS ORDERED
+-------------
+<% @line_items.each do |item| %>
+<%= item.product.name %>
+<%= item.product.description %>
+Quantity: <%= item.quantity %>
+Price: $<%= sprintf("%.2f", item.subtotal) %>
+<% if item.product.device? %>
+** Device - Activation Required **
+<% end %>
+
+<% end %>
+
+<% if @device_items.any? %>
+DEVICE ACTIVATION REQUIRED
+--------------------------
+You have purchased device(s) that require activation. You'll receive separate emails with detailed activation instructions for each device.
+
+<% end %>
+WHAT'S NEXT?
+------------
+1. Your payment has been processed successfully
+<% if @device_items.any? %>
+2. You'll receive device activation instructions via email shortly
+3. Follow the activation instructions to connect your devices
+<% end %>
+4. Access your dashboard to monitor your devices
+
+NEED HELP?
+----------
+If you have any questions about your order, please contact us:
+Email: support@spacegrow.local
+
+---
+© <%= Date.current.year %> XSpaceGrow. All rights reserved.
+
+This email was sent regarding your order. You cannot unsubscribe from transactional emails.
