@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Monitoring Setup - Special Device Offers</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .promotion-badge { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; }
+    .device-card { background-color: #f8f9fa; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #667eea; }
+    .price-section { display: flex; align-items: center; justify-content: space-between; margin: 20px 0; }
+    .price-old { font-size: 18px; text-decoration: line-through; color: #6c757d; }
+    .price-new { font-size: 28px; font-weight: bold; color: #e74c3c; }
+    .savings-badge { background-color: #e74c3c; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .urgency-banner { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; }
+    .success-story { background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 20px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .feature-list { background-color: white; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #e9ecef; }
+    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; }
+    @media (max-width: 600px) {
+      .device-grid { grid-template-columns: 1fr; }
+      .price-section { flex-direction: column; align-items: flex-start; }
+      .cta-button { display: block; text-align: center; margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="promotion-badge">🎯 Special Device Offer</div>
+      <h1><%= @promotion_data[:headline] %></h1>
+      <p><%= @promotion_data[:value_proposition] %></p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.display_name %>,</p>
+
+      <p>You've been exploring IoT monitoring solutions, and we want to make it easy for you to get started with the perfect device setup. We've selected these special offers just for you!</p>
+
+      <!-- Urgency Banner -->
+      <div class="urgency-banner">
+        <h3 style="margin: 0;">⚡ Limited-Time Pricing • Save up to $<%= @max_savings %>!</h3>
+        <% @promotion_data[:urgency_factors].each do |factor| %>
+          <div style="font-size: 14px; margin: 5px 0;">• <%= factor %></div>
+        <% end %>
+      </div>
+
+      <!-- Featured Devices -->
+      <h3>🚀 Featured Device Offers</h3>
+      <div class="device-grid">
+        <% @promotion_data[:featured_devices].each do |device| %>
+          <div class="device-card">
+            <h4 style="margin-top: 0; color: #667eea;"><%= device[:name] %></h4>
+            <p style="color: #666; font-size: 14px; margin: 10px 0;"><%= device[:perfect_for] %></p>
+            
+            <!-- Pricing -->
+            <div class="price-section">
+              <div>
+                <div class="price-old">$<%= device[:regular_price] %></div>
+                <div class="price-new">$<%= device[:sale_price] %></div>
+              </div>
+              <div class="savings-badge">
+                Save $<%= device[:savings] %>
+              </div>
+            </div>
+
+            <!-- What's Included -->
+            <div class="feature-list">
+              <strong>What's Included:</strong>
+              <ul style="margin: 10px 0; padding-left: 15px;">
+                <% device[:includes].each do |include_item| %>
+                  <li><%= include_item %></li>
+                <% end %>
+              </ul>
+            </div>
+
+            <!-- Perfect For -->
+            <div style="background-color: #e8f4f8; padding: 12px; border-radius: 6px; margin: 15px 0;">
+              <strong style="color: #17a2b8;">Perfect for:</strong> <%= device[:perfect_for] %>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="<%= Rails.application.config.app_host %>/shop/devices/<%= device[:name].parameterize %>?utm_source=email&utm_campaign=device_promotion" class="cta-button" style="color: white;">
+                🛒 Get This Deal
+              </a>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Success Stories -->
+      <h3>🌟 Why Our Customers Love These Devices</h3>
+      <% @promotion_data[:success_stories].each do |story| %>
+        <div class="success-story">
+          <p style="font-style: italic; margin: 0 0 10px 0;">
+            "<%= story[:result] %> in just <%= story[:timeframe] %>!"
+          </p>
+          <p style="margin: 0; font-size: 14px; color: #666;">
+            - <%= story[:customer] %>
+          </p>
+        </div>
+      <% end %>
+
+      <!-- Why Start Now -->
+      <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0;">
+        <h3 style="margin-top: 0;">🚀 Why Start Your IoT Journey Now?</h3>
+        <ul style="margin: 15px 0;">
+          <li><strong>Immediate ROI:</strong> Start saving money from day one with early problem detection</li>
+          <li><strong>Peace of Mind:</strong> 24/7 monitoring gives you confidence and control</li>
+          <li><strong>Data Insights:</strong> Understand patterns and optimize your operations</li>
+          <li><strong>Scalable Solution:</strong> Start small and expand as your needs grow</li>
+        </ul>
+      </div>
+
+      <!-- How It Works -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">📋 How It Works (Simple 3-Step Process)</h4>
+        <div style="display: flex; justify-content: space-around; text-align: center; margin: 20px 0;">
+          <div style="flex: 1; margin: 0 10px;">
+            <div style="font-size: 24px; margin-bottom: 10px;">📦</div>
+            <strong>1. Order</strong><br>
+            <span style="font-size: 14px; color: #666;">Choose your device</span>
+          </div>
+          <div style="flex: 1; margin: 0 10px;">
+            <div style="font-size: 24px; margin-bottom: 10px;">🔧</div>
+            <strong>2. Setup</strong><br>
+            <span style="font-size: 14px; color: #666;">5-minute activation</span>
+          </div>
+          <div style="flex: 1; margin: 0 10px;">
+            <div style="font-size: 24px; margin-bottom: 10px;">📊</div>
+            <strong>3. Monitor</strong><br>
+            <span style="font-size: 14px; color: #666;">Instant insights</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk-Free Guarantee -->
+      <div style="background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0; color: #856404;">🛡️ Risk-Free Guarantee</h4>
+        <ul style="margin: 15px 0;">
+          <li><strong>30-Day Money-Back Guarantee:</strong> Not satisfied? Get a full refund</li>
+          <li><strong>Free Setup Support:</strong> Our team helps you get started</li>
+          <li><strong>No Long-Term Contracts:</strong> Cancel anytime, keep your data</li>
+          <li><strong>1-Year Warranty:</strong> Devices covered against defects</li>
+        </ul>
+      </div>
+
+      <!-- Final CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <h3>Ready to Start Monitoring Like a Pro?</h3>
+        <a href="<%= Rails.application.config.app_host %>/shop/devices?utm_source=email&utm_campaign=device_promotion" class="cta-button" style="color: white; font-size: 18px; padding: 20px 40px;">
+          🎯 Shop Device Offers
+        </a>
+        <p style="font-size: 14px; color: #666; margin-top: 15px;">
+          Free shipping • Setup support included • 30-day guarantee
+        </p>
+      </div>
+
+      <!-- Still Have Questions -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4 style="margin-top: 0;">🤔 Still Have Questions?</h4>
+        <p>Our IoT experts are here to help you choose the perfect monitoring solution:</p>
+        <ul style="margin: 15px 0;">
+          <li><a href="<%= Rails.application.config.app_host %>/consultation">Schedule a free consultation</a> (15 minutes)</li>
+          <li><a href="<%= Rails.application.config.app_host %>/demo">Watch a live demo</a> of our platform</li>
+          <li><a href="<%= Rails.application.config.app_host %>/compare">Compare device options</a> side-by-side</li>
+          <li><a href="mailto:sales@xspacegrow.com">Email our sales team</a> with specific questions</li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 30px;">
+        These special offers won't last long, and we'd hate for you to miss out on the perfect device setup for your needs.<br><br>
+        <strong>Ready to transform your monitoring capabilities?</strong><br>
+        The XSpaceGrow Sales Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • Complete IoT Device Solutions<br>
+        <a href="<%= Rails.application.config.app_host %>/shop">Shop All Devices</a> • 
+        <a href="<%= Rails.application.config.app_host %>/compare">Compare Options</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Special pricing valid for limited time • Subject to availability
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from device promotions</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

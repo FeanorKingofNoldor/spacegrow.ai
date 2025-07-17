@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started with Your XSpaceGrow Devices</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3); }
+    .device-card { background-color: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #4facfe; }
+    .step-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 15px 0; }
+    .setup-time { background-color: #d4edda; color: #155724; padding: 10px 15px; border-radius: 20px; display: inline-block; font-weight: bold; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .token-highlight { background-color: #fffacd; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-weight: bold; }
+    .progress-indicator { display: flex; align-items: center; justify-content: center; margin: 20px 0; }
+    .progress-step { background-color: #4facfe; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 10px; }
+    .progress-line { width: 50px; height: 2px; background-color: #ddd; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🚀 Get Started with Your XSpaceGrow Devices</h1>
+      <p>Your IoT monitoring journey begins now!</p>
+      <div class="setup-time">
+        ⏱️ Estimated Setup Time: <%= @estimated_setup_time %> minutes
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
+
+      <p>Congratulations! Your XSpaceGrow order has been processed successfully. Your IoT devices are ready for activation and you're just minutes away from starting real-time environmental monitoring.</p>
+
+      <!-- Progress Indicator -->
+      <div class="progress-indicator">
+        <div class="progress-step">1</div>
+        <div class="progress-line"></div>
+        <div class="progress-step">2</div>
+        <div class="progress-line"></div>
+        <div class="progress-step">3</div>
+      </div>
+      <p style="text-align: center; font-size: 14px; color: #666;">
+        <strong>Unbox → Activate → Monitor</strong>
+      </p>
+
+      <!-- Order Summary -->
+      <div class="device-card">
+        <h3>📦 Your Order #<%= @order.id %></h3>
+        <p><strong><%= @device_count %> IoT Device<%= @device_count > 1 ? 's' : '' %> Ready for Setup</strong></p>
+        <p>Total Investment: <strong>$<%= @total %></strong></p>
+      </div>
+
+      <!-- Device Activation Section -->
+      <% @devices_by_type.each do |device_type, tokens| %>
+        <div class="device-card">
+          <h4>🔧 <%= device_type.name %> Setup</h4>
+          <p><%= device_type.description %></p>
+          
+          <% if tokens.length == 1 %>
+            <p><strong>Activation Token:</strong></p>
+            <div class="token-highlight">
+              <%= tokens.first.token %>
+            </div>
+            <p style="font-size: 14px; color: #666;">
+              ⏰ Expires: <%= tokens.first.expires_at.strftime("%B %d, %Y at %I:%M %p") %>
+            </p>
+          <% else %>
+            <p><strong>Activation Tokens (<%= tokens.length %> devices):</strong></p>
+            <% tokens.each_with_index do |token, index| %>
+              <div style="margin: 10px 0;">
+                <strong>Device <%= index + 1 %>:</strong>
+                <div class="token-highlight">
+                  <%= token.token %>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+
+          <!-- Setup Guide -->
+          <% if @setup_guides[device_type] %>
+            <div class="step-box">
+              <h5>📋 Quick Setup Steps:</h5>
+              <ol style="margin: 10px 0;">
+                <% @setup_guides[device_type].each do |step| %>
+                  <li><%= step %></li>
+                <% end %>
+              </ol>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Activation CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= Rails.application.config.app_host %>/device-activation" class="cta-button" style="color: white;">
+          🔗 Activate Your Devices
+        </a>
+        <a href="<%= Rails.application.config.app_host %>/dashboard" class="cta-button" style="color: white;">
+          📊 View Dashboard
+        </a>
+      </div>
+
+      <!-- What's Next -->
+      <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 25px; border-radius: 12px; margin: 30px 0;">
+        <h3>🎯 What Happens After Activation?</h3>
+        <ul style="margin: 15px 0;">
+          <li><strong>Immediate Data:</strong> Start receiving sensor readings within 30 seconds</li>
+          <li><strong>Smart Alerts:</strong> Get notified when readings exceed your thresholds</li>
+          <li><strong>Historical Trends:</strong> View data patterns and export reports</li>
+          <li><strong>Multiple Dashboards:</strong> Organize devices by location or purpose</li>
+        </ul>
+      </div>
+
+      <!-- Tips for Success -->
+      <div class="device-card">
+        <h4>💡 Pro Tips for Best Results</h4>
+        <ul>
+          <li><strong>Placement Matters:</strong> Avoid direct sunlight and heat sources for temperature sensors</li>
+          <li><strong>WiFi Range:</strong> Ensure strong WiFi signal at device locations</li>
+          <li><strong>Regular Monitoring:</strong> Check your dashboard weekly to establish baselines</li>
+          <li><strong>Alert Settings:</strong> Customize thresholds based on your specific needs</li>
+        </ul>
+      </div>
+
+      <!-- Need Help -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4>🤝 Need Setup Assistance?</h4>
+        <p>Our technical support team is here to help:</p>
+        <ul>
+          <li>📱 <strong>Live Chat:</strong> Real-time help during business hours</li>
+          <li>📧 <strong>Email Support:</strong> <a href="mailto:support@xspacegrow.com">support@xspacegrow.com</a></li>
+          <li>📹 <strong>Video Guides:</strong> <a href="<%= Rails.application.config.app_host %>/setup-guides">Setup Tutorial Library</a></li>
+          <li>📖 <strong>Documentation:</strong> <a href="<%= Rails.application.config.app_host %>/docs">Complete User Guide</a></li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 30px;">
+        Welcome to the XSpaceGrow community! We're excited to see what insights your data will reveal.<br><br>
+        <strong>Happy Monitoring!</strong><br>
+        The XSpaceGrow Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • IoT Device Management Platform<br>
+        <a href="<%= Rails.application.config.app_host %>">Dashboard</a> • 
+        <a href="<%= Rails.application.config.app_host %>/setup-guides">Setup Guides</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Device activation tokens expire in 30 days • Order #<%= @order.id %>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

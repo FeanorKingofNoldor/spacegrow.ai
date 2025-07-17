@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Suspended - XSpaceGrow</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .suspension-box { background-color: #f8d7da; border: 2px solid #dc3545; color: #721c24; padding: 25px; border-radius: 12px; margin: 20px 0; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px 0; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); }
+    .impact-details { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6c757d; }
+    .grace-info { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .suspended-badge { background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; }
+    .data-warning { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🔒 Service Suspended</h1>
+      <p>Your XSpaceGrow account requires immediate attention</p>
+      <div class="suspended-badge">
+        SERVICE TEMPORARILY SUSPENDED
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
+
+      <p>We regret to inform you that your XSpaceGrow <%= @plan.name %> plan has been temporarily suspended due to <%= @suspension_reason.downcase %>. Your IoT devices and monitoring services are currently inactive.</p>
+
+      <!-- Suspension Details -->
+      <div class="suspension-box">
+        <h3>🚨 Suspension Details</h3>
+        <ul style="margin: 15px 0;">
+          <li><strong>Reason:</strong> <%= @suspension_reason %></li>
+          <li><strong>Suspended Devices:</strong> <%= @suspended_devices_count %> devices affected</li>
+          <li><strong>Grace Period:</strong> <%= @grace_period_days %> days to reactivate</li>
+          <li><strong>Action Required:</strong> Update payment information</li>
+        </ul>
+      </div>
+
+      <!-- Data Protection Warning -->
+      <div class="data-warning">
+        <h3>⚠️ Data Protection Notice</h3>
+        <p><strong>Your data is safe for <%= @grace_period_days %> days.</strong></p>
+        <p>After <%= @permanent_suspension_date.strftime("%B %d, %Y") %>, inactive accounts may have their data archived or deleted according to our data retention policy.</p>
+      </div>
+
+      <!-- Service Impact -->
+      <div class="impact-details">
+        <h3>📊 Services Currently Affected</h3>
+        <ul>
+          <li>❌ Real-time device monitoring</li>
+          <li>❌ Data collection from sensors</li>
+          <li>❌ Alert notifications and warnings</li>
+          <li>❌ Dashboard access and analytics</li>
+          <li>❌ API integrations and exports</li>
+          <li>✅ Account access (for reactivation)</li>
+          <li>✅ Historical data (preserved for <%= @grace_period_days %> days)</li>
+        </ul>
+      </div>
+
+      <!-- Reactivation CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <% if @can_reactivate_immediately %>
+          <a href="<%= @reactivation_url %>" class="cta-button" style="color: white;">
+            🔄 Reactivate Service Now
+          </a>
+          <p style="font-size: 14px; color: #666; margin-top: 10px;">
+            Instant reactivation available • Secure payment processing
+          </p>
+        <% else %>
+          <a href="<%= @reactivation_url %>" class="cta-button" style="color: white;">
+            💳 Update Payment Method
+          </a>
+          <p style="font-size: 14px; color: #666; margin-top: 10px;">
+            Reactivation within 24 hours of payment update
+          </p>
+        <% end %>
+      </div>
+
+      <!-- Grace Period Information -->
+      <div class="grace-info">
+        <h4>⏳ <%= @grace_period_days %>-Day Grace Period</h4>
+        <p><strong>You have until <%= @permanent_suspension_date.strftime("%B %d, %Y") %> to reactivate your service.</strong></p>
+        <ul>
+          <li>Your devices will automatically reconnect upon reactivation</li>
+          <li>Historical data remains intact and accessible</li>
+          <li>All custom settings and configurations are preserved</li>
+          <li>No setup or reconfiguration required</li>
+        </ul>
+      </div>
+
+      <!-- What Reactivation Includes -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0;">
+        <h3>🚀 Reactivation Restores Full Service</h3>
+        <ul style="margin: 15px 0;">
+          <li>✅ All <%= @suspended_devices_count %> devices come back online</li>
+          <li>✅ Real-time monitoring resumes immediately</li>
+          <li>✅ Alert notifications reactivate</li>
+          <li>✅ Full dashboard and analytics access</li>
+          <li>✅ API integrations reconnect</li>
+          <li>✅ Priority support restoration</li>
+        </ul>
+      </div>
+
+      <!-- Prevent Future Suspensions -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4>💡 Prevent Future Service Interruptions</h4>
+        <ul>
+          <li><strong>Auto-Pay:</strong> Enable automatic payments for seamless billing</li>
+          <li><strong>Backup Payment:</strong> Add a secondary payment method</li>
+          <li><strong>Billing Alerts:</strong> Get notified before payment issues occur</li>
+          <li><strong>Account Monitoring:</strong> Regular billing email confirmations</li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>Need Immediate Assistance? 🤝</h4>
+        <p>Our reactivation team is standing by:</p>
+        <ul>
+          <li>🔥 <strong>Urgent Line:</strong> 1-800-XSPACE-1 (press 1 for reactivation)</li>
+          <li>📧 <strong>Email:</strong> <a href="mailto:reactivation@xspacegrow.com">reactivation@xspacegrow.com</a></li>
+          <li>💬 <strong>Live Chat:</strong> Available 24/7 in your account portal</li>
+        </ul>
+        <p style="font-size: 14px; margin-top: 15px;">
+          <strong>Average reactivation time:</strong> 2-4 hours after payment resolution
+        </p>
+      </div>
+
+      <p style="margin-top: 30px;">
+        We understand this suspension may be inconvenient. Our team is here to help restore your service as quickly as possible.<br><br>
+        <strong>The XSpaceGrow Reactivation Team</strong>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • IoT Device Management Platform<br>
+        <a href="<%= @reactivation_url %>">Reactivate Service</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Emergency Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Subscription ID: <%= @subscription.id %> • Suspension effective immediately
+      </p>
+    </div>
+  </div>
+</body>
+</html>

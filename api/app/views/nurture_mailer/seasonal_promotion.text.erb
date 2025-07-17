@@ -1,0 +1,42 @@
+🍂 Seasonal Special - Limited Time Savings
+
+Hi <%= @user.name %>,
+
+<%= @seasonal_greeting %> As the season changes, it's the perfect time to upgrade your monitoring setup with special savings!
+
+🎉 <%= @discount_percentage %>% OFF ALL DEVICES & SUBSCRIPTIONS
+Use code: <%= @promo_code %>
+
+<%= @season_emoji %> WHY UPGRADE NOW?
+<% @seasonal_benefits.each do |benefit| %>
+✓ <%= benefit %>
+<% end %>
+
+FEATURED PRODUCTS:
+
+🌡️ Temperature Monitoring
+Perfect for climate-controlled environments
+From $<%= number_with_precision(@temp_device_price * (1 - @discount_percentage/100.0), precision: 0) %> (was $<%= @temp_device_price %>)
+
+💧 Humidity Sensors  
+Ideal for storage and production areas
+From $<%= number_with_precision(@humidity_device_price * (1 - @discount_percentage/100.0), precision: 0) %> (was $<%= @humidity_device_price %>)
+
+⏰ HURRY! Offer expires <%= @offer_expiry_date %>
+
+SHOP SEASONAL SALE: <%= shop_url(utm_source: 'email', utm_medium: 'seasonal', utm_campaign: @campaign_name) %>
+
+CUSTOMER SUCCESS STORY:
+"<%= @customer_testimonial %>"
+— <%= @customer_name %>, <%= @customer_title %>
+
+Don't miss out on this seasonal special! Questions? Our team is ready to help you choose the perfect monitoring solution.
+
+Best regards,
+The XSpaceGrow Team
+
+---
+Unsubscribe: <%= unsubscribe_url(token: @unsubscribe_token) %>
+Visit Dashboard: <%= root_url %>
+Shop Now: <%= shop_url %>
+XSpaceGrow - Professional IoT Solutions

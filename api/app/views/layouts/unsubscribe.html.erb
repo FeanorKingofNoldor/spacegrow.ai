@@ -1,0 +1,194 @@
+<!-- app/views/layouts/unsubscribe.html.erb -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for?(:title) ? yield(:title) : "Email Preferences - XSpaceGrow" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <!-- Simplified styling for unsubscribe pages -->
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+      }
+      
+      .unsubscribe-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .unsubscribe-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 0;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      
+      .unsubscribe-header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      
+      .unsubscribe-header p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+      
+      .unsubscribe-main {
+        flex: 1;
+        padding: 20px;
+        max-width: 100%;
+      }
+      
+      .unsubscribe-footer {
+        background-color: #fff;
+        border-top: 1px solid #e9ecef;
+        padding: 20px;
+        text-align: center;
+        color: #6c757d;
+        font-size: 14px;
+      }
+      
+      .unsubscribe-footer a {
+        color: #667eea;
+        text-decoration: none;
+      }
+      
+      .unsubscribe-footer a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Flash messages */
+      .flash-message {
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 8px;
+        font-weight: 500;
+      }
+      
+      .flash-notice {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      
+      .flash-error, .flash-alert {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .unsubscribe-main {
+          padding: 10px;
+        }
+        
+        .unsubscribe-header h1 {
+          font-size: 20px;
+        }
+      }
+    </style>
+
+    <!-- Minimal JavaScript for basic functionality -->
+    <script>
+      // Simple form validation
+      document.addEventListener('DOMContentLoaded', function() {
+        // Auto-hide flash messages after 5 seconds
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(function(message) {
+          setTimeout(function() {
+            message.style.opacity = '0';
+            setTimeout(function() {
+              message.style.display = 'none';
+            }, 300);
+          }, 5000);
+        });
+      });
+      
+      // Basic analytics tracking (if gtag is available)
+      function trackUnsubscribeEvent(action, category) {
+        if (typeof gtag !== 'undefined') {
+          gtag('event', action, {
+            'event_category': category || 'unsubscribe',
+            'event_label': window.location.pathname
+          });
+        }
+      }
+    </script>
+
+    <!-- Optional: Include analytics if configured -->
+    <% if Rails.env.production? && ENV['GOOGLE_ANALYTICS_ID'].present? %>
+      <!-- Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=<%= ENV['GOOGLE_ANALYTICS_ID'] %>"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '<%= ENV['GOOGLE_ANALYTICS_ID'] %>', {
+          'anonymize_ip': true,
+          'cookie_domain': 'auto',
+          'cookie_flags': 'SameSite=None;Secure'
+        });
+      </script>
+    <% end %>
+  </head>
+
+  <body>
+    <div class="unsubscribe-container">
+      <!-- Simple Header -->
+      <header class="unsubscribe-header">
+        <h1>XSpaceGrow</h1>
+        <p>Email Preference Management</p>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="unsubscribe-main">
+        <!-- Flash Messages -->
+        <% if notice %>
+          <div class="flash-message flash-notice">
+            <%= notice %>
+          </div>
+        <% end %>
+
+        <% if alert %>
+          <div class="flash-message flash-error">
+            <%= alert %>
+          </div>
+        <% end %>
+
+        <!-- Page Content -->
+        <%= yield %>
+      </main>
+
+      <!-- Simple Footer -->
+      <footer class="unsubscribe-footer">
+        <p>
+          <strong>XSpaceGrow</strong> • IoT Device Management Platform<br>
+          <a href="<%= Rails.application.config.app_host %>">Return to XSpaceGrow</a> • 
+          <a href="mailto:support@xspacegrow.com">Contact Support</a> • 
+          <a href="<%= Rails.application.config.app_host %>/privacy">Privacy Policy</a>
+        </p>
+        
+        <p style="font-size: 12px; margin-top: 10px; color: #adb5bd;">
+          Your privacy matters to us. We respect your email preferences and will process your request within 24 hours.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

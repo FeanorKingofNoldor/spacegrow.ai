@@ -1,0 +1,96 @@
+Complete Your Monitoring Setup - Special Device Offers
+
+Hi <%= @user.display_name %>,
+
+🎯 Special Device Offer - <%= @promotion_data[:headline] %>
+
+<%= @promotion_data[:value_proposition] %>
+
+You've been exploring IoT monitoring solutions, and we want to make it easy for you to get started with the perfect device setup. We've selected these special offers just for you!
+
+LIMITED-TIME PRICING
+=====================
+⚡ Save up to $<%= @max_savings %>!
+
+<% @promotion_data[:urgency_factors].each do |factor| %>
+• <%= factor %>
+<% end %>
+
+FEATURED DEVICE OFFERS
+=======================
+<% @promotion_data[:featured_devices].each_with_index do |device, index| %>
+
+<%= index + 1 %>. <%= device[:name] %>
+<%= "=" * device[:name].length %>
+Perfect for: <%= device[:perfect_for] %>
+
+Regular Price: $<%= device[:regular_price] %>
+SALE PRICE: $<%= device[:sale_price] %>
+YOU SAVE: $<%= device[:savings] %>
+
+What's Included:
+<% device[:includes].each do |include_item| %>
+• <%= include_item %>
+<% end %>
+
+Get This Deal: <%= Rails.application.config.app_host %>/shop/devices/<%= device[:name].parameterize %>?utm_source=email&utm_campaign=device_promotion
+
+<% end %>
+
+WHY OUR CUSTOMERS LOVE THESE DEVICES
+=====================================
+<% @promotion_data[:success_stories].each do |story| %>
+"<%= story[:result] %> in just <%= story[:timeframe] %>!"
+- <%= story[:customer] %>
+
+<% end %>
+
+WHY START YOUR IOT JOURNEY NOW?
+================================
+🚀 Immediate ROI: Start saving money from day one with early problem detection
+🚀 Peace of Mind: 24/7 monitoring gives you confidence and control
+🚀 Data Insights: Understand patterns and optimize your operations
+🚀 Scalable Solution: Start small and expand as your needs grow
+
+HOW IT WORKS (SIMPLE 3-STEP PROCESS)
+=====================================
+1. 📦 Order - Choose your device
+2. 🔧 Setup - 5-minute activation  
+3. 📊 Monitor - Instant insights
+
+RISK-FREE GUARANTEE
+====================
+🛡️ 30-Day Money-Back Guarantee: Not satisfied? Get a full refund
+🛡️ Free Setup Support: Our team helps you get started
+🛡️ No Long-Term Contracts: Cancel anytime, keep your data
+🛡️ 1-Year Warranty: Devices covered against defects
+
+READY TO START MONITORING LIKE A PRO?
+======================================
+Shop Device Offers: <%= Rails.application.config.app_host %>/shop/devices?utm_source=email&utm_campaign=device_promotion
+
+Free shipping • Setup support included • 30-day guarantee
+
+STILL HAVE QUESTIONS?
+=====================
+Our IoT experts are here to help you choose the perfect monitoring solution:
+
+• Schedule a free consultation (15 minutes): <%= Rails.application.config.app_host %>/consultation
+• Watch a live demo: <%= Rails.application.config.app_host %>/demo
+• Compare device options: <%= Rails.application.config.app_host %>/compare
+• Email our sales team: sales@xspacegrow.com
+
+These special offers won't last long, and we'd hate for you to miss out on the perfect device setup for your needs.
+
+Ready to transform your monitoring capabilities?
+The XSpaceGrow Sales Team
+
+---
+XSpaceGrow • Complete IoT Device Solutions
+Shop All Devices: <%= Rails.application.config.app_host %>/shop
+Compare Options: <%= Rails.application.config.app_host %>/compare
+Support: <%= Rails.application.config.app_host %>/support
+
+Special pricing valid for limited time • Subject to availability
+
+Unsubscribe from device promotions: <%= unsubscribe_url(@unsubscribe_token) %>

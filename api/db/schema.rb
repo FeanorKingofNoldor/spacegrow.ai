@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_15_123553) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_17_093838) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -144,7 +144,22 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_15_123553) do
     t.decimal "total", precision: 10, scale: 2
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "payment_completed_at"
+    t.datetime "payment_failed_at"
+    t.text "payment_failure_reason"
+    t.string "retry_strategy"
+    t.text "retry_reason"
+    t.string "stripe_payment_intent_id"
+    t.string "stripe_session_id"
+    t.datetime "cancelled_at"
+    t.string "cancellation_reason"
+    t.index ["cancelled_at"], name: "index_orders_on_cancelled_at"
+    t.index ["payment_completed_at"], name: "index_orders_on_payment_completed_at"
+    t.index ["payment_failed_at"], name: "index_orders_on_payment_failed_at"
+    t.index ["status", "retry_strategy"], name: "index_orders_on_status_and_retry_strategy"
     t.index ["status"], name: "index_orders_on_status"
+    t.index ["stripe_payment_intent_id"], name: "index_orders_on_stripe_payment_intent_id"
+    t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
@@ -255,6 +270,53 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_15_123553) do
     t.index ["user_id"], name: "index_subscriptions_on_user_id"
   end
 
+  create_table "user_notification_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.boolean "security_auth_email", default: true, null: false
+    t.boolean "financial_billing_email", default: true, null: false
+    t.boolean "critical_device_alerts_email", default: true, null: false
+    t.boolean "device_management_email", default: false, null: false
+    t.boolean "account_updates_email", default: false, null: false
+    t.boolean "system_notifications_email", default: false, null: false
+    t.boolean "reports_analytics_email", default: false, null: false
+    t.boolean "marketing_tips_email", default: false, null: false
+    t.boolean "security_auth_inapp", default: true, null: false
+    t.boolean "financial_billing_inapp", default: true, null: false
+    t.boolean "critical_device_alerts_inapp", default: true, null: false
+    t.boolean "device_management_inapp", default: true, null: false
+    t.boolean "account_updates_inapp", default: true, null: false
+    t.boolean "system_notifications_inapp", default: true, null: false
+    t.boolean "reports_analytics_inapp", default: false, null: false
+    t.boolean "marketing_tips_inapp", default: false, null: false
+    t.boolean "marketing_emails_opted_in", default: false, null: false
+    t.datetime "marketing_opted_in_at"
+    t.datetime "marketing_opted_out_at"
+    t.string "marketing_opt_source"
+    t.string "digest_frequency", default: "immediate", null: false
+    t.time "digest_time", default: "2000-01-01 09:00:00"
+    t.integer "digest_day_of_week", default: 1
+    t.boolean "enable_escalation", default: true, null: false
+    t.integer "escalation_delay_minutes", default: 120, null: false
+    t.datetime "last_email_sent_at"
+    t.datetime "last_inapp_notification_at"
+    t.integer "total_emails_sent", default: 0, null: false
+    t.integer "total_inapp_notifications", default: 0, null: false
+    t.datetime "suppress_all_until"
+    t.text "suppression_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["digest_frequency"], name: "index_user_notification_preferences_on_digest_frequency"
+    t.index ["marketing_emails_opted_in"], name: "idx_on_marketing_emails_opted_in_281581a08a"
+    t.index ["marketing_opted_in_at"], name: "index_user_notification_preferences_on_marketing_opted_in_at"
+    t.index ["marketing_opted_out_at"], name: "index_user_notification_preferences_on_marketing_opted_out_at"
+    t.index ["suppress_all_until"], name: "index_user_notification_preferences_on_suppress_all_until"
+    t.index ["user_id", "marketing_emails_opted_in"], name: "idx_user_notification_preferences_marketing"
+    t.index ["user_id"], name: "index_user_notification_preferences_on_user_id", unique: true
+    t.check_constraint "digest_day_of_week >= 1 AND digest_day_of_week <= 7", name: "valid_digest_day_of_week"
+    t.check_constraint "digest_frequency::text = ANY (ARRAY['immediate'::character varying, 'daily'::character varying, 'weekly'::character varying, 'disabled'::character varying]::text[])", name: "valid_digest_frequency"
+    t.check_constraint "escalation_delay_minutes >= 15 AND escalation_delay_minutes <= 1440", name: "valid_escalation_delay"
+  end
+
   create_table "user_sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "jti", null: false
@@ -318,5 +380,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_15_123553) do
   add_foreign_key "sensor_data", "device_sensors"
   add_foreign_key "subscriptions", "plans"
   add_foreign_key "subscriptions", "users"
+  add_foreign_key "user_notification_preferences", "users"
   add_foreign_key "user_sessions", "users"
 end

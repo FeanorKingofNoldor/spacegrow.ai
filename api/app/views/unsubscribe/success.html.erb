@@ -1,0 +1,205 @@
+<!-- app/views/unsubscribe/success.html.erb -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribe Successful - XSpaceGrow</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      margin: 0; 
+      padding: 20px; 
+      background-color: #f4f4f4; 
+    }
+    .container { 
+      max-width: 500px; 
+      margin: 0 auto; 
+      background-color: white; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header { 
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+      color: white; 
+      padding: 30px 20px; 
+      text-align: center; 
+    }
+    .content { 
+      padding: 30px 20px; 
+    }
+    .success-icon { 
+      font-size: 48px; 
+      margin-bottom: 15px; 
+    }
+    .primary-button { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white; 
+      padding: 15px 30px; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%;
+      font-size: 16px;
+      margin: 15px 0;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .primary-button:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); 
+    }
+    .secondary-button { 
+      background-color: transparent; 
+      color: #667eea; 
+      padding: 10px 20px; 
+      border: 2px solid #667eea; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%;
+      font-size: 14px;
+      margin: 10px 0;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .secondary-button:hover { 
+      background-color: #667eea; 
+      color: white; 
+    }
+    .info-box { 
+      background-color: #f8f9fa; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 20px 0; 
+      border-left: 4px solid #28a745;
+    }
+    .footer { 
+      background-color: #f8f9fa; 
+      padding: 20px; 
+      text-align: center; 
+      font-size: 14px; 
+      color: #666; 
+    }
+    .contact-info { 
+      background-color: #e8f4f8; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 20px 0; 
+      border-left: 4px solid #17a2b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="success-icon">✅</div>
+      <h1>Successfully Unsubscribed</h1>
+      <p>Your email preferences have been updated</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <!-- Confirmation -->
+      <div class="info-box">
+        <h3 style="margin-top: 0;">📧 What Changed</h3>
+        <p><strong>You've been unsubscribed from:</strong> <%= @type_description %></p>
+        <ul style="margin: 15px 0;">
+          <li>Changes take effect within 24 hours</li>
+          <li>You'll still receive important account notifications</li>
+          <li>You can resubscribe anytime from your account settings</li>
+        </ul>
+      </div>
+
+      <!-- What You'll Still Receive -->
+      <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+        <h4 style="margin-top: 0; color: #856404;">📋 You'll Still Receive</h4>
+        <ul style="margin: 15px 0; color: #856404;">
+          <li><strong>Account notifications</strong> (login alerts, password changes)</li>
+          <li><strong>Billing communications</strong> (receipts, payment issues)</li>
+          <li><strong>Critical device alerts</strong> (if you have devices)</li>
+          <li><strong>Service announcements</strong> (maintenance, security updates)</li>
+        </ul>
+        <p style="color: #856404; margin-bottom: 0; font-size: 14px;">
+          These ensure your account security and service continuity.
+        </p>
+      </div>
+
+      <!-- Resubscribe Options -->
+      <div class="contact-info">
+        <h4 style="margin-top: 0;">🔄 Changed Your Mind?</h4>
+        <p>You can easily resubscribe or customize your email preferences:</p>
+        <ul style="margin: 15px 0;">
+          <li><strong>Email us:</strong> <a href="mailto:<%= @resubscribe_options[:email] %>"><%= @resubscribe_options[:email] %></a></li>
+          <li><strong>Call us:</strong> <%= @resubscribe_options[:phone] %></li>
+          <li><strong>Update preferences:</strong> <a href="<%= @resubscribe_options[:preferences_url] %>">Account Settings</a></li>
+        </ul>
+      </div>
+
+      <!-- Alternative Actions -->
+      <h3>What Would You Like to Do Next?</h3>
+      
+      <a href="<%= Rails.application.config.app_host %>" class="primary-button">
+        🏠 Return to XSpaceGrow
+      </a>
+      
+      <a href="<%= Rails.application.config.app_host %>/account/notifications" class="secondary-button">
+        ⚙️ Customize Email Preferences
+      </a>
+
+      <!-- Feedback -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">💭 Help Us Improve</h4>
+        <p>Your feedback helps us create better email experiences for everyone.</p>
+        <a href="<%= Rails.application.config.app_host %>/feedback/email-experience" class="secondary-button" style="margin-top: 10px;">
+          📝 Share Feedback (2 minutes)
+        </a>
+      </div>
+
+      <!-- Stay Connected -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0; text-align: center;">
+        <h3 style="margin-top: 0;">🌐 Stay Connected</h3>
+        <p>Follow us on social media for updates, tips, and community insights:</p>
+        <div style="margin-top: 15px;">
+          <a href="https://twitter.com/xspacegrow" style="color: white; margin: 0 10px;">Twitter</a> •
+          <a href="https://linkedin.com/company/xspacegrow" style="color: white; margin: 0 10px;">LinkedIn</a> •
+          <a href="https://youtube.com/xspacegrow" style="color: white; margin: 0 10px;">YouTube</a>
+        </div>
+      </div>
+
+      <p style="text-align: center; color: #666; font-size: 14px;">
+        Thank you for being part of the XSpaceGrow community!
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        <strong>XSpaceGrow</strong><br>
+        IoT Device Management Platform
+      </p>
+      <p style="font-size: 12px; margin-top: 10px;">
+        Questions? Contact <a href="mailto:support@xspacegrow.com">support@xspacegrow.com</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Track unsubscribe success for analytics
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'unsubscribe_completed', {
+        'event_category': 'email',
+        'event_label': '<%= @unsubscribe_type %>',
+        'value': 1
+      });
+    }
+  </script>
+</body>
+</html>

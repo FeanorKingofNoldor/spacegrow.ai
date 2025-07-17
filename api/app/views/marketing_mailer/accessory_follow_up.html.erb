@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Monitoring Setup</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .accessory-badge { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; }
+    .device-card { background-color: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #28a745; }
+    .price-highlight { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 15px 0; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); }
+    .offer-box { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .feature-list { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; }
+    @media (max-width: 600px) {
+      .device-grid { grid-template-columns: 1fr; }
+      .cta-button { display: block; text-align: center; margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="accessory-badge">🔧 Accessories Ready</div>
+      <h1>Complete Your Monitoring Setup</h1>
+      <p>Your accessories are waiting for the perfect device companion!</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.display_name %>,</p>
+
+      <p>Great choice on your recent accessory purchase! You've got some fantastic monitoring components, and now it's time to unlock their full potential with the right device setup.</p>
+
+      <!-- Purchased Accessories -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 20px 0;">
+        <h3>📦 Your Recent Accessories</h3>
+        <ul style="margin: 15px 0;">
+          <% @accessory_data[:accessories_purchased].each do |accessory| %>
+            <li><strong><%= accessory %></strong></li>
+          <% end %>
+        </ul>
+        <p style="color: #666; font-size: 14px;">Perfect for building a comprehensive monitoring solution!</p>
+      </div>
+
+      <!-- Device Recommendations -->
+      <h3>🎯 Perfect Device Matches for Your Accessories</h3>
+      <div class="device-grid">
+        <% @accessory_data[:device_recommendations].each do |device| %>
+          <div class="device-card">
+            <h4 style="margin-top: 0; color: #28a745;"><%= device[:name] %></h4>
+            <p style="color: #666; font-size: 14px; margin: 10px 0;"><%= device[:perfect_for] %></p>
+            
+            <div class="feature-list">
+              <strong>Features:</strong>
+              <ul style="margin: 10px 0; padding-left: 15px;">
+                <% device[:features].each do |feature| %>
+                  <li><%= feature %></li>
+                <% end %>
+              </ul>
+            </div>
+
+            <div class="price-highlight">
+              <div style="text-decoration: line-through; font-size: 14px; opacity: 0.8;">Regular: $<%= device[:price] %></div>
+              <div style="font-size: 24px; font-weight: bold;">Special: $<%= device[:price] - (device[:price] * device[:discount] / 100) %></div>
+              <div style="font-size: 14px;">Save <%= device[:discount] %>%!</div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Use Cases -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0;">
+        <h3>🌟 What You Can Build</h3>
+        <ul style="margin: 15px 0;">
+          <% @accessory_data[:use_cases].each do |use_case| %>
+            <li style="margin: 8px 0;"><%= use_case %></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Special Offer -->
+      <div class="offer-box">
+        <h3 style="margin-top: 0;">🎉 Limited-Time Bundle Offer</h3>
+        <div style="font-size: 18px; margin: 15px 0;">
+          <strong><%= @accessory_data[:special_offer][:discount_percent] %>% OFF</strong> when you add a device to your accessories
+        </div>
+        <p style="margin: 15px 0;">
+          <strong>Bundle Savings:</strong> Save up to $<%= @accessory_data[:special_offer][:bundle_savings] %> total!<br>
+          <strong>Valid until:</strong> <%= @accessory_data[:special_offer][:valid_until].strftime("%B %d, %Y") %>
+        </p>
+        
+        <div style="margin-top: 20px;">
+          <a href="<%= Rails.application.config.app_host %>/shop/devices?utm_source=email&utm_campaign=accessory_followup&discount=<%= @accessory_data[:special_offer][:discount_percent] %>" class="cta-button" style="color: white;">
+            🛒 Shop Devices Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Success Example -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>💡 Customer Success Story</h4>
+        <p><em>"I started with just sensors, then added the monitoring hub. Within a week, I caught a temperature spike that could have cost me thousands in damaged inventory!"</em></p>
+        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+          - Mark T., Cold Storage Facility Manager
+        </p>
+      </div>
+
+      <!-- Why Complete Your Setup -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4>🚀 Why Complete Your Setup Now?</h4>
+        <ul style="margin: 15px 0;">
+          <li><strong>Immediate Value:</strong> Start getting insights from day one</li>
+          <li><strong>Cost Savings:</strong> Early detection prevents expensive problems</li>
+          <li><strong>Peace of Mind:</strong> 24/7 monitoring while you sleep</li>
+          <li><strong>Bundle Discount:</strong> Maximum savings when bought together</li>
+        </ul>
+      </div>
+
+      <!-- Final CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= Rails.application.config.app_host %>/shop/bundles?accessories=true" class="cta-button" style="color: white;">
+          🎯 See Perfect Bundles
+        </a>
+        <a href="<%= Rails.application.config.app_host %>/contact/consultation" class="cta-button" style="color: white;">
+          💬 Get Free Consultation
+        </a>
+      </div>
+
+      <p style="margin-top: 30px;">
+        Your accessories are a great start – let's complete the solution and get you monitoring like a pro!<br><br>
+        <strong>Ready to unlock full monitoring power?</strong><br>
+        The XSpaceGrow Solutions Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • Complete IoT Solutions<br>
+        <a href="<%= Rails.application.config.app_host %>/shop">Shop Devices</a> • 
+        <a href="<%= Rails.application.config.app_host %>/bundles">View Bundles</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Order #<%= @order.id %> • Accessories ready for completion
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from marketing emails</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

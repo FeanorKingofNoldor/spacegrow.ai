@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real Results: IoT Success Stories</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .roi-badge { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; }
+    .case-study-card { background-color: #f8f9fa; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #667eea; }
+    .company-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .company-name { font-size: 18px; font-weight: bold; color: #667eea; }
+    .industry-tag { background-color: #e8f4f8; color: #17a2b8; padding: 4px 12px; border-radius: 15px; font-size: 12px; }
+    .challenge-section { background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 3px solid #ffc107; }
+    .solution-section { background-color: #d4edda; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 3px solid #28a745; }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
+    .result-item { background-color: white; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid #28a745; }
+    .roi-highlight { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 15px 0; }
+    .quote-box { background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 15px 0; font-style: italic; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .stats-header { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 30px 0; text-align: center; }
+    @media (max-width: 600px) {
+      .results-grid { grid-template-columns: 1fr; }
+      .company-header { flex-direction: column; align-items: flex-start; }
+      .cta-button { display: block; text-align: center; margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="roi-badge">💼 Success Stories</div>
+      <h1>Real Results: How Companies Achieved <%= @max_roi %>% ROI</h1>
+      <p>See what's possible with smart IoT monitoring</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= user_display_name %>,</p>
+
+      <p><%= @introduction %></p>
+
+      <!-- Overall Stats -->
+      <div class="stats-header">
+        <h3 style="margin-top: 0;">📊 What Our Customers Achieve</h3>
+        <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+          <div>
+            <div style="font-size: 24px; font-weight: bold;"><%= @average_roi %>%</div>
+            <div>Average ROI</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: bold;"><%= @studies.length %></div>
+            <div>Success Stories</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">100%</div>
+            <div>Satisfaction Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case Studies -->
+      <% @studies.each_with_index do |study, index| %>
+        <div class="case-study-card">
+          <div class="company-header">
+            <div class="company-name"><%= study[:company] %></div>
+            <div class="industry-tag"><%= study[:industry] %></div>
+          </div>
+
+          <!-- Challenge -->
+          <div class="challenge-section">
+            <h4 style="margin-top: 0; color: #856404;">🎯 The Challenge</h4>
+            <p style="margin-bottom: 0;"><%= study[:challenge] %></p>
+          </div>
+
+          <!-- Solution -->
+          <div class="solution-section">
+            <h4 style="margin-top: 0; color: #155724;">🛠️ The Solution</h4>
+            <p style="margin-bottom: 0;"><%= study[:solution] %></p>
+          </div>
+
+          <!-- Results -->
+          <h4>📈 The Results</h4>
+          <div class="results-grid">
+            <% study[:results].each do |result| %>
+              <div class="result-item">
+                <div style="font-weight: bold; color: #28a745;"><%= result %></div>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- ROI Highlight -->
+          <div class="roi-highlight">
+            <div style="font-size: 28px; font-weight: bold;"><%= study[:roi_percentage] %>% ROI</div>
+            <div>Return on Investment</div>
+          </div>
+
+          <!-- Quote -->
+          <div class="quote-box">
+            <p style="margin: 0; font-size: 16px;">"<%= study[:quote] %>"</p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Your Potential -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center;">
+        <h3>🚀 Your Potential with XSpaceGrow</h3>
+        <p style="font-size: 18px; margin: 15px 0;">Based on similar implementations, you could achieve:</p>
+        <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">60-90%</div>
+            <div>Downtime Reduction</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">$25K+</div>
+            <div>Annual Savings</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">3-6 months</div>
+            <div>Payback Period</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Implementation Insights -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>💡 Key Success Factors</h4>
+        <ul style="margin: 15px 0;">
+          <li><strong>Strategic Placement:</strong> Position sensors at critical monitoring points</li>
+          <li><strong>Smart Alerts:</strong> Configure thresholds based on historical data</li>
+          <li><strong>Regular Review:</strong> Analyze trends monthly to optimize operations</li>
+          <li><strong>Team Training:</strong> Ensure staff understand how to respond to alerts</li>
+          <li><strong>Integration:</strong> Connect monitoring data with existing systems</li>
+        </ul>
+      </div>
+
+      <!-- Action Steps -->
+      <div style="text-align: center; margin: 30px 0;">
+        <h3>Ready to Write Your Success Story?</h3>
+        <a href="<%= Rails.application.config.app_host %>/consultation/roi-assessment" class="cta-button" style="color: white;">
+          📊 Get Your ROI Assessment
+        </a>
+        <a href="<%= Rails.application.config.app_host %>/case-studies" class="cta-button" style="color: white;">
+          📚 Read More Case Studies
+        </a>
+      </div>
+
+      <!-- Industry Specific -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4>🏭 Industry-Specific Applications</h4>
+        <ul style="margin: 15px 0;">
+          <li><strong>Manufacturing:</strong> Predictive maintenance and quality control</li>
+          <li><strong>Healthcare:</strong> Environmental compliance and equipment monitoring</li>
+          <li><strong>Agriculture:</strong> Crop optimization and livestock monitoring</li>
+          <li><strong>Food Service:</strong> Temperature compliance and storage monitoring</li>
+          <li><strong>Data Centers:</strong> Environmental control and equipment health</li>
+        </ul>
+        <p style="margin-top: 15px;">
+          <a href="<%= Rails.application.config.app_host %>/industries" style="color: #17a2b8; font-weight: bold;">
+            Explore your industry solutions →
+          </a>
+        </p>
+      </div>
+
+      <p style="margin-top: 30px;">
+        These success stories aren't just inspiring – they're blueprints for what you can achieve. Every great monitoring implementation starts with the first sensor.<br><br>
+        <strong>What will your success story look like?</strong><br>
+        The XSpaceGrow Success Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow Success Stories • Real Results from Real Customers<br>
+        <a href="<%= Rails.application.config.app_host %>/case-studies">All Case Studies</a> • 
+        <a href="<%= Rails.application.config.app_host %>/roi-calculator">ROI Calculator</a> • 
+        <a href="<%= Rails.application.config.app_host %>/consultation">Free Consultation</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Average customer ROI: <%= @average_roi %>% • Success rate: 100%
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from case studies</a> • 
+        <a href="<%= Rails.application.config.app_host %>/preferences">Update preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

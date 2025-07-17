@@ -1,0 +1,62 @@
+Complete Your XSpaceGrow Order - Payment Retry Needed
+
+Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,
+
+We noticed there was an issue processing payment for your XSpaceGrow order. Don't worry - your order is still reserved, and we're here to help you complete it!
+
+ORDER SUMMARY
+=============
+Order #<%= @order.id %>
+
+<% if @device_count > 0 %>
+🚀 <%= @device_count %> IoT Device<%= @device_count > 1 ? 's' : '' %> Ready for Activation
+Start monitoring your environment data in minutes!
+
+<% end %>
+<% @order_items.each do |item %>
+<%= item.product.name %> × <%= item.quantity %> - $<%= item.total %>
+<% end %>
+
+Total: $<%= @total %>
+
+<% if @hours_since_failure %>
+⏰ Payment attempt failed <%= @hours_since_failure %> hours ago
+<% end %>
+
+COMPLETE YOUR PAYMENT
+=====================
+Click here to retry your payment: <%= @retry_url %>
+
+Your order is reserved for 48 hours.
+
+<% if @suggestions.present? %>
+QUICK SOLUTIONS
+===============
+<% @suggestions.each_with_index do |suggestion, index| %>
+<%= index + 1 %>. <%= suggestion %>
+<% end %>
+
+<% end %>
+WHY COMPLETE YOUR ORDER?
+========================
+• Real-time Monitoring: Start tracking temperature, humidity, and more instantly
+• Smart Alerts: Get notified when conditions change  
+• Historical Data: Build valuable trend analysis
+• Easy Setup: Device activation takes less than 5 minutes
+
+NEED HELP?
+==========
+Our support team is ready to assist:
+• Email: support@xspacegrow.com
+• Live Chat: Available on our website
+• Phone: 1-800-XSPACE-1
+
+Thanks for choosing XSpaceGrow!
+The XSpaceGrow Team
+
+---
+XSpaceGrow • IoT Device Management Platform
+Visit Dashboard: <%= Rails.application.config.app_host %>
+Support Center: <%= Rails.application.config.app_host %>/support
+
+This email was sent regarding your order #<%= @order.id %>

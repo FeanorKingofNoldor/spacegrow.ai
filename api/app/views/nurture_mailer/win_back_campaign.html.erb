@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>We Miss You - Come Back to XSpaceGrow</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .miss-you-badge { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; }
+    .incentive-box { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
+    .missed-features { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #e74c3c; }
+    .social-proof { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0; text-align: center; }
+    .stat-item { background-color: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; }
+    .stat-number { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .cta-button { display: block; text-align: center; margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="miss-you-badge">🔄 We Miss You</div>
+      <h1>Come Back to <%= @incentive_value %> Savings</h1>
+      <p>Your IoT monitoring journey doesn't have to end here</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= user_display_name %>,</p>
+
+      <p><%= @personal_message %> We've noticed it's been <%= @days_since_activity.to_i %> days since your last visit, and we wanted to reach out personally.</p>
+
+      <!-- Incentive Highlight -->
+      <div class="incentive-box">
+        <h3 style="margin-top: 0;">🎁 Welcome Back Gift</h3>
+        <div style="font-size: 32px; font-weight: bold; margin: 15px 0;">
+          <%= @incentive_value %>
+        </div>
+        <p style="margin: 15px 0;">Exclusive offer just for you</p>
+        <div style="font-size: 14px; opacity: 0.9;">
+          Valid until <%= @valid_until.strftime("%B %d, %Y") %>
+        </div>
+      </div>
+
+      <!-- What You've Missed -->
+      <div class="missed-features">
+        <h3 style="margin-top: 0; color: #e74c3c;">🚀 What You've Missed</h3>
+        <p>While you've been away, we've been busy making XSpaceGrow even better:</p>
+        <ul style="margin: 15px 0;">
+          <% @what_they_missed.each do |feature| %>
+            <li><strong><%= feature %></strong></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Social Proof -->
+      <div class="social-proof">
+        <h3 style="margin-top: 0;">📈 Community Growth</h3>
+        <p>Here's what's been happening in the XSpaceGrow community:</p>
+        
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number"><%= @social_proof[:new_customers_count] %>+</div>
+            <div>New Customers</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @social_proof[:data_points_processed] %></div>
+            <div>Data Points Processed</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @social_proof[:average_roi] %></div>
+            <div>Average ROI</div>
+          </div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 20px;">
+          <em>Join thousands of successful IoT monitoring implementations</em>
+        </p>
+      </div>
+
+      <!-- Why Come Back -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">💡 Why Our Customers Love Coming Back</h4>
+        <ul style="margin: 15px 0;">
+          <li><strong>Instant Value:</strong> Start monitoring within minutes of setup</li>
+          <li><strong>Proven Results:</strong> Average 3-month ROI for active users</li>
+          <li><strong>Continuous Innovation:</strong> New features released monthly</li>
+          <li><strong>Expert Support:</strong> Get help when you need it most</li>
+          <li><strong>Growing Community:</strong> Learn from other successful implementations</li>
+        </ul>
+      </div>
+
+      <!-- Success Story -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4 style="margin-top: 0;">🌟 Recent Success Story</h4>
+        <p style="font-style: italic;">"I came back to XSpaceGrow after 6 months away and was amazed by all the improvements. The new dashboard alone saved me 2 hours per week in monitoring tasks."</p>
+        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+          - Jennifer K., Facility Operations Manager
+        </p>
+      </div>
+
+      <!-- Return CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= shop_url_with_tracking('win_back_campaign') %>" class="cta-button" style="color: white;">
+          🎯 Claim Your <%= @incentive_value %> Offer
+        </a>
+        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+          No long-term commitment • Start small and scale up
+        </p>
+      </div>
+
+      <!-- Limited Time -->
+      <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 30px 0; text-align: center;">
+        <h3 style="margin-top: 0;">⏰ Limited Time Offer</h3>
+        <p>This exclusive welcome-back offer expires on <strong><%= @valid_until.strftime("%B %d, %Y") %></strong></p>
+        <p style="font-size: 14px; margin-bottom: 0;">
+          We're only extending this to a select group of valued former customers
+        </p>
+      </div>
+
+      <!-- Alternative Actions -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">🤔 Not Ready to Purchase?</h4>
+        <p>No problem! Here are other ways to reconnect:</p>
+        <ul style="margin: 15px 0;">
+          <li><a href="<%= Rails.application.config.app_host %>/demo">Watch a product demo</a> (5 minutes)</li>
+          <li><a href="<%= Rails.application.config.app_host %>/case-studies">Read success stories</a> from your industry</li>
+          <li><a href="<%= Rails.application.config.app_host %>/blog">Check out our blog</a> for IoT insights</li>
+          <li><a href="<%= Rails.application.config.app_host %>/consultation">Schedule a free consultation</a></li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 30px;">
+        We genuinely miss having you as part of our community. Whether you return now or in the future, we're here when you're ready to take your monitoring to the next level.<br><br>
+        <strong>Hope to see you soon!</strong><br>
+        The XSpaceGrow Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • We're Here When You're Ready<br>
+        <a href="<%= Rails.application.config.app_host %>">Return to XSpaceGrow</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Contact Support</a> • 
+        <a href="<%= Rails.application.config.app_host %>/why-customers-return">Why Customers Return</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Last activity: <%= @days_since_activity.to_i %> days ago • Offer expires <%= @valid_until.strftime("%m/%d/%Y") %>
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from win-back emails</a> • 
+        <a href="<%= Rails.application.config.app_host %>/preferences">Update preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

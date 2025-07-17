@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final Opportunity - Last Chance for IoT Devices</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .final-badge { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; }
+    .mega-incentive { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; border-radius: 12px; margin: 30px 0; text-align: center; border: 3px solid #ffc107; }
+    .engagement-summary { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+    .risk-reversal { background-color: #d4edda; border: 2px solid #28a745; color: #155724; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .scarcity-box { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center; }
+    .social-proof { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: #212529; padding: 20px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px; font-size: 18px; border: 3px solid #fff; }
+    .cta-button:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5); }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0; text-align: center; }
+    .stat-item { background-color: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; }
+    .stat-number { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+    .flash-banner { background: linear-gradient(45deg, #e74c3c, #f39c12, #e74c3c, #f39c12); background-size: 400% 400%; animation: gradient 3s ease infinite; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .cta-button { display: block; text-align: center; margin: 15px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Flash Banner -->
+    <div class="flash-banner">
+      ⚡ FINAL OPPORTUNITY: <%= @final_data[:strongest_incentive][:discount_percent] %>% OFF + FREE SHIPPING ⚡
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="final-badge">⏰ Last Chance</div>
+      <h1>Final Opportunity</h1>
+      <p>This is our last outreach about IoT device offers</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.display_name %>,</p>
+
+      <p>We've noticed your interest in IoT monitoring solutions, and this is our final opportunity to help you get started with the devices that could transform your operations.</p>
+
+      <!-- Engagement Summary -->
+      <% if @final_data[:engagement_summary].present? %>
+        <div class="engagement-summary">
+          <h3 style="margin-top: 0;">📊 Your Journey So Far</h3>
+          <% if @final_data[:engagement_summary][:pages_visited] %>
+            <p>You've explored <strong><%= @final_data[:engagement_summary][:pages_visited] %> pages</strong> on our site, showing serious interest in IoT monitoring.</p>
+          <% end %>
+          <% if @final_data[:engagement_summary][:emails_opened] %>
+            <p>You've engaged with <strong><%= @final_data[:engagement_summary][:emails_opened] %> of our emails</strong>, demonstrating genuine consideration.</p>
+          <% end %>
+          <% if @final_data[:engagement_summary][:time_considering] %>
+            <p>You've been considering this decision for <strong><%= @final_data[:engagement_summary][:time_considering] %></strong> - we understand it's an important choice.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Strongest Incentive Ever -->
+      <div class="mega-incentive">
+        <h3 style="margin-top: 0;">🎁 Our Strongest Offer Ever</h3>
+        <div style="font-size: 48px; font-weight: bold; margin: 20px 0;">
+          <%= @final_data[:strongest_incentive][:discount_percent] %>% OFF
+        </div>
+        <div style="font-size: 18px; margin: 15px 0;">
+          <% if @final_data[:strongest_incentive][:free_shipping] %>
+            ✅ <strong>FREE SHIPPING</strong><br>
+          <% end %>
+          <% if @final_data[:strongest_incentive][:extended_warranty] %>
+            ✅ <strong>EXTENDED WARRANTY</strong><br>
+          <% end %>
+          ✅ <strong>SETUP SUPPORT INCLUDED</strong>
+        </div>
+        <p style="margin-top: 20px;">
+          Valid until: <strong><%= @final_data[:strongest_incentive][:valid_until].strftime("%B %d, %Y") %></strong>
+        </p>
+      </div>
+
+      <!-- Risk Reversal -->
+      <div class="risk-reversal">
+        <h4 style="margin-top: 0; color: #155724;">🛡️ Zero-Risk Guarantee</h4>
+        <p style="color: #155724;">We're so confident you'll love your IoT monitoring setup that we're removing all risk:</p>
+        <ul style="margin: 15px 0; color: #155724;">
+          <% @final_data[:risk_reversal].each do |guarantee| %>
+            <li><strong><%= guarantee %></strong></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Social Proof -->
+      <div class="social-proof">
+        <h3 style="margin-top: 0;">🌟 Join <%= @final_data[:social_proof][:recent_buyers] %> Recent Customers</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number"><%= @final_data[:social_proof][:recent_buyers] %></div>
+            <div>Customers This Month</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @final_data[:social_proof][:average_rating] %>/5</div>
+            <div>Average Rating</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @final_data[:social_proof][:satisfaction_rate] %>%</div>
+            <div>Satisfaction Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scarcity Elements -->
+      <div class="scarcity-box">
+        <h3 style="margin-top: 0;">🚨 Why This Is Truly Your Last Chance</h3>
+        <ul style="text-align: left; display: inline-block; margin: 20px 0;">
+          <% @final_data[:scarcity_elements].each do |element| %>
+            <li><strong><%= element %></strong></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Final CTA -->
+      <div style="text-align: center; margin: 40px 0; padding: 30px; background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); border-radius: 12px;">
+        <h3 style="margin-top: 0;">🎯 CLAIM YOUR <%= @final_data[:strongest_incentive][:discount_percent] %>% DISCOUNT NOW</h3>
+        <p style="font-size: 16px; margin: 20px 0;">
+          <strong>Don't let this final opportunity pass you by</strong>
+        </p>
+        
+        <a href="<%= Rails.application.config.app_host %>/shop/devices?utm_source=email&utm_campaign=final_device_followup&discount=<%= @final_data[:strongest_incentive][:discount_percent] %>" class="cta-button" style="color: #212529;">
+          🔥 GET MY <%= @final_data[:strongest_incentive][:discount_percent] %>% OFF DEVICES
+        </a>
+        
+        <p style="font-size: 14px; margin-top: 20px; color: #856404;">
+          ⏰ Expires <%= @final_data[:strongest_incentive][:valid_until].strftime("%m/%d/%Y") %> • Limited inventory • Final outreach
+        </p>
+      </div>
+
+      <!-- What You Could Achieve -->
+      <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">🚀 What You Could Achieve</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+          <div style="background-color: white; padding: 15px; border-radius: 8px; border: 2px solid #28a745;">
+            <h5 style="color: #28a745; margin: 0 0 10px 0;">Immediate Benefits</h5>
+            <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
+              <li>24/7 monitoring peace of mind</li>
+              <li>Early problem detection</li>
+              <li>Instant alert notifications</li>
+            </ul>
+          </div>
+          <div style="background-color: white; padding: 15px; border-radius: 8px; border: 2px solid #17a2b8;">
+            <h5 style="color: #17a2b8; margin: 0 0 10px 0;">Long-term Value</h5>
+            <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
+              <li>Prevent costly equipment failures</li>
+              <li>Optimize operational efficiency</li>
+              <li>Data-driven decision making</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alternative for Non-buyers -->
+      <div style="background-color: #e9ecef; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">🤔 Not Ready to Purchase?</h4>
+        <p>We understand that timing matters. If you're not ready now, here are ways to stay connected:</p>
+        <ul style="margin: 15px 0;">
+          <li><a href="<%= Rails.application.config.app_host %>/newsletter">Join our newsletter</a> for IoT insights and future offers</li>
+          <li><a href="<%= Rails.application.config.app_host %>/roi-calculator">Use our ROI calculator</a> to see your potential savings</li>
+          <li><a href="<%= Rails.application.config.app_host %>/case-studies">Read success stories</a> from your industry</li>
+          <li><a href="<%= Rails.application.config.app_host %>/consultation">Schedule a future consultation</a> when timing is better</li>
+        </ul>
+      </div>
+
+      <!-- Final Message -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center; border: 2px solid #6c757d;">
+        <h4 style="margin-top: 0;">📧 This Is Our Final Device Offer Email</h4>
+        <p>After this offer expires, we won't contact you again about device promotions. We respect your decision and your inbox.</p>
+        <p style="margin-bottom: 0; font-size: 14px; color: #6c757d;">
+          You'll only receive account updates and service notifications going forward.
+        </p>
+      </div>
+
+      <p style="margin-top: 30px; text-align: center;">
+        This truly is your final chance to get IoT devices at this incredible price. We hope you'll take advantage of this opportunity to transform your monitoring capabilities.<br><br>
+        <strong>Thank you for considering XSpaceGrow!</strong><br>
+        The XSpaceGrow Final Outreach Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • Final Device Opportunity<br>
+        <a href="<%= Rails.application.config.app_host %>/shop/devices">Shop Devices</a> • 
+        <a href="<%= Rails.application.config.app_host %>/why-choose-xspacegrow">Why Choose Us</a> • 
+        <a href="<%= Rails.application.config.app_host %>/testimonials">Customer Reviews</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px; color: #e74c3c;">
+        ⚡ EXPIRES <%= @final_data[:strongest_incentive][:valid_until].strftime("%m/%d/%Y") %> ⚡ • Final device promotion email
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from all device promotions</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

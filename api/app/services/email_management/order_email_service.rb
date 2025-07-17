@@ -1,4 +1,4 @@
-# app/services/email_management/order_email_service.rb
+# app/services/email_management/order_email_service.rb - EXTENDED
 module EmailManagement
   class OrderEmailService < ApplicationService
     def self.send_confirmation(order)
@@ -17,6 +17,16 @@ module EmailManagement
       new(order).send_refund_notification(refund_amount)
     end
 
+    # ✅ NEW: Retry reminder for failed payments
+    def self.send_retry_reminder(order)
+      new(order).send_retry_reminder
+    end
+
+    # ✅ NEW: Setup help for device activation
+    def self.send_setup_help(order)
+      new(order).send_setup_help
+    end
+
     def initialize(order)
       @order = order
       @user = order.user
@@ -26,11 +36,25 @@ module EmailManagement
       return failure('Order must be paid to send confirmation') unless @order.paid?
       return failure('User email not found') unless @user.email.present?
 
+      # ✅ CHECK: User preferences for financial/billing notifications
+      preference_check = NotificationManagement::PreferenceService.should_send_email?(
+        @user, 
+        'financial_billing'   # order confirmations are financial
+      )
+      
+      unless preference_check[:should_send]
+        Rails.logger.info "📧 [OrderEmailService] Skipping confirmation email for user #{@user.id}: #{preference_check[:message]}"
+        return success_with_skip(preference_check[:message])
+      end
+
       begin
         Rails.logger.info "📧 [OrderEmailService] Sending confirmation email for order #{@order.id}"
         
         OrderMailer.confirmation(@order).deliver_now
         @order.mark_confirmation_email_sent!
+        
+        # ✅ TRACK: Email was sent
+        @user.preferences.track_email_sent!
         
         success(
           message: "Order confirmation email sent to #{@user.email}",
@@ -50,6 +74,17 @@ module EmailManagement
       device_tokens = @order.device_activation_tokens.includes(:device_type)
       return success(message: 'No device activation tokens found') if device_tokens.empty?
 
+      # ✅ CHECK: User preferences for device management category
+      preference_check = NotificationManagement::PreferenceService.should_send_email?(
+        @user, 
+        'device_management'   # activation instructions are device management
+      )
+      
+      unless preference_check[:should_send]
+        Rails.logger.info "📧 [OrderEmailService] Skipping activation instructions for user #{@user.id}: #{preference_check[:message]}"
+        return success_with_skip(preference_check[:message])
+      end
+
       begin
         Rails.logger.info "📧 [OrderEmailService] Sending #{device_tokens.count} activation instruction emails for order #{@order.id}"
         
@@ -61,6 +96,9 @@ module EmailManagement
         end
 
         @order.mark_activation_emails_sent!(sent_count)
+        
+        # ✅ TRACK: Email was sent
+        @user.preferences.track_email_sent!
         
         success(
           message: "#{sent_count} activation instruction email(s) sent to #{@user.email}",
@@ -77,11 +115,26 @@ module EmailManagement
     def send_payment_failed(failure_reason)
       return failure('User email not found') unless @user.email.present?
 
+      # ✅ CHECK: Financial/billing notifications (should almost always send)
+      preference_check = NotificationManagement::PreferenceService.should_send_email?(
+        @user, 
+        'financial_billing',
+        { urgent: true, bypass_rate_limit: true } # Critical billing issue
+      )
+      
+      unless preference_check[:should_send]
+        Rails.logger.warn "📧 [OrderEmailService] User has suppressed critical billing notification: #{preference_check[:message]}"
+        # Note: Still sending this due to critical nature, but log the preference
+      end
+
       begin
         Rails.logger.info "📧 [OrderEmailService] Sending payment failure email for order #{@order.id}"
         
         OrderMailer.payment_failed(@order, failure_reason).deliver_now
         @order.mark_payment_failure_email_sent!
+        
+        # ✅ TRACK: Email was sent
+        @user.preferences.track_email_sent!
         
         success(
           message: "Payment failure email sent to #{@user.email}",
@@ -98,10 +151,24 @@ module EmailManagement
     def send_refund_notification(refund_amount)
       return failure('User email not found') unless @user.email.present?
 
+      # ✅ CHECK: Financial/billing notifications
+      preference_check = NotificationManagement::PreferenceService.should_send_email?(
+        @user, 
+        'financial_billing'
+      )
+      
+      unless preference_check[:should_send]
+        Rails.logger.info "📧 [OrderEmailService] Skipping refund notification for user #{@user.id}: #{preference_check[:message]}"
+        return success_with_skip(preference_check[:message])
+      end
+
       begin
         Rails.logger.info "📧 [OrderEmailService] Sending refund notification for order #{@order.id}"
         
         OrderMailer.refund_initiated(@order, refund_amount).deliver_now
+        
+        # ✅ TRACK: Email was sent
+        @user.preferences.track_email_sent!
         
         success(
           message: "Refund notification email sent to #{@user.email}",
@@ -112,6 +179,82 @@ module EmailManagement
       rescue => e
         Rails.logger.error "📧 [OrderEmailService] Failed to send refund notification for order #{@order.id}: #{e.message}"
         failure("Failed to send refund notification: #{e.message}")
+      end
+    end
+
+    # ✅ NEW: Send retry reminder for failed payments
+    def send_retry_reminder
+      return failure('Order must have failed payment to send retry reminder') unless @order.payment_failed?
+      return failure('User email not found') unless @user.email.present?
+
+      # ✅ CHECK: User preferences before sending
+      preference_check = NotificationManagement::PreferenceService.should_send_email?(
+        @user, 
+        'financial_billing',  # retry reminders are financial/billing related
+        { urgent: true }      # mark as urgent to bypass quiet hours
+      )
+      
+      unless preference_check[:should_send]
+        Rails.logger.info "📧 [OrderEmailService] Skipping retry reminder for user #{@user.id}: #{preference_check[:message]}"
+        return success_with_skip(preference_check[:message])
+      end
+
+      begin
+        Rails.logger.info "📧 [OrderEmailService] Sending payment retry reminder for order #{@order.id}"
+        
+        OrderMailer.retry_reminder(@order).deliver_now
+        
+        # ✅ TRACK: Email was sent
+        @user.preferences.track_email_sent!
+        
+        success(
+          message: "Payment retry reminder sent to #{@user.email}",
+          email_address: @user.email,
+          email_type: 'payment_retry_reminder',
+          order_id: @order.id,
+          retry_url: @order.retry_payment_url
+        )
+      rescue => e
+        Rails.logger.error "📧 [OrderEmailService] Failed to send retry reminder for order #{@order.id}: #{e.message}"
+        failure("Failed to send retry reminder: #{e.message}")
+      end
+    end
+
+    # ✅ NEW: Send setup help for device activation
+    def send_setup_help
+      return failure('Order must be paid to send setup help') unless @order.paid?
+      return failure('Order must have devices to send setup help') unless @order.has_devices?
+      return failure('User email not found') unless @user.email.present?
+
+      # ✅ CHECK: User preferences for device management category
+      preference_check = NotificationManagement::PreferenceService.should_send_email?(
+        @user, 
+        'device_management'   # setup help is device management
+      )
+      
+      unless preference_check[:should_send]
+        Rails.logger.info "📧 [OrderEmailService] Skipping setup help for user #{@user.id}: #{preference_check[:message]}"
+        return success_with_skip(preference_check[:message])
+      end
+
+      begin
+        Rails.logger.info "📧 [OrderEmailService] Sending device setup help for order #{@order.id}"
+        
+        OrderMailer.setup_help(@order).deliver_now
+        
+        # ✅ TRACK: Email was sent
+        @user.preferences.track_email_sent!
+        
+        success(
+          message: "Device setup help email sent to #{@user.email}",
+          email_address: @user.email,
+          email_type: 'device_setup_help',
+          order_id: @order.id,
+          device_count: @order.device_count
+        )
+      rescue => e
+        Rails.logger.error "📧 [OrderEmailService] Failed to send setup help for order #{@order.id}: #{e.message}"
+        failure("Failed to send setup help: #{e.message}")
       end
     end
 
@@ -158,6 +301,14 @@ module EmailManagement
 
     def failure(message, additional_data = {})
       { success: false, error: message }.merge(additional_data)
+    end
+
+    def success_with_skip(message)
+      success(
+        message: message,
+        email_sent: false,
+        skipped: true
+      )
     end
   end
 end

@@ -1,0 +1,88 @@
+🔒 Service Suspended - Immediate Action Required
+
+Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,
+
+SERVICE TEMPORARILY SUSPENDED
+
+We regret to inform you that your XSpaceGrow <%= @plan.name %> plan has been temporarily suspended due to <%= @suspension_reason.downcase %>. Your IoT devices and monitoring services are currently inactive.
+
+SUSPENSION DETAILS
+==================
+🚨 Reason: <%= @suspension_reason %>
+🚨 Suspended Devices: <%= @suspended_devices_count %> devices affected
+🚨 Grace Period: <%= @grace_period_days %> days to reactivate
+🚨 Action Required: Update payment information
+
+DATA PROTECTION NOTICE
+=======================
+⚠️ Your data is safe for <%= @grace_period_days %> days.
+
+After <%= @permanent_suspension_date.strftime("%B %d, %Y") %>, inactive accounts may have their data archived or deleted according to our data retention policy.
+
+SERVICES CURRENTLY AFFECTED
+============================
+❌ Real-time device monitoring
+❌ Data collection from sensors
+❌ Alert notifications and warnings
+❌ Dashboard access and analytics
+❌ API integrations and exports
+
+✅ Account access (for reactivation)
+✅ Historical data (preserved for <%= @grace_period_days %> days)
+
+<% if @can_reactivate_immediately %>
+REACTIVATE SERVICE NOW
+======================
+Instant reactivation: <%= @reactivation_url %>
+Secure payment processing
+<% else %>
+UPDATE PAYMENT METHOD
+=====================
+Reactivate service: <%= @reactivation_url %>
+Reactivation within 24 hours of payment update
+<% end %>
+
+<%= @grace_period_days %>-DAY GRACE PERIOD
+<%= "=" * (@grace_period_days.to_s.length + 16) %>
+⏳ You have until <%= @permanent_suspension_date.strftime("%B %d, %Y") %> to reactivate your service.
+
+• Your devices will automatically reconnect upon reactivation
+• Historical data remains intact and accessible
+• All custom settings and configurations are preserved
+• No setup or reconfiguration required
+
+REACTIVATION RESTORES FULL SERVICE
+===================================
+🚀 All <%= @suspended_devices_count %> devices come back online
+🚀 Real-time monitoring resumes immediately
+🚀 Alert notifications reactivate
+🚀 Full dashboard and analytics access
+🚀 API integrations reconnect
+🚀 Priority support restoration
+
+PREVENT FUTURE SERVICE INTERRUPTIONS
+=====================================
+• Auto-Pay: Enable automatic payments for seamless billing
+• Backup Payment: Add a secondary payment method
+• Billing Alerts: Get notified before payment issues occur
+• Account Monitoring: Regular billing email confirmations
+
+NEED IMMEDIATE ASSISTANCE?
+==========================
+Our reactivation team is standing by:
+🔥 Urgent Line: 1-800-XSPACE-1 (press 1 for reactivation)
+📧 Email: reactivation@xspacegrow.com
+💬 Live Chat: Available 24/7 in your account portal
+
+Average reactivation time: 2-4 hours after payment resolution
+
+We understand this suspension may be inconvenient. Our team is here to help restore your service as quickly as possible.
+
+The XSpaceGrow Reactivation Team
+
+---
+XSpaceGrow • IoT Device Management Platform
+Reactivate Service: <%= @reactivation_url %>
+Emergency Support: <%= Rails.application.config.app_host %>/support
+
+Subscription ID: <%= @subscription.id %> • Suspension effective immediately

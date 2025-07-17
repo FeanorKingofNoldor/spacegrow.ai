@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :user_sessions, dependent: :destroy
 
   # ✅ FIXED: Get the most recent subscription
+  has_one :notification_preferences, class_name: 'UserNotificationPreference', dependent: :destroy
   has_one :subscription, -> { order(created_at: :desc) }, class_name: 'Subscription'
   has_one :active_subscription, -> { where(status: 'active').order(created_at: :desc) }, class_name: 'Subscription'
   has_one :plan, through: :subscription
@@ -150,6 +151,18 @@ class User < ApplicationRecord
   
   def at_session_limit?
     active_sessions_count >= 5
+  end
+
+  def preferences
+    notification_preferences || create_notification_preferences!
+  end
+
+  def should_receive_email?(category, context = {})
+    NotificationManagement::PreferenceService.should_send_email?(self, category, context)
+  end
+
+  def should_receive_inapp?(category, context = {})
+    NotificationManagement::PreferenceService.should_send_inapp?(self, category, context)
   end
 
   private

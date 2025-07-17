@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your XSpaceGrow Order</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .order-summary { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .suggestions { background-color: #e8f4f8; padding: 20px; border-left: 4px solid #17a2b8; margin: 20px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .device-highlight { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .urgency-badge { background-color: #e74c3c; color: white; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>💳 Complete Your XSpaceGrow Order</h1>
+      <p>Your IoT devices are waiting for you!</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
+
+      <p>We noticed there was an issue processing payment for your XSpaceGrow order. Don't worry - your order is still reserved, and we're here to help you complete it!</p>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <h3>📦 Order #<%= @order.id %></h3>
+        <% if @device_count > 0 %>
+          <div class="device-highlight">
+            <strong>🚀 <%= @device_count %> IoT Device<%= @device_count > 1 ? 's' : '' %> Ready for Activation</strong>
+            <p>Start monitoring your environment data in minutes!</p>
+          </div>
+        <% end %>
+        
+        <% @order_items.each do |item| %>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+            <span><%= item.product.name %> × <%= item.quantity %></span>
+            <span><strong>$<%= item.total %></strong></span>
+          </div>
+        <% end %>
+        
+        <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 18px; font-weight: bold; border-top: 2px solid #667eea;">
+          <span>Total:</span>
+          <span>$<%= @total %></span>
+        </div>
+
+        <% if @hours_since_failure %>
+          <p style="margin-top: 15px;">
+            <span class="urgency-badge">⏰ <%= @hours_since_failure %> hours ago</span>
+            Payment attempt failed
+          </p>
+        <% end %>
+      </div>
+
+      <!-- Retry CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= @retry_url %>" class="cta-button" style="color: white;">
+          🔄 Complete Payment Now
+        </a>
+        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+          Your order is reserved for <strong>48 hours</strong>
+        </p>
+      </div>
+
+      <!-- Helpful Suggestions -->
+      <% if @suggestions.present? %>
+        <div class="suggestions">
+          <h4>💡 Quick Solutions:</h4>
+          <ul>
+            <% @suggestions.each do |suggestion| %>
+              <li><%= suggestion %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Why Complete Your Order -->
+      <div style="margin-top: 30px;">
+        <h3>🌟 Why Complete Your Order?</h3>
+        <ul>
+          <li><strong>Real-time Monitoring:</strong> Start tracking temperature, humidity, and more instantly</li>
+          <li><strong>Smart Alerts:</strong> Get notified when conditions change</li>
+          <li><strong>Historical Data:</strong> Build valuable trend analysis</li>
+          <li><strong>Easy Setup:</strong> Device activation takes less than 5 minutes</li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <h4>Need Help? 🤝</h4>
+        <p>Our support team is ready to assist:</p>
+        <ul>
+          <li>📧 Email: <a href="mailto:support@xspacegrow.com">support@xspacegrow.com</a></li>
+          <li>💬 Live Chat: Available on our website</li>
+          <li>📞 Phone: 1-800-XSPACE-1</li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 30px;">
+        Thanks for choosing XSpaceGrow!<br>
+        <strong>The XSpaceGrow Team</strong>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • IoT Device Management Platform<br>
+        <a href="<%= Rails.application.config.app_host %>">Visit Dashboard</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support Center</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        This email was sent regarding your order #<%= @order.id %>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

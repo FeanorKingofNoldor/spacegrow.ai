@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Failed - Action Required</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .alert-box { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px 0; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
+    .payment-details { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .grace-period { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .urgent-badge { background-color: #e74c3c; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; }
+    .deadline-countdown { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>⚠️ Payment Failed</h1>
+      <p>Action Required to Continue Your Service</p>
+      <div class="urgent-badge">
+        IMMEDIATE ATTENTION NEEDED
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
+
+      <p>We were unable to process your subscription payment for your XSpaceGrow <%= @plan.name %> plan. To ensure uninterrupted service for your IoT devices, please update your payment information immediately.</p>
+
+      <!-- Alert Box -->
+      <div class="alert-box">
+        <h4>🚨 Service Interruption Warning</h4>
+        <p><strong>Your account will be suspended if payment is not received by <%= @grace_period_end.strftime("%B %d, %Y") %>.</strong></p>
+        <p>This may affect device monitoring, data collection, and alert notifications.</p>
+      </div>
+
+      <!-- Payment Details -->
+      <div class="payment-details">
+        <h3>💳 Failed Payment Details</h3>
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+          <span>Plan:</span>
+          <span><strong><%= @plan.name %> Plan</strong></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+          <span>Amount:</span>
+          <span><strong>$<%= sprintf("%.2f", @amount) %> <%= @currency.upcase %></strong></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+          <span>Reason:</span>
+          <span><%= @user_friendly_message %></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+          <span>Invoice ID:</span>
+          <span><%= @invoice_id %></span>
+        </div>
+      </div>
+
+      <!-- Grace Period Countdown -->
+      <div class="deadline-countdown">
+        <h3>⏰ Grace Period</h3>
+        <p style="font-size: 18px; margin: 10px 0;">
+          <strong><%= (((@grace_period_end - Time.current) / 1.day).ceil) %> days remaining</strong>
+        </p>
+        <p>Service suspension date: <strong><%= @grace_period_end.strftime("%B %d, %Y") %></strong></p>
+      </div>
+
+      <!-- Retry Payment CTA -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= @retry_url %>" class="cta-button" style="color: white;">
+          🔄 Update Payment Method
+        </a>
+        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+          Secure payment processing with SSL encryption
+        </p>
+      </div>
+
+      <!-- What Happens Next -->
+      <div class="grace-period">
+        <h4>📋 What Happens Next?</h4>
+        <ul>
+          <li><strong>Update Payment:</strong> Click the button above to update your payment method</li>
+          <li><strong>Automatic Retry:</strong> We'll attempt to process payment again within 24 hours</li>
+          <li><strong>Service Continues:</strong> Your devices remain active during the grace period</li>
+          <li><strong>Suspension Warning:</strong> Service will be suspended if payment isn't resolved by the deadline</li>
+        </ul>
+      </div>
+
+      <!-- Common Payment Issues -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4>💡 Common Payment Issues & Solutions</h4>
+        <ul>
+          <li><strong>Expired Card:</strong> Update with your new card expiration date</li>
+          <li><strong>Insufficient Funds:</strong> Ensure adequate balance or use a different payment method</li>
+          <li><strong>Bank Decline:</strong> Contact your bank to authorize XSpaceGrow transactions</li>
+          <li><strong>Address Mismatch:</strong> Verify billing address matches your bank records</li>
+          <li><strong>International Cards:</strong> Ensure your card supports international transactions</li>
+        </ul>
+      </div>
+
+      <!-- Service Impact -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0;">
+        <h3>🛡️ Don't Lose Your Data Protection</h3>
+        <p>Your XSpaceGrow <%= @plan.name %> plan provides:</p>
+        <ul>
+          <li>✅ Real-time device monitoring and alerts</li>
+          <li>✅ Historical data preservation</li>
+          <li>✅ Custom threshold notifications</li>
+          <li>✅ Advanced analytics and reporting</li>
+          <li>✅ Priority technical support</li>
+        </ul>
+        <p><strong>Update your payment to maintain these benefits.</strong></p>
+      </div>
+
+      <!-- Contact Support -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>Need Help? 🤝</h4>
+        <p>Our billing support team is ready to assist:</p>
+        <ul>
+          <li>📧 Email: <a href="mailto:billing@xspacegrow.com">billing@xspacegrow.com</a></li>
+          <li>💬 Live Chat: Available 24/7 in your dashboard</li>
+          <li>📞 Phone: 1-800-XSPACE-1 (urgent billing issues)</li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 30px;">
+        We value your business and want to keep your IoT monitoring running smoothly. Please resolve this payment issue at your earliest convenience.<br><br>
+        <strong>The XSpaceGrow Billing Team</strong>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • IoT Device Management Platform<br>
+        <a href="<%= Rails.application.config.app_host %>">Dashboard</a> • 
+        <a href="<%= Rails.application.config.app_host %>/account/billing">Update Payment</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Subscription ID: <%= @subscription.id %> • Invoice #<%= @invoice_id %>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

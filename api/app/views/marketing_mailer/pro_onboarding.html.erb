@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Pro-Level IoT Monitoring</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .pro-badge { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; }
+    .device-count { font-size: 48px; font-weight: bold; color: #667eea; margin: 20px 0; }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; }
+    .feature-card { background-color: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .step-list { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 25px; border-radius: 12px; margin: 30px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .support-highlight { background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0; }
+    @media (max-width: 600px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .cta-button { display: block; text-align: center; margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="pro-badge">🚀 PRO USER</div>
+      <h1>Welcome to Pro-Level IoT Monitoring!</h1>
+      <div class="device-count"><%= @device_count %></div>
+      <p>Devices Ready for Advanced Monitoring</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.display_name %>,</p>
+
+      <p>Congratulations on your pro-level IoT investment! With <strong><%= @device_count %> devices</strong> in your order, you're ready to unlock the full potential of enterprise-grade monitoring and analytics.</p>
+
+      <!-- Advanced Features Grid -->
+      <h3>🎯 Your Pro-Level Advantages</h3>
+      <div class="feature-grid">
+        <% @advanced_features.each do |feature| %>
+          <div class="feature-card">
+            <h4><%= feature[:name] %></h4>
+            <p><%= feature[:description] %></p>
+            <div style="color: #28a745; font-weight: bold; margin-top: 10px;">
+              💡 <%= feature[:benefit] %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= Rails.application.config.app_host %>/device-activation" class="cta-button" style="color: white;">
+          🔗 Activate Your Devices
+        </a>
+        <a href="<%= Rails.application.config.app_host %>/dashboard/pro" class="cta-button" style="color: white;">
+          📊 Access Pro Dashboard
+        </a>
+      </div>
+
+      <!-- Next Steps -->
+      <div class="step-list">
+        <h3>🗓️ Your Pro Onboarding Roadmap</h3>
+        <ol style="margin: 15px 0; padding-left: 20px;">
+          <% @next_steps.each do |step| %>
+            <li style="margin: 10px 0; font-size: 16px;"><%= step %></li>
+          <% end %>
+        </ol>
+        <p style="margin-top: 20px;"><strong>Estimated completion time:</strong> 45-60 minutes</p>
+      </div>
+
+      <!-- ROI Projection -->
+      <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center;">
+        <h3>📈 Your Potential ROI</h3>
+        <p style="font-size: 18px; margin: 15px 0;">Pro users typically see <strong>250-400% ROI</strong> in their first year</p>
+        <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">85%</div>
+            <div>Reduced Downtime</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">$50K+</div>
+            <div>Average Savings</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: bold;">2 hrs</div>
+            <div>Daily Time Saved</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support Highlight -->
+      <div class="support-highlight">
+        <h4>🤝 Your Pro Support Package</h4>
+        <ul style="margin: 15px 0;">
+          <% if @support_options[:priority_support] %>
+            <li>✅ <strong>Priority Support</strong> - Skip the queue, get help faster</li>
+          <% end %>
+          <% if @support_options[:dedicated_onboarding] %>
+            <li>✅ <strong>Dedicated Onboarding</strong> - Personal setup assistance</li>
+          <% end %>
+          <% if @support_options[:custom_training] %>
+            <li>✅ <strong>Custom Training Session</strong> - One-on-one with our experts</li>
+          <% end %>
+        </ul>
+        <p style="margin-top: 15px;">
+          <strong>Pro Support Hotline:</strong> 1-800-XSPACE-PRO<br>
+          <strong>Priority Email:</strong> <a href="mailto:pro-support@xspacegrow.com">pro-support@xspacegrow.com</a>
+        </p>
+      </div>
+
+      <!-- Advanced Resources -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>📚 Pro Resources & Training</h4>
+        <ul>
+          <li><a href="<%= Rails.application.config.app_host %>/pro/getting-started">Pro User Quick Start Guide</a></li>
+          <li><a href="<%= Rails.application.config.app_host %>/pro/api-docs">Complete API Documentation</a></li>
+          <li><a href="<%= Rails.application.config.app_host %>/pro/best-practices">Multi-Device Best Practices</a></li>
+          <li><a href="<%= Rails.application.config.app_host %>/pro/case-studies">Enterprise Case Studies</a></li>
+          <li><a href="<%= Rails.application.config.app_host %>/pro/webinars">Exclusive Pro Webinar Series</a></li>
+        </ul>
+      </div>
+
+      <!-- Community Access -->
+      <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 30px 0;">
+        <h3>👥 Join the Pro Community</h3>
+        <p>Connect with other pro users, share insights, and get exclusive tips from our engineering team.</p>
+        <div style="text-align: center; margin-top: 15px;">
+          <a href="<%= Rails.application.config.app_host %>/community/pro" class="cta-button" style="color: white;">
+            🌟 Access Pro Community
+          </a>
+        </div>
+      </div>
+
+      <p style="margin-top: 30px;">
+        You've made an excellent investment in your monitoring infrastructure. We're here to ensure you get maximum value from every device.<br><br>
+        <strong>Welcome to the pro level!</strong><br>
+        The XSpaceGrow Pro Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow Pro • Enterprise IoT Monitoring<br>
+        <a href="<%= Rails.application.config.app_host %>/pro">Pro Dashboard</a> • 
+        <a href="<%= Rails.application.config.app_host %>/pro/support">Pro Support</a> • 
+        <a href="<%= Rails.application.config.app_host %>/pro/resources">Pro Resources</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Order #<%= @order.id %> • <%= @device_count %> devices • Pro onboarding initiated
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from marketing emails</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

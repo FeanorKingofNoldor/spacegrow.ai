@@ -1,0 +1,80 @@
+Get Started with Your XSpaceGrow Devices
+
+Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,
+
+Congratulations! Your XSpaceGrow order has been processed successfully. Your IoT devices are ready for activation and you're just minutes away from starting real-time environmental monitoring.
+
+⏱️ Estimated Setup Time: <%= @estimated_setup_time %> minutes
+
+YOUR ORDER
+==========
+Order #<%= @order.id %>
+<%= @device_count %> IoT Device<%= @device_count > 1 ? 's' : '' %> Ready for Setup
+Total Investment: $<%= @total %>
+
+DEVICE ACTIVATION
+=================
+<% @devices_by_type.each do |device_type, tokens| %>
+
+<%= device_type.name.upcase %>
+<%= "=" * device_type.name.length %>
+<%= device_type.description %>
+
+<% if tokens.length == 1 %>
+Activation Token: <%= tokens.first.token %>
+Expires: <%= tokens.first.expires_at.strftime("%B %d, %Y at %I:%M %p") %>
+<% else %>
+Activation Tokens (<%= tokens.length %> devices):
+<% tokens.each_with_index do |token, index| %>
+Device <%= index + 1 %>: <%= token.token %>
+<% end %>
+<% end %>
+
+<% if @setup_guides[device_type] %>
+Quick Setup Steps:
+<% @setup_guides[device_type].each_with_index do |step, index| %>
+<%= index + 1 %>. <%= step %>
+<% end %>
+<% end %>
+
+<% end %>
+ACTIVATION LINKS
+================
+Activate Your Devices: <%= Rails.application.config.app_host %>/device-activation
+View Dashboard: <%= Rails.application.config.app_host %>/dashboard
+
+WHAT HAPPENS AFTER ACTIVATION?
+===============================
+• Immediate Data: Start receiving sensor readings within 30 seconds
+• Smart Alerts: Get notified when readings exceed your thresholds
+• Historical Trends: View data patterns and export reports
+• Multiple Dashboards: Organize devices by location or purpose
+
+PRO TIPS FOR BEST RESULTS
+==========================
+• Placement Matters: Avoid direct sunlight and heat sources for temperature sensors
+• WiFi Range: Ensure strong WiFi signal at device locations
+• Regular Monitoring: Check your dashboard weekly to establish baselines
+• Alert Settings: Customize thresholds based on your specific needs
+
+NEED SETUP ASSISTANCE?
+======================
+Our technical support team is here to help:
+
+• Live Chat: Real-time help during business hours
+• Email Support: support@xspacegrow.com
+• Video Guides: <%= Rails.application.config.app_host %>/setup-guides
+• Documentation: <%= Rails.application.config.app_host %>/docs
+
+Welcome to the XSpaceGrow community! We're excited to see what insights your data will reveal.
+
+Happy Monitoring!
+The XSpaceGrow Team
+
+---
+XSpaceGrow • IoT Device Management Platform
+Dashboard: <%= Rails.application.config.app_host %>
+Setup Guides: <%= Rails.application.config.app_host %>/setup-guides
+Support: <%= Rails.application.config.app_host %>/support
+
+Device activation tokens expire in 30 days • Order #<%= @order.id %>

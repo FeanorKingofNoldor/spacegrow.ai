@@ -1,0 +1,123 @@
+📋 Plan Change Confirmed
+
+Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,
+
+CHANGE CONFIRMED
+
+Your plan change request has been successfully processed. Your XSpaceGrow subscription has been updated with your new plan benefits and pricing.
+
+CHANGE SUMMARY
+==============
+Previous Plan: <%= @change_data[:old_plan] %>
+New Plan: <%= @change_data[:new_plan] %>
+Effective Date: <%= @change_data[:effective_date].strftime("%B %d, %Y") %>
+Change Type: <%= @change_data[:change_type]&.titleize || 'Plan Update' %>
+
+WHEN CHANGES TAKE EFFECT
+=========================
+📅 Effective Date: <%= @change_data[:effective_date].strftime("%B %d, %Y at %I:%M %p") %>
+
+<% if @change_data[:effective_date] > Time.current %>
+Your plan changes will be activated on the date above. Until then, your current plan remains active.
+<% else %>
+Your plan changes are now active and all new features are available immediately.
+<% end %>
+
+PLAN COMPARISON
+===============
+<%= @change_data[:old_plan].upcase %> PLAN (Previous)
+<%= "=" * (@change_data[:old_plan].length + 17) %>
+<% if @change_data[:old_plan_features] %>
+<% @change_data[:old_plan_features].each do |feature| %>
+• <%= feature %>
+<% end %>
+<% end %>
+
+<%= @change_data[:new_plan].upcase %> PLAN (New)
+<%= "=" * (@change_data[:new_plan].length + 11) %>
+<% if @change_data[:new_plan_features] %>
+<% @change_data[:new_plan_features].each do |feature| %>
+• <%= feature %>
+<% end %>
+<% end %>
+
+<% is_upgrade = @change_data[:change_type]&.downcase&.include?('upgrade') %>
+<% if is_upgrade %>
+CONGRATULATIONS ON YOUR UPGRADE!
+=================================
+🚀 You've unlocked additional features and capabilities:
+
+<% if @change_data[:added_features] %>
+<% @change_data[:added_features].each do |feature| %>
+✅ <%= feature %>
+<% end %>
+<% else %>
+✅ Enhanced device monitoring capabilities
+✅ Advanced analytics and reporting
+✅ Priority support access
+✅ Extended data retention
+<% end %>
+<% else %>
+PLAN CHANGE DETAILS
+===================
+📋 Your plan has been updated. Here's what's changed:
+
+<% if @change_data[:feature_changes] %>
+<% @change_data[:feature_changes].each do |change| %>
+• <%= change %>
+<% end %>
+<% else %>
+Your service level has been adjusted according to your new plan selection. All core monitoring features remain available.
+<% end %>
+<% end %>
+
+<% if @change_data[:billing_changes] %>
+BILLING CHANGES
+===============
+<% if @change_data[:new_price] && @change_data[:old_price] %>
+Previous Price: $<%= sprintf("%.2f", @change_data[:old_price]) %>/month
+New Price: $<%= sprintf("%.2f", @change_data[:new_price]) %>/month
+<% end %>
+<% if @change_data[:proration_amount] %>
+Proration Amount: $<%= sprintf("%.2f", @change_data[:proration_amount]) %>
+<% end %>
+<% if @change_data[:next_billing_date] %>
+Next Billing Date: <%= @change_data[:next_billing_date].strftime("%B %d, %Y") %>
+<% end %>
+
+<% end %>
+QUICK LINKS
+===========
+Explore Your Dashboard: <%= Rails.application.config.app_host %>/dashboard
+Manage Subscription: <%= Rails.application.config.app_host %>/account/subscription
+
+WHAT'S NEXT?
+============
+<% if is_upgrade %>
+• Explore New Features: Check out the enhanced capabilities in your dashboard
+• Upgrade Devices: You can now add more devices to your monitoring network
+• Advanced Analytics: Access detailed reporting and trend analysis
+<% end %>
+• Review Settings: Ensure your alert preferences match your new plan
+• Update Billing: Verify your payment method is current
+• Get Support: Contact us if you have questions about your new plan
+
+QUESTIONS ABOUT YOUR PLAN CHANGE?
+==================================
+Our team is here to help you make the most of your new plan:
+📧 Email: support@xspacegrow.com
+💬 Live Chat: Available in your dashboard
+📞 Phone: 1-800-XSPACE-1
+📚 Help Center: <%= Rails.application.config.app_host %>/help
+
+Thank you for choosing XSpaceGrow. We're excited to support your IoT monitoring journey with your updated plan!
+
+The XSpaceGrow Team
+
+---
+XSpaceGrow • IoT Device Management Platform
+Dashboard: <%= Rails.application.config.app_host %>
+Subscription: <%= Rails.application.config.app_host %>/account/subscription
+Support: <%= Rails.application.config.app_host %>/support
+
+Subscription ID: <%= @subscription.id %> • Change effective <%= @change_data[:effective_date].strftime("%B %d, %Y") %>

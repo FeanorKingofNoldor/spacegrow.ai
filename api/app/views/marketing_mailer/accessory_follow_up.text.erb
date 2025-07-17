@@ -1,0 +1,79 @@
+Complete Your Monitoring Setup
+
+Hi <%= @user.display_name %>,
+
+🔧 Accessories Ready - Complete Your Monitoring Setup
+
+Great choice on your recent accessory purchase! You've got some fantastic monitoring components, and now it's time to unlock their full potential with the right device setup.
+
+YOUR RECENT ACCESSORIES
+=======================
+<% @accessory_data[:accessories_purchased].each do |accessory| %>
+• <%= accessory %>
+<% end %>
+
+Perfect for building a comprehensive monitoring solution!
+
+PERFECT DEVICE MATCHES FOR YOUR ACCESSORIES
+============================================
+<% @accessory_data[:device_recommendations].each_with_index do |device, index| %>
+<%= index + 1 %>. <%= device[:name] %>
+   Perfect for: <%= device[:perfect_for] %>
+   
+   Features:
+<% device[:features].each do |feature| %>
+   • <%= feature %>
+<% end %>
+   
+   Regular: $<%= device[:price] %>
+   Special: $<%= device[:price] - (device[:price] * device[:discount] / 100) %>
+   Save <%= device[:discount] %>%!
+
+<% end %>
+
+WHAT YOU CAN BUILD
+==================
+<% @accessory_data[:use_cases].each do |use_case| %>
+• <%= use_case %>
+<% end %>
+
+LIMITED-TIME BUNDLE OFFER
+==========================
+🎉 <%= @accessory_data[:special_offer][:discount_percent] %>% OFF when you add a device to your accessories
+
+Bundle Savings: Save up to $<%= @accessory_data[:special_offer][:bundle_savings] %> total!
+Valid until: <%= @accessory_data[:special_offer][:valid_until].strftime("%B %d, %Y") %>
+
+Shop Devices Now: <%= Rails.application.config.app_host %>/shop/devices?utm_source=email&utm_campaign=accessory_followup&discount=<%= @accessory_data[:special_offer][:discount_percent] %>
+
+CUSTOMER SUCCESS STORY
+=======================
+"I started with just sensors, then added the monitoring hub. Within a week, I caught a temperature spike that could have cost me thousands in damaged inventory!"
+- Mark T., Cold Storage Facility Manager
+
+WHY COMPLETE YOUR SETUP NOW?
+=============================
+• Immediate Value: Start getting insights from day one
+• Cost Savings: Early detection prevents expensive problems
+• Peace of Mind: 24/7 monitoring while you sleep
+• Bundle Discount: Maximum savings when bought together
+
+QUICK ACTIONS
+=============
+See Perfect Bundles: <%= Rails.application.config.app_host %>/shop/bundles?accessories=true
+Get Free Consultation: <%= Rails.application.config.app_host %>/contact/consultation
+
+Your accessories are a great start – let's complete the solution and get you monitoring like a pro!
+
+Ready to unlock full monitoring power?
+The XSpaceGrow Solutions Team
+
+---
+XSpaceGrow • Complete IoT Solutions
+Shop Devices: <%= Rails.application.config.app_host %>/shop
+View Bundles: <%= Rails.application.config.app_host %>/bundles
+Support: <%= Rails.application.config.app_host %>/support
+
+Order #<%= @order.id %> • Accessories ready for completion
+
+Unsubscribe from marketing emails: <%= unsubscribe_url(@unsubscribe_token) %>

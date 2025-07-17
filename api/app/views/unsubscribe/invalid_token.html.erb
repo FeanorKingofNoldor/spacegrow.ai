@@ -1,0 +1,215 @@
+<!-- app/views/unsubscribe/invalid_token.html.erb -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invalid Link - XSpaceGrow</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      margin: 0; 
+      padding: 20px; 
+      background-color: #f4f4f4; 
+    }
+    .container { 
+      max-width: 500px; 
+      margin: 0 auto; 
+      background-color: white; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header { 
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); 
+      color: white; 
+      padding: 30px 20px; 
+      text-align: center; 
+    }
+    .content { 
+      padding: 30px 20px; 
+    }
+    .error-icon { 
+      font-size: 48px; 
+      margin-bottom: 15px; 
+    }
+    .primary-button { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white; 
+      padding: 15px 30px; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%;
+      font-size: 16px;
+      margin: 15px 0;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .primary-button:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); 
+    }
+    .secondary-button { 
+      background-color: transparent; 
+      color: #667eea; 
+      padding: 10px 20px; 
+      border: 2px solid #667eea; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%;
+      font-size: 14px;
+      margin: 10px 0;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .secondary-button:hover { 
+      background-color: #667eea; 
+      color: white; 
+    }
+    .info-box { 
+      background-color: #f8f9fa; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 20px 0; 
+      border-left: 4px solid #6c757d;
+    }
+    .footer { 
+      background-color: #f8f9fa; 
+      padding: 20px; 
+      text-align: center; 
+      font-size: 14px; 
+      color: #666; 
+    }
+    .help-section { 
+      background-color: #e8f4f8; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 20px 0; 
+      border-left: 4px solid #17a2b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="error-icon">⚠️</div>
+      <h1>Invalid or Expired Link</h1>
+      <p>We couldn't process your unsubscribe request</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <!-- Error Explanation -->
+      <div class="info-box">
+        <h3 style="margin-top: 0;">🔍 What Happened?</h3>
+        <p>The unsubscribe link you clicked is either:</p>
+        <ul style="margin: 15px 0;">
+          <li><strong>Expired:</strong> Links are valid for 1 year from email date</li>
+          <li><strong>Already used:</strong> You may have already unsubscribed</li>
+          <li><strong>Corrupted:</strong> The link may have been broken when forwarded</li>
+          <li><strong>Invalid:</strong> The token doesn't match our records</li>
+        </ul>
+      </div>
+
+      <!-- Alternative Actions -->
+      <h3>📧 How to Manage Your Email Preferences</h3>
+      
+      <p>You can still update your email preferences using these methods:</p>
+
+      <!-- Method 1: Account Settings -->
+      <div style="background-color: #d4edda; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #28a745;">
+        <h4 style="margin-top: 0; color: #155724;">✅ Recommended: Use Your Account</h4>
+        <p style="color: #155724; margin-bottom: 10px;">Sign in to your XSpaceGrow account to manage all email preferences</p>
+        <a href="<%= Rails.application.config.app_host %>/login" class="primary-button">
+          🔐 Sign In to Account
+        </a>
+      </div>
+
+      <!-- Method 2: Contact Support -->
+      <div class="help-section">
+        <h4 style="margin-top: 0;">💬 Contact Support</h4>
+        <p>Our team can help you unsubscribe manually:</p>
+        <ul style="margin: 15px 0;">
+          <li><strong>Email:</strong> <a href="mailto:support@xspacegrow.com?subject=Unsubscribe Request">support@xspacegrow.com</a></li>
+          <li><strong>Phone:</strong> 1-800-XSPACE-1</li>
+          <li><strong>Live Chat:</strong> Available on our website</li>
+        </ul>
+        <p style="font-size: 14px; color: #0c5460; margin-bottom: 0;">
+          Include your email address and which emails you'd like to stop receiving.
+        </p>
+      </div>
+
+      <!-- Method 3: Reply to Email -->
+      <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+        <h4 style="margin-top: 0; color: #856404;">📧 Reply to Original Email</h4>
+        <p style="color: #856404; margin-bottom: 0;">
+          You can also reply to the original email with "UNSUBSCRIBE" in the subject line, and we'll process your request manually.
+        </p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= Rails.application.config.app_host %>" class="primary-button">
+          🏠 Return to XSpaceGrow
+        </a>
+        <a href="mailto:support@xspacegrow.com?subject=Unsubscribe Request&body=Hi, I'd like to unsubscribe from marketing emails. My email address is: " class="secondary-button">
+          📧 Email Support
+        </a>
+      </div>
+
+      <!-- Prevention Tips -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">💡 For Future Reference</h4>
+        <ul style="margin: 15px 0;">
+          <li>Always click unsubscribe links directly from the original email</li>
+          <li>Don't forward emails with unsubscribe links to others</li>
+          <li>Use your account settings for the most reliable preference management</li>
+          <li>Contact support if you have any issues with email preferences</li>
+        </ul>
+      </div>
+
+      <!-- Already Unsubscribed -->
+      <div style="background-color: #d1ecf1; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #bee5eb;">
+        <h4 style="margin-top: 0; color: #0c5460;">🎯 Already Unsubscribed?</h4>
+        <p style="color: #0c5460; margin-bottom: 0;">
+          If you've already unsubscribed, changes can take up to 24 hours to take effect. You may receive a few more emails during this processing period.
+        </p>
+      </div>
+
+      <p style="text-align: center; color: #666; font-size: 14px; margin-top: 30px;">
+        We apologize for any inconvenience and appreciate your patience.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        <strong>XSpaceGrow</strong><br>
+        IoT Device Management Platform
+      </p>
+      <p style="font-size: 12px; margin-top: 10px;">
+        Need help? Contact <a href="mailto:support@xspacegrow.com">support@xspacegrow.com</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Track invalid token events for debugging
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'unsubscribe_invalid_token', {
+        'event_category': 'email',
+        'event_label': 'invalid_or_expired_link',
+        'value': 1
+      });
+    }
+  </script>
+</body>
+</html>

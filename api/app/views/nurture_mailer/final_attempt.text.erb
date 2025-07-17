@@ -1,0 +1,55 @@
+Final Offer: Last Chance to Save
+
+Hi <%= @user.name %>,
+
+This is our final email to you about returning to XSpaceGrow.
+
+We've shared the benefits of IoT monitoring, shown you success stories, and offered various incentives. If you haven't found value in our communications, we respect that.
+
+However, we wanted to make one last offer because we believe XSpaceGrow could genuinely help your operations:
+
+🎯 FINAL OFFER (Expires in 48 hours):
+- 40% OFF any device or subscription
+- FREE setup and configuration
+- 3 months of priority support included
+- No long-term commitment required
+
+Use code: FINALOFFER40
+
+WHY THIS MATTERS:
+In the past year, our customers have:
+- Prevented $2.3M in equipment failures
+- Reduced energy costs by an average of 18%
+- Improved compliance audit scores by 92%
+- Saved an average of 15 hours per week on manual monitoring
+
+Your industry peers are already using IoT monitoring:
+- 78% of facilities now use continuous monitoring
+- Early adopters report 3x ROI within the first year
+- Companies without monitoring are falling behind in efficiency
+
+WHAT HAPPENS NEXT:
+This is our final promotional offer. After this email:
+- You'll be removed from our marketing sequence
+- You can still access your account anytime
+- We'll only send essential account updates (if needed)
+- You can resubscribe to marketing emails anytime
+
+If you're still not interested, we understand. We'll respect your decision and won't send promotional emails anymore.
+
+But if you're curious or want to give XSpaceGrow one more try, this is the best offer we can make.
+
+CLAIM YOUR FINAL OFFER: <%= claim_final_offer_url(code: 'FINALOFFER40') %>
+
+Or contact us directly if you have specific questions: <%= support_url %>
+
+Thanks for your time and consideration.
+
+Best regards,
+The XSpaceGrow Team
+
+P.S. - This offer truly expires in 48 hours and won't be repeated. If IoT monitoring is something you might want to explore in the future, now is the time.
+
+---
+Update preferences: <%= unsubscribe_url(token: @unsubscribe_token) %>
+XSpaceGrow - Professional IoT Solutions

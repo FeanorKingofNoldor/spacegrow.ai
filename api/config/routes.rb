@@ -6,6 +6,17 @@ Rails.application.routes.draw do
   # Mount ActionCable for WebSocket connections
   mount ActionCable.server, at: '/cable'
 
+  # ===== UNSUBSCRIBE SYSTEM =====
+  # Public unsubscribe routes (no authentication required)
+  get '/unsubscribe', to: 'unsubscribe#show'
+  post '/unsubscribe', to: 'unsubscribe#create'
+  get '/unsubscribe/success', to: 'unsubscribe#success'
+  post '/unsubscribe/resubscribe', to: 'unsubscribe#resubscribe'
+  
+  # Unsubscribe preference management
+  get '/unsubscribe/preferences', to: 'unsubscribe#preferences'
+  patch '/unsubscribe/preferences', to: 'unsubscribe#update_preferences'
+
   # API routes
   namespace :api do
     namespace :v1 do
@@ -134,6 +145,16 @@ Rails.application.routes.draw do
           post :select_plan   
         end
         
+        # ✅ NEW: Notification Preferences API routes
+        resource :notification_preferences, only: [:show, :update] do
+          post :marketing_opt_in
+          post :marketing_opt_out
+          post :suppress
+          delete :suppress, action: :unsuppress
+          get :categories
+          get :test # development/staging only
+        end
+        
         # Static pages/documentation
         resources :pages, only: [] do
           collection do
@@ -158,7 +179,54 @@ Rails.application.routes.draw do
       # Admin routes (admin authentication required)
       namespace :admin do
         get 'dashboard', to: 'dashboard#index'
-        # Add other admin routes as needed
+        
+        # ===== MARKETING & NURTURE EMAIL MANAGEMENT =====
+        namespace :marketing do
+          # Marketing email triggers (admin only)
+          post '/send_pro_onboarding/:order_id', to: 'emails#send_pro_onboarding'
+          post '/send_accessory_follow_up/:order_id', to: 'emails#send_accessory_follow_up'
+          post '/send_device_promotion/:user_id', to: 'emails#send_device_promotion'
+          post '/send_pro_features_follow_up/:user_id', to: 'emails#send_pro_features_follow_up'
+          
+          # Nurture email triggers (admin only)
+          post '/send_educational_content/:user_id', to: 'emails#send_educational_content'
+          post '/send_case_studies/:user_id', to: 'emails#send_case_studies'
+          post '/send_seasonal_promotion/:user_id', to: 'emails#send_seasonal_promotion'
+          post '/send_win_back_campaign/:user_id', to: 'emails#send_win_back_campaign'
+          post '/send_final_attempt/:user_id', to: 'emails#send_final_attempt'
+          
+          # Analytics and management
+          get '/unsubscribe_analytics', to: 'analytics#unsubscribe_stats'
+          get '/email_performance', to: 'analytics#email_performance'
+        end
+        
+        # Admin API for triggering marketing emails
+        resources :marketing_emails, only: [] do
+          collection do
+            post :trigger_pro_onboarding
+            post :trigger_accessory_follow_up
+            post :trigger_device_promotion
+            post :trigger_nurture_sequence
+            post :bulk_unsubscribe
+            get :email_analytics
+          end
+        end
+        
+        # Unsubscribe management API
+        resources :unsubscribes, only: [:index, :show, :create, :destroy] do
+          collection do
+            get :statistics
+            post :bulk_unsubscribe
+            post :bulk_resubscribe
+          end
+        end
+      end
+      
+      # ===== PUBLIC API ENDPOINTS =====
+      namespace :public do
+        # Unsubscribe via API (for integrations)
+        post '/unsubscribe', to: 'unsubscribe#create'
+        get '/unsubscribe/verify/:token', to: 'unsubscribe#verify_token'
       end
     end
   end

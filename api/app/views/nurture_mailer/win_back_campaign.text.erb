@@ -1,0 +1,57 @@
+We Miss You! Come Back to XSpaceGrow
+
+Hi <%= @user.name %>,
+
+We noticed you haven't logged into your XSpaceGrow dashboard recently, and we miss having you as an active member of our community!
+
+A lot has improved since your last visit:
+
+🚀 NEW FEATURES:
+✓ Enhanced real-time alerts with smart filtering
+✓ Mobile app with push notifications
+✓ Advanced data export and reporting tools
+✓ Improved dashboard performance
+✓ New sensor types and integrations
+
+📊 YOUR ACCOUNT STATUS:
+- Last login: <%= @user.last_sign_in_at&.strftime("%B %d, %Y") || "More than 90 days ago" %>
+- Devices registered: <%= @user.devices.count %>
+- Data points collected: <%= number_with_delimiter(@total_data_points) %>
+
+💡 WHAT YOU'RE MISSING:
+The IoT monitoring landscape has evolved rapidly. Companies using continuous monitoring are:
+- Preventing 73% more equipment failures
+- Reducing operational costs by 22%
+- Improving compliance scores by 85%
+
+🎁 WELCOME BACK OFFER:
+We'd love to have you back! Here's an exclusive offer:
+
+30% OFF any new device or subscription upgrade
+Use code: WELCOMEBACK30
+
+This offer is valid for 7 days only.
+
+QUICK ACTIONS:
+- Login to dashboard: <%= login_url %>
+- Browse new features: <%= features_url %>
+- Add a new device: <%= add_device_url %>
+- Contact support: <%= support_url %>
+
+Still not sure? Here's what other customers are saying:
+
+"I came back after 6 months away and was amazed at the improvements. The new mobile alerts alone have saved us thousands in prevented downtime."
+— Mike Chen, Facility Manager
+
+We understand if XSpaceGrow isn't the right fit for everyone. If you'd prefer not to receive these emails, you can update your preferences here: <%= unsubscribe_url(token: @unsubscribe_token) %>
+
+We're here to help if you have any questions. Just reply to this email and our team will reach out personally.
+
+Hope to see you back soon!
+
+Best regards,
+The XSpaceGrow Team
+
+---
+Unsubscribe: <%= unsubscribe_url(token: @unsubscribe_token) %>
+XSpaceGrow - Professional IoT Solutions

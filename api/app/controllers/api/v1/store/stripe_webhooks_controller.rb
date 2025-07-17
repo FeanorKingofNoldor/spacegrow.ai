@@ -1,96 +1,59 @@
+# app/controllers/api/v1/store/stripe_webhooks_controller.rb - UPDATED (Slim Controller)
 class Api::V1::Store::StripeWebhooksController < Api::V1::Store::BaseController
+  skip_before_action :authenticate_user!
+  skip_before_action :set_cart_service
 
   def create
     payload = request.body.read
     sig_header = request.env['HTTP_STRIPE_SIGNATURE']
-    event = nil
-
+    
     begin
-      event = Stripe::Webhook.construct_event(
-        payload, sig_header, Rails.application.credentials.stripe[:webhook_secret]
-      )
-    rescue JSON::ParserError => e
-      render json: { error: "Invalid payload" }, status: :bad_request
-      return
+      # Verify webhook signature
+      event = construct_verified_event(payload, sig_header)
+      
+      # Delegate all processing to the service (Fat Service!)
+      result = PaymentProcessing::StripeWebhookService.call(event)
+      
+      if result[:success]
+        Rails.logger.info "✅ [StripeWebhooksController] Webhook processed successfully: #{event.type}"
+        render json: { 
+          received: true, 
+          event_type: event.type,
+          message: result[:message] 
+        }, status: :ok
+      else
+        Rails.logger.error "❌ [StripeWebhooksController] Webhook processing failed: #{result[:error]}"
+        render json: { 
+          error: 'Webhook processing failed',
+          details: result[:error] 
+        }, status: :unprocessable_entity
+      end
+      
     rescue Stripe::SignatureVerificationError => e
-      render json: { error: "Invalid signature" }, status: :bad_request
-      return
+      Rails.logger.error "❌ [StripeWebhooksController] Invalid signature: #{e.message}"
+      render json: { error: 'Invalid signature' }, status: :bad_request
+      
+    rescue JSON::ParserError => e
+      Rails.logger.error "❌ [StripeWebhooksController] Invalid payload: #{e.message}"
+      render json: { error: 'Invalid payload' }, status: :bad_request
+      
+    rescue => e
+      Rails.logger.error "❌ [StripeWebhooksController] Unexpected error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: { error: 'Internal server error' }, status: :internal_server_error
     end
-
-    case event.type
-    when 'checkout.session.completed'
-      handle_checkout_session_completed(event.data.object)
-    when 'payment_intent.succeeded'
-      handle_payment_intent_succeeded(event.data.object)
-    when 'customer.subscription.created'
-      handle_subscription_created(event.data.object)
-    when 'customer.subscription.updated'
-      handle_subscription_updated(event.data.object)
-    when 'customer.subscription.deleted'
-      handle_subscription_deleted(event.data.object)
-    else
-      Rails.logger.info "Unhandled event type: #{event.type}"
-    end
-
-    render json: { success: true }, status: :ok
   end
 
   private
 
-  def json_request?
-    request.format.json?
-  end
-
-  def handle_checkout_session_completed(checkout_session)
-    user_id = checkout_session.metadata&.user_id
-    return unless user_id
-
-    user = User.find_by(id: user_id)
-    return unless user
-
-    # Create order from checkout session
-    order = Order.create!(
-      user: user,
-      total: checkout_session.amount_total / 100.0,
-      status: 'paid'
-    )
-
-    Rails.logger.info "Created order #{order.id} for user #{user.id}"
-  end
-
-  def handle_payment_intent_succeeded(payment_intent)
-    Rails.logger.info "Payment succeeded: #{payment_intent.id}"
-  end
-
-  def handle_subscription_created(subscription)
-    user = User.find_by(stripe_customer_id: subscription.customer)
-    return unless user
-
-    Rails.logger.info "Subscription created for user #{user.id}: #{subscription.id}"
-  end
-
-  def handle_subscription_updated(subscription)
-    user = User.find_by(stripe_customer_id: subscription.customer)
-    return unless user
-
-    # Update subscription status
-    user_subscription = user.subscription
-    if user_subscription
-      user_subscription.update!(
-        status: subscription.status,
-        current_period_start: Time.at(subscription.current_period_start),
-        current_period_end: Time.at(subscription.current_period_end)
-      )
+  def construct_verified_event(payload, sig_header)
+    webhook_secret = Rails.application.credentials.stripe[:webhook_secret]
+    
+    if webhook_secret.blank?
+      Rails.logger.error "❌ [StripeWebhooksController] Missing webhook secret in credentials"
+      raise StandardError, "Webhook secret not configured"
     end
 
-    Rails.logger.info "Subscription updated for user #{user.id}: #{subscription.status}"
-  end
-
-  def handle_subscription_deleted(subscription)
-    user = User.find_by(stripe_customer_id: subscription.customer)
-    return unless user
-
-    user.subscription&.update!(status: 'canceled')
-    Rails.logger.info "Subscription canceled for user #{user.id}"
+    Stripe::Webhook.construct_event(payload, sig_header, webhook_secret)
   end
 end

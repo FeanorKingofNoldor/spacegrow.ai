@@ -1,0 +1,81 @@
+Welcome to Pro-Level IoT Monitoring!
+
+Hi <%= @user.display_name %>,
+
+🚀 PRO USER - <%= @device_count %> Devices Ready for Advanced Monitoring
+
+Congratulations on your pro-level IoT investment! With <%= @device_count %> devices in your order, you're ready to unlock the full potential of enterprise-grade monitoring and analytics.
+
+YOUR PRO-LEVEL ADVANTAGES
+=========================
+<% @advanced_features.each_with_index do |feature, index| %>
+<%= index + 1 %>. <%= feature[:name] %>
+   <%= feature[:description] %>
+   💡 <%= feature[:benefit] %>
+
+<% end %>
+
+QUICK ACTIONS
+=============
+Activate Your Devices: <%= Rails.application.config.app_host %>/device-activation
+Access Pro Dashboard: <%= Rails.application.config.app_host %>/dashboard/pro
+
+YOUR PRO ONBOARDING ROADMAP
+============================
+<% @next_steps.each_with_index do |step, index| %>
+<%= index + 1 %>. <%= step %>
+<% end %>
+
+Estimated completion time: 45-60 minutes
+
+YOUR POTENTIAL ROI
+==================
+Pro users typically see 250-400% ROI in their first year
+
+• 85% Reduced Downtime
+• $50K+ Average Savings  
+• 2 hrs Daily Time Saved
+
+YOUR PRO SUPPORT PACKAGE
+=========================
+<% if @support_options[:priority_support] %>
+✅ Priority Support - Skip the queue, get help faster
+<% end %>
+<% if @support_options[:dedicated_onboarding] %>
+✅ Dedicated Onboarding - Personal setup assistance
+<% end %>
+<% if @support_options[:custom_training] %>
+✅ Custom Training Session - One-on-one with our experts
+<% end %>
+
+Pro Support Hotline: 1-800-XSPACE-PRO
+Priority Email: pro-support@xspacegrow.com
+
+PRO RESOURCES & TRAINING
+=========================
+• Pro User Quick Start Guide: <%= Rails.application.config.app_host %>/pro/getting-started
+• Complete API Documentation: <%= Rails.application.config.app_host %>/pro/api-docs
+• Multi-Device Best Practices: <%= Rails.application.config.app_host %>/pro/best-practices
+• Enterprise Case Studies: <%= Rails.application.config.app_host %>/pro/case-studies
+• Exclusive Pro Webinar Series: <%= Rails.application.config.app_host %>/pro/webinars
+
+JOIN THE PRO COMMUNITY
+=======================
+Connect with other pro users, share insights, and get exclusive tips from our engineering team.
+
+Access Pro Community: <%= Rails.application.config.app_host %>/community/pro
+
+You've made an excellent investment in your monitoring infrastructure. We're here to ensure you get maximum value from every device.
+
+Welcome to the pro level!
+The XSpaceGrow Pro Team
+
+---
+XSpaceGrow Pro • Enterprise IoT Monitoring
+Pro Dashboard: <%= Rails.application.config.app_host %>/pro
+Pro Support: <%= Rails.application.config.app_host %>/pro/support
+Pro Resources: <%= Rails.application.config.app_host %>/pro/resources
+
+Order #<%= @order.id %> • <%= @device_count %> devices • Pro onboarding initiated
+
+Unsubscribe from marketing emails: <%= unsubscribe_url(@unsubscribe_token) %>

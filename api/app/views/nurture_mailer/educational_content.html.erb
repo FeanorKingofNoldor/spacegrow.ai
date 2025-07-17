@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your IoT Learning Journey Continues</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .learning-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; }
+    .progress-bar { background-color: #e9ecef; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
+    .progress-fill { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); height: 100%; border-radius: 4px; }
+    .article-card { background-color: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #4facfe; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px; }
+    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3); }
+    .tip-box { background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 30px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0; text-align: center; }
+    .stat-item { background-color: #f8f9fa; padding: 15px; border-radius: 8px; }
+    .stat-number { font-size: 24px; font-weight: bold; color: #4facfe; }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .cta-button { display: block; text-align: center; margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="learning-badge">📚 Learning Journey</div>
+      <h1><%= @title %></h1>
+      <p>Mastering IoT monitoring, one insight at a time</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= user_display_name %>,</p>
+
+      <p>Your IoT journey is progressing beautifully! You've been with us for <strong><%= @days_since_registration.to_i %> days</strong>, and we're excited to share insights that will help you get even more value from your monitoring setup.</p>
+
+      <!-- Learning Progress -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3>🎯 Your Learning Progress</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number"><%= @days_since_registration.to_i %></div>
+            <div>Days Learning</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @total_orders %></div>
+            <div>Orders Placed</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @device_count %></div>
+            <div>Devices Active</div>
+          </div>
+        </div>
+        
+        <!-- Progress visualization based on topic -->
+        <% case @topic %>
+        <% when 'getting_started' %>
+          <div>Your Learning Stage: <strong>Foundation Building</strong></div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 25%;"></div>
+          </div>
+          <p style="font-size: 14px; color: #666;">Next: Device Optimization & Configuration</p>
+        <% when 'optimization' %>
+          <div>Your Learning Stage: <strong>Optimization & Tuning</strong></div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 60%;"></div>
+          </div>
+          <p style="font-size: 14px; color: #666;">Next: Advanced Analytics & Scaling</p>
+        <% when 'advanced_strategies' %>
+          <div>Your Learning Stage: <strong>Advanced Practitioner</strong></div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 90%;"></div>
+          </div>
+          <p style="font-size: 14px; color: #666;">You're becoming an IoT expert!</p>
+        <% end %>
+      </div>
+
+      <!-- Featured Articles -->
+      <h3>📖 Curated Learning for You</h3>
+      <p>Based on your experience level, we've selected these articles to accelerate your IoT mastery:</p>
+
+      <% @articles.each_with_index do |article, index| %>
+        <div class="article-card">
+          <div style="display: flex; justify-content: between; align-items: flex-start;">
+            <div style="flex: 1;">
+              <h4 style="margin-top: 0; color: #4facfe;">
+                <%= index + 1 %>. <%= article[:title] %>
+              </h4>
+              <p style="margin: 10px 0;">Learn the essentials for maximizing your monitoring effectiveness</p>
+              <div style="display: flex; align-items: center; margin-top: 15px;">
+                <span style="background-color: #e8f4f8; color: #17a2b8; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 10px;">
+                  <%= article[:read_time] %>
+                </span>
+                <a href="<%= article[:url] %>?utm_source=nurture&utm_campaign=educational_content" class="cta-button" style="color: white; padding: 8px 16px; font-size: 14px;">
+                  Read Article →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Learning Tip -->
+      <div class="tip-box">
+        <h3>💡 Pro Tip for This Week</h3>
+        <% case @content_focus %>
+        <% when 'setup_basics' %>
+          <p><strong>Perfect Placement Matters:</strong> Place temperature sensors away from heat sources (like radiators or direct sunlight) for accurate readings. A difference of just 2°C can trigger false alerts!</p>
+        <% when 'advanced_configuration' %>
+          <p><strong>Smart Alerts Save Time:</strong> Set up cascading alert thresholds. Start with warnings at 80% of your critical level, then alerts at 95%. This gives you time to respond before issues become emergencies.</p>
+        <% when 'scaling_optimization' %>
+          <p><strong>Data Patterns Reveal Insights:</strong> Look for weekly and monthly patterns in your data. Many users discover energy-saving opportunities or predict maintenance needs by analyzing long-term trends.</p>
+        <% end %>
+      </div>
+
+      <!-- Community Highlight -->
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 30px 0;">
+        <h4>👥 Community Success Story</h4>
+        <p><em>"Following the setup guides helped us reduce false alerts by 85%. Now we only get notifications for real issues that need attention."</em></p>
+        <p style="font-size: 14px; color: #666; margin-top: 10px;">
+          - Sarah M., Manufacturing Operations Manager
+        </p>
+        <div style="margin-top: 15px;">
+          <a href="<%= Rails.application.config.app_host %>/community/success-stories" class="cta-button" style="color: white; padding: 8px 16px; font-size: 14px;">
+            Read More Stories →
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= Rails.application.config.app_host %>/guides/<%= @topic %>" class="cta-button" style="color: white;">
+          📚 Explore All <%= @topic.humanize %> Guides
+        </a>
+        <a href="<%= Rails.application.config.app_host %>/dashboard" class="cta-button" style="color: white;">
+          📊 Apply Learning to Dashboard
+        </a>
+      </div>
+
+      <!-- What's Next -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>🚀 Coming Up in Your Learning Journey</h4>
+        <ul style="margin: 15px 0;">
+          <% case @topic %>
+          <% when 'getting_started' %>
+            <li>Advanced alert configuration techniques</li>
+            <li>Creating custom monitoring dashboards</li>
+            <li>Integrating with your existing systems</li>
+          <% when 'optimization' %>
+            <li>Predictive analytics and trend analysis</li>
+            <li>Multi-location monitoring strategies</li>
+            <li>API integration best practices</li>
+          <% when 'advanced_strategies' %>
+            <li>Enterprise-grade security configurations</li>
+            <li>Custom reporting and white-labeling</li>
+            <li>Building monitoring automation workflows</li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Feedback Request -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0; text-align: center;">
+        <h3>📝 Help Us Personalize Your Learning</h3>
+        <p>What topics would you like to learn about most?</p>
+        <div style="margin-top: 15px;">
+          <a href="<%= Rails.application.config.app_host %>/feedback/learning-preferences" class="cta-button" style="background-color: rgba(255,255,255,0.2); border: 2px solid white; color: white;">
+            Share Your Interests →
+          </a>
+        </div>
+      </div>
+
+      <p style="margin-top: 30px;">
+        Keep up the great learning momentum! Every insight you gain makes your monitoring more effective and valuable.<br><br>
+        <strong>Happy Learning!</strong><br>
+        The XSpaceGrow Education Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow Learning • IoT Monitoring Education<br>
+        <a href="<%= Rails.application.config.app_host %>/guides">All Guides</a> • 
+        <a href="<%= Rails.application.config.app_host %>/community">Community</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Day <%= @days_since_registration.to_i %> of your IoT journey • <%= @content_focus.humanize %> Focus
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from educational emails</a> • 
+        <a href="<%= Rails.application.config.app_host %>/preferences">Update preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

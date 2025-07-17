@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Receipt - XSpaceGrow</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .receipt-box { background-color: #f8f9fa; padding: 25px; border-radius: 12px; border: 2px solid #28a745; margin: 20px 0; }
+    .amount-highlight { font-size: 28px; font-weight: bold; color: #28a745; text-align: center; margin: 20px 0; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .detail-row:last-child { border-bottom: none; font-weight: bold; font-size: 16px; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .success-badge { background-color: #28a745; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; }
+    .plan-info { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; }
+    .next-billing { background-color: #e8f4f8; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>✅ Payment Received</h1>
+      <p>Thank you for your continued trust in XSpaceGrow</p>
+      <div class="success-badge">
+        PAYMENT SUCCESSFUL
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
+
+      <p>We've successfully processed your subscription payment. Your XSpaceGrow service continues uninterrupted, and all your devices remain fully operational.</p>
+
+      <!-- Payment Amount -->
+      <div class="amount-highlight">
+        $<%= sprintf("%.2f", @amount) %> <%= @currency.upcase %>
+      </div>
+
+      <!-- Receipt Details -->
+      <div class="receipt-box">
+        <h3>📄 Payment Receipt</h3>
+        
+        <div class="detail-row">
+          <span>Invoice ID:</span>
+          <span><strong><%= @invoice_id %></strong></span>
+        </div>
+        
+        <div class="detail-row">
+          <span>Payment Date:</span>
+          <span><%= @payment_date.strftime("%B %d, %Y at %I:%M %p %Z") %></span>
+        </div>
+        
+        <div class="detail-row">
+          <span>Billing Period:</span>
+          <span><%= @billing_period %></span>
+        </div>
+        
+        <div class="detail-row">
+          <span>Plan:</span>
+          <span><strong><%= @plan.name %> Plan</strong></span>
+        </div>
+        
+        <div class="detail-row">
+          <span>Payment Method:</span>
+          <span>Card ending in ••••</span>
+        </div>
+        
+        <div class="detail-row">
+          <span><strong>Total Paid:</strong></span>
+          <span><strong>$<%= sprintf("%.2f", @amount) %> <%= @currency.upcase %></strong></span>
+        </div>
+      </div>
+
+      <!-- Plan Information -->
+      <div class="plan-info">
+        <h3>📊 Your <%= @plan.name %> Plan Benefits</h3>
+        <ul style="margin: 15px 0;">
+          <% case @plan.name.downcase %>
+          <% when 'basic' %>
+            <li>✅ Up to 5 IoT devices</li>
+            <li>✅ Real-time monitoring dashboard</li>
+            <li>✅ Basic alerting system</li>
+            <li>✅ 30-day data history</li>
+            <li>✅ Email support</li>
+          <% when 'professional' %>
+            <li>✅ Up to 25 IoT devices</li>
+            <li>✅ Advanced analytics & reporting</li>
+            <li>✅ Custom alert configurations</li>
+            <li>✅ 1-year data history</li>
+            <li>✅ Priority email & chat support</li>
+            <li>✅ API access</li>
+          <% when 'enterprise' %>
+            <li>✅ Unlimited IoT devices</li>
+            <li>✅ White-label dashboard</li>
+            <li>✅ Advanced integrations</li>
+            <li>✅ Unlimited data history</li>
+            <li>✅ Dedicated account manager</li>
+            <li>✅ Custom SLA agreements</li>
+          <% else %>
+            <li>✅ Full access to XSpaceGrow platform</li>
+            <li>✅ Real-time device monitoring</li>
+            <li>✅ Smart alerting system</li>
+            <li>✅ Comprehensive support</li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Next Billing -->
+      <div class="next-billing">
+        <h4>📅 Next Billing Information</h4>
+        <p>
+          <strong>Next Payment Date:</strong> <%= @next_billing_date.strftime("%B %d, %Y") %><br>
+          <strong>Amount:</strong> $<%= sprintf("%.2f", @amount) %> <%= @currency.upcase %>
+        </p>
+        <p style="font-size: 14px; color: #666;">
+          We'll automatically charge your payment method on file. You'll receive a receipt confirmation after each successful payment.
+        </p>
+      </div>
+
+      <!-- Service Status -->
+      <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 30px 0;">
+        <h3>🚀 Service Status: Active</h3>
+        <p>All your devices are connected and monitoring. Your data is being collected and stored securely.</p>
+        <ul>
+          <li>Device Management: <strong>Operational</strong></li>
+          <li>Data Collection: <strong>Active</strong></li>
+          <li>Alert System: <strong>Monitoring</strong></li>
+          <li>Support Access: <strong>Available</strong></li>
+        </ul>
+      </div>
+
+      <!-- Account Management -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="<%= Rails.application.config.app_host %>/dashboard" style="display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px;">
+          📊 View Dashboard
+        </a>
+        <a href="<%= Rails.application.config.app_host %>/account/billing" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px;">
+          💳 Manage Billing
+        </a>
+      </div>
+
+      <!-- Support -->
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h4>Questions About Your Bill? 🤝</h4>
+        <p>Our billing support team is here to help:</p>
+        <ul>
+          <li>📧 Email: <a href="mailto:billing@xspacegrow.com">billing@xspacegrow.com</a></li>
+          <li>💬 Live Chat: Available in your dashboard</li>
+          <li>📞 Phone: 1-800-XSPACE-1 (billing inquiries)</li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 30px;">
+        Thank you for being a valued XSpaceGrow customer!<br><br>
+        <strong>The XSpaceGrow Billing Team</strong>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • IoT Device Management Platform<br>
+        <a href="<%= Rails.application.config.app_host %>">Dashboard</a> • 
+        <a href="<%= Rails.application.config.app_host %>/account/billing">Billing</a> • 
+        <a href="<%= Rails.application.config.app_host %>/support">Support</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        Invoice #<%= @invoice_id %> • Subscription ID: <%= @subscription.id %>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

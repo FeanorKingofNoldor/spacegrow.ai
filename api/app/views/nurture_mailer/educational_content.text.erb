@@ -1,0 +1,98 @@
+Your IoT Learning Journey Continues
+
+Hi <%= user_display_name %>,
+
+📚 Learning Journey - <%= @title %>
+
+Your IoT journey is progressing beautifully! You've been with us for <%= @days_since_registration.to_i %> days, and we're excited to share insights that will help you get even more value from your monitoring setup.
+
+YOUR LEARNING PROGRESS
+=======================
+• <%= @days_since_registration.to_i %> Days Learning
+• <%= @total_orders %> Orders Placed  
+• <%= @device_count %> Devices Active
+
+<% case @topic %>
+<% when 'getting_started' %>
+Your Learning Stage: Foundation Building (25% Complete)
+Next: Device Optimization & Configuration
+<% when 'optimization' %>
+Your Learning Stage: Optimization & Tuning (60% Complete)
+Next: Advanced Analytics & Scaling
+<% when 'advanced_strategies' %>
+Your Learning Stage: Advanced Practitioner (90% Complete)
+You're becoming an IoT expert!
+<% end %>
+
+CURATED LEARNING FOR YOU
+=========================
+Based on your experience level, we've selected these articles to accelerate your IoT mastery:
+
+<% @articles.each_with_index do |article, index| %>
+<%= index + 1 %>. <%= article[:title] %>
+   Learn the essentials for maximizing your monitoring effectiveness
+   Reading time: <%= article[:read_time] %>
+   Read Article: <%= article[:url] %>?utm_source=nurture&utm_campaign=educational_content
+
+<% end %>
+
+PRO TIP FOR THIS WEEK
+======================
+<% case @content_focus %>
+<% when 'setup_basics' %>
+💡 Perfect Placement Matters: Place temperature sensors away from heat sources (like radiators or direct sunlight) for accurate readings. A difference of just 2°C can trigger false alerts!
+<% when 'advanced_configuration' %>
+💡 Smart Alerts Save Time: Set up cascading alert thresholds. Start with warnings at 80% of your critical level, then alerts at 95%. This gives you time to respond before issues become emergencies.
+<% when 'scaling_optimization' %>
+💡 Data Patterns Reveal Insights: Look for weekly and monthly patterns in your data. Many users discover energy-saving opportunities or predict maintenance needs by analyzing long-term trends.
+<% end %>
+
+COMMUNITY SUCCESS STORY
+========================
+"Following the setup guides helped us reduce false alerts by 85%. Now we only get notifications for real issues that need attention."
+- Sarah M., Manufacturing Operations Manager
+
+Read More Stories: <%= Rails.application.config.app_host %>/community/success-stories
+
+QUICK ACTIONS
+=============
+Explore All <%= @topic.humanize %> Guides: <%= Rails.application.config.app_host %>/guides/<%= @topic %>
+Apply Learning to Dashboard: <%= Rails.application.config.app_host %>/dashboard
+
+COMING UP IN YOUR LEARNING JOURNEY
+===================================
+<% case @topic %>
+<% when 'getting_started' %>
+• Advanced alert configuration techniques
+• Creating custom monitoring dashboards
+• Integrating with your existing systems
+<% when 'optimization' %>
+• Predictive analytics and trend analysis
+• Multi-location monitoring strategies
+• API integration best practices
+<% when 'advanced_strategies' %>
+• Enterprise-grade security configurations
+• Custom reporting and white-labeling
+• Building monitoring automation workflows
+<% end %>
+
+HELP US PERSONALIZE YOUR LEARNING
+==================================
+What topics would you like to learn about most?
+Share Your Interests: <%= Rails.application.config.app_host %>/feedback/learning-preferences
+
+Keep up the great learning momentum! Every insight you gain makes your monitoring more effective and valuable.
+
+Happy Learning!
+The XSpaceGrow Education Team
+
+---
+XSpaceGrow Learning • IoT Monitoring Education
+All Guides: <%= Rails.application.config.app_host %>/guides
+Community: <%= Rails.application.config.app_host %>/community
+Support: <%= Rails.application.config.app_host %>/support
+
+Day <%= @days_since_registration.to_i %> of your IoT journey • <%= @content_focus.humanize %> Focus
+
+Unsubscribe from educational emails: <%= unsubscribe_url(@unsubscribe_token) %>
+Update preferences: <%= Rails.application.config.app_host %>/preferences

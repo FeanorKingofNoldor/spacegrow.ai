@@ -1,0 +1,111 @@
+✅ Welcome Back! - Service Reactivated
+
+Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,
+
+🎉 SERVICE FULLY OPERATIONAL
+
+Great news! Your XSpaceGrow <%= @plan.name %> plan has been successfully reactivated. All your IoT devices are back online and actively monitoring your environment.
+
+REACTIVATION COMPLETE
+======================
+🚀 Reactivated: <%= @reactivation_date.strftime("%B %d, %Y at %I:%M %p") %>
+🚀 Plan: <%= @plan.name %> Plan
+🚀 Devices Online: <%= @devices_count %> devices reconnected
+🚀 Next Billing: <%= @next_billing_date.strftime("%B %d, %Y") %>
+
+YOU'RE BACK IN CONTROL!
+========================
+<% if @suspension_duration %>
+After <%= @suspension_duration %>, your IoT monitoring is fully restored and ready to protect your valuable assets.
+<% else %>
+Your IoT monitoring is fully restored and ready to protect your valuable assets.
+<% end %>
+
+Everything you had before is exactly as you left it.
+
+CURRENT SERVICE STATUS
+======================
+Device Monitoring: ✅ ACTIVE
+Data Collection: ✅ RUNNING
+Alert System: ✅ MONITORING
+
+All systems operational:
+• Real-time sensor data streaming
+• Custom alerts and notifications active
+• Historical data fully preserved and accessible
+• Dashboard analytics and reporting available
+• API integrations reconnected
+• Priority support access restored
+
+QUICK LINKS
+===========
+View Live Dashboard: <%= Rails.application.config.app_host %>/dashboard
+Manage Devices: <%= Rails.application.config.app_host %>/devices
+
+YOUR <%= @plan.name.upcase %> PLAN BENEFITS ARE ACTIVE
+<%= "=" * (@plan.name.length + 32) %>
+<% case @plan.name.downcase %>
+<% when 'basic' %>
+✅ Up to 5 IoT devices monitored
+✅ Real-time dashboard access
+✅ Basic alerting system
+✅ 30-day data history
+✅ Email support
+<% when 'professional' %>
+✅ Up to 25 IoT devices monitored
+✅ Advanced analytics & custom reports
+✅ Sophisticated alert configurations
+✅ 1-year data history
+✅ Priority email & chat support
+✅ Full API access
+<% when 'enterprise' %>
+✅ Unlimited IoT devices
+✅ White-label dashboard options
+✅ Advanced integrations & webhooks
+✅ Unlimited data history
+✅ Dedicated account manager
+✅ Custom SLA agreements
+<% else %>
+✅ Full XSpaceGrow platform access
+✅ Comprehensive device monitoring
+✅ Advanced alerting capabilities
+✅ Complete support services
+<% end %>
+
+ENSURE CONTINUOUS SERVICE
+=========================
+To prevent future service interruptions, consider these options:
+• Enable Auto-Pay: Automatic billing ensures seamless service
+• Add Backup Payment: Secondary payment method as failsafe
+• Billing Notifications: Get alerts before payment issues
+• Account Monitoring: Regular billing confirmations
+
+Manage Billing Settings: <%= Rails.application.config.app_host %>/account/billing
+
+WHAT'S NEXT?
+============
+• Check Your Dashboard: Review any data collected during reactivation
+• Verify Device Status: Confirm all devices are reporting correctly
+• Review Alert Settings: Ensure thresholds are still appropriate
+• Export Recent Data: Catch up on any trends you might have missed
+
+QUESTIONS OR NEED ASSISTANCE?
+=============================
+Our team is here to help:
+📧 Email: support@xspacegrow.com
+💬 Live Chat: Available 24/7 in your dashboard
+📞 Phone: 1-800-XSPACE-1
+📚 Help Center: <%= Rails.application.config.app_host %>/help
+
+Thank you for your patience during the reactivation process. We're thrilled to have you back and look forward to helping you achieve your monitoring goals.
+
+Welcome back to XSpaceGrow!
+The XSpaceGrow Team
+
+---
+XSpaceGrow • IoT Device Management Platform
+Dashboard: <%= Rails.application.config.app_host %>
+Devices: <%= Rails.application.config.app_host %>/devices
+Support: <%= Rails.application.config.app_host %>/support
+
+Subscription ID: <%= @subscription.id %> • Reactivated <%= @reactivation_date.strftime("%B %d, %Y") %>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FINAL NOTICE - Last Chance for IoT Savings</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background-color: white; }
+    .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px 20px; text-align: center; }
+    .content { padding: 30px 20px; }
+    .final-badge { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block; animation: pulse 2s infinite; }
+    .mega-offer { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; border-radius: 12px; margin: 30px 0; text-align: center; border: 3px solid #ffc107; }
+    .countdown { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: #212529; padding: 20px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px; font-size: 18px; border: 3px solid #fff; }
+    .cta-button:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5); }
+    .urgency-list { background-color: #fff3cd; border: 2px solid #ffc107; color: #856404; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .testimonial-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; }
+    .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    .flash-banner { background: linear-gradient(45deg, #e74c3c, #f39c12, #e74c3c, #f39c12); background-size: 400% 400%; animation: gradient 3s ease infinite; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @media (max-width: 600px) {
+      .cta-button { display: block; text-align: center; margin: 15px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Flash Banner -->
+    <div class="flash-banner">
+      ⚡ FINAL NOTICE: <%= @incentive_value %> EXPIRES IN <%= @hours_remaining %>H ⚡
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="final-badge">⚡ FINAL OPPORTUNITY</div>
+      <h1>Last Chance: <%= @incentive_value %></h1>
+      <p>This is our final email about this exclusive offer</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <p>Hi <%= user_display_name %>,</p>
+
+      <p>This is it. After this email, we won't contact you again about this exclusive <%= @incentive_value %> offer. We wanted to give you one final chance to join thousands of successful XSpaceGrow users.</p>
+
+      <!-- Countdown -->
+      <div class="countdown">
+        <h3 style="margin-top: 0;">⏰ TIME IS RUNNING OUT</h3>
+        <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">
+          <%= @hours_remaining %> HOURS LEFT
+        </div>
+        <p style="margin-bottom: 0;">
+          Offer expires: <%= @valid_until.strftime("%B %d at %I:%M %p") %>
+        </p>
+      </div>
+
+      <!-- Mega Offer -->
+      <div class="mega-offer">
+        <h3 style="margin-top: 0;">🎁 OUR BIGGEST OFFER EVER</h3>
+        <div style="font-size: 48px; font-weight: bold; margin: 20px 0;">
+          <%= @incentive_value %>
+        </div>
+        <p style="font-size: 18px; margin: 15px 0;">
+          <strong>This is our best offer of the year</strong>
+        </p>
+        <ul style="text-align: left; display: inline-block; margin: 20px 0;">
+          <li>✅ No long-term contracts</li>
+          <li>✅ 30-day money-back guarantee</li>
+          <li>✅ Free setup and onboarding</li>
+          <li>✅ Priority customer support</li>
+        </ul>
+      </div>
+
+      <!-- Urgency Factors -->
+      <div class="urgency-list">
+        <h4 style="margin-top: 0; color: #856404;">🚨 Why This Is Your Last Chance</h4>
+        <ul style="margin: 15px 0;">
+          <% @urgency_factors.each do |factor| %>
+            <li><strong><%= factor %></strong></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="testimonial-box">
+        <h3 style="margin-top: 0;">💬 Don't Make the Same Mistake</h3>
+        <p style="font-size: 18px; font-style: italic; margin: 20px 0;">
+          "<%= @testimonial[:quote] %>"
+        </p>
+        <div style="text-align: right; margin-top: 15px;">
+          <strong><%= @testimonial[:customer_name] %></strong><br>
+          <%= @testimonial[:company] %><br>
+          <em>Result: <%= @testimonial[:result] %></em>
+        </div>
+      </div>
+
+      <!-- Final CTA -->
+      <div style="text-align: center; margin: 40px 0; padding: 30px; background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); border-radius: 12px;">
+        <h3 style="margin-top: 0;">🎯 CLAIM YOUR <%= @incentive_value %> NOW</h3>
+        <p style="font-size: 16px; margin: 20px 0;">
+          <strong>Don't let this opportunity slip away forever</strong>
+        </p>
+        
+        <a href="<%= shop_url_with_tracking('final_attempt') %>" class="cta-button" style="color: #212529;">
+          🔥 CLAIM MY <%= @incentive_value %> OFFER
+        </a>
+        
+        <p style="font-size: 14px; margin-top: 20px; color: #856404;">
+          ⏰ Expires in <%= @hours_remaining %> hours • Limited inventory • No future discounts
+        </p>
+      </div>
+
+      <!-- What You Get -->
+      <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 30px 0;">
+        <h4 style="margin-top: 0;">🎁 What You Get with This Offer</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+          <div style="background-color: white; padding: 15px; border-radius: 8px; border: 2px solid #28a745;">
+            <h5 style="color: #28a745; margin: 0 0 10px 0;">Instant Value</h5>
+            <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
+              <li>Immediate monitoring setup</li>
+              <li>Real-time alerts</li>
+              <li>Historical data analysis</li>
+            </ul>
+          </div>
+          <div style="background-color: white; padding: 15px; border-radius: 8px; border: 2px solid #17a2b8;">
+            <h5 style="color: #17a2b8; margin: 0 0 10px 0;">Support Package</h5>
+            <ul style="margin: 0; padding-left: 15px; font-size: 14px;">
+              <li>Free setup consultation</li>
+              <li>Priority technical support</li>
+              <li>30-day success guarantee</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Warning -->
+      <% if @is_final_day %>
+        <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center; border: 3px solid #ffc107;">
+          <h3 style="margin-top: 0;">🚨 FINAL DAY WARNING</h3>
+          <p style="font-size: 18px; margin: 15px 0;">
+            This offer expires in <strong><%= @hours_remaining %> hours</strong>
+          </p>
+          <p style="margin-bottom: 0;">
+            After tonight, this pricing will never be available again
+          </p>
+        </div>
+      <% end %>
+
+      <!-- No More Emails Notice -->
+      <div style="background-color: #e9ecef; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center;">
+        <h4 style="margin-top: 0;">📧 This Is Our Final Email</h4>
+        <p>We respect your inbox. After this offer expires, we won't send you any more promotional emails about special pricing.</p>
+        <p style="margin-bottom: 0; font-size: 14px; color: #6c757d;">
+          You'll only receive account updates and critical service notifications.
+        </p>
+      </div>
+
+      <p style="margin-top: 30px; text-align: center;">
+        This truly is your last chance for this incredible offer. We hope you'll join the thousands of successful XSpaceGrow users before time runs out.<br><br>
+        <strong>Don't wait – claim your <%= @incentive_value %> now!</strong><br>
+        The XSpaceGrow Final Opportunity Team
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        XSpaceGrow • Final Opportunity Expires Soon<br>
+        <a href="<%= Rails.application.config.app_host %>/offer/final">Claim Offer</a> • 
+        <a href="<%= Rails.application.config.app_host %>/why-act-now">Why Act Now</a> • 
+        <a href="<%= Rails.application.config.app_host %>/testimonials">Customer Success</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px; color: #e74c3c;">
+        ⚡ EXPIRES IN <%= @hours_remaining %> HOURS ⚡ • Final email in sequence
+      </p>
+      <p style="font-size: 11px; margin-top: 10px;">
+        <a href="<%= unsubscribe_url(@unsubscribe_token) %>">Unsubscribe from all future promotional emails</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
