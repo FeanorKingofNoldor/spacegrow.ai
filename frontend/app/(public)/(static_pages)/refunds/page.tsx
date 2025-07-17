@@ -27,7 +27,7 @@ const RefundInfoPage = () => {
           </button>
           <h1 className="text-4xl font-bold text-white mb-4">Refund & Return Policy</h1>
           <p className="text-xl text-gray-300 max-w-3xl">
-            We want you to be completely satisfied with your XSpaceGrow purchase. 
+            We want you to be completely satisfied with your SpaceGrow purchase. 
             Here's everything you need to know about our refund and return process.
           </p>
         </div>
@@ -61,7 +61,7 @@ const RefundInfoPage = () => {
             
             <div className="prose prose-invert max-w-none">
               <p className="text-gray-300 text-lg mb-6">
-                At XSpaceGrow, we stand behind our products. If you're not completely satisfied 
+                At SpaceGrow, we stand behind our products. If you're not completely satisfied 
                 with your purchase, we offer hassle-free returns within 30 days of delivery.
               </p>
               
@@ -73,7 +73,7 @@ const RefundInfoPage = () => {
                 <ul className="space-y-2 text-gray-300">
                   <li className="flex items-start">
                     <CheckCircle className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>All XSpaceGrow monitoring devices and kits</span>
+                    <span>All SpaceGrow monitoring devices and kits</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
@@ -106,7 +106,7 @@ const RefundInfoPage = () => {
                 </div>
                 <h3 className="font-semibold text-white mb-2">Contact Us</h3>
                 <p className="text-gray-300 text-sm">
-                  Email us at support@xspacegrow.com with your order number
+                  Email us at support@SpaceGrow.com with your order number
                 </p>
               </div>
               
@@ -258,7 +258,7 @@ const RefundInfoPage = () => {
               <div>
                 <h3 className="text-lg font-semibold text-white mb-3">Warranty Coverage</h3>
                 <p className="text-gray-300 mb-4">
-                  All XSpaceGrow devices come with a 1-year manufacturer warranty covering defects 
+                  All SpaceGrow devices come with a 1-year manufacturer warranty covering defects 
                   and malfunctions under normal use.
                 </p>
                 <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
@@ -284,7 +284,7 @@ const RefundInfoPage = () => {
                 <div className="space-y-3 text-gray-300">
                   <div className="flex items-center">
                     <Mail className="w-5 h-5 text-blue-400 mr-3" />
-                    <span>support@xspacegrow.com</span>
+                    <span>support@SpaceGrow.com</span>
                   </div>
                   <div className="flex items-center">
                     <Phone className="w-5 h-5 text-blue-400 mr-3" />
@@ -303,7 +303,7 @@ const RefundInfoPage = () => {
               <div>
                 <h3 className="font-semibold text-white mb-4">Return Address</h3>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-gray-300">
-                  <div className="font-medium text-white mb-2">XSpaceGrow Returns</div>
+                  <div className="font-medium text-white mb-2">SpaceGrow Returns</div>
                   <div>1234 Innovation Drive</div>
                   <div>Suite 567</div>
                   <div>TechCity, TC 12345</div>
@@ -322,7 +322,7 @@ const RefundInfoPage = () => {
               <div>
                 <h3 className="text-yellow-300 font-semibold text-lg mb-2">Important Notice</h3>
                 <p className="text-yellow-200 mb-4">
-                  This return policy applies to purchases made directly from XSpaceGrow. 
+                  This return policy applies to purchases made directly from SpaceGrow. 
                   For items purchased from authorized retailers, please check with the retailer 
                   for their specific return policy.
                 </p>

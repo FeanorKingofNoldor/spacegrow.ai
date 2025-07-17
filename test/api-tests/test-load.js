@@ -1,4 +1,4 @@
-// api-tests/test-load.js - XSpaceGrow Load Testing Suite (IMPROVED)
+// api-tests/test-load.js - SpaceGrow Load Testing Suite (IMPROVED)
 const axios = require('axios');
 const WebSocket = require('ws');
 const { performance } = require('perf_hooks');

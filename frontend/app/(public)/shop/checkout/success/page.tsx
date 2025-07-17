@@ -130,8 +130,8 @@ export default function CheckoutSuccessPage() {
           <div className="mt-8 pt-6 border-t text-sm text-gray-500">
             <p>
               Questions about your order? Contact our support team at{' '}
-              <a href="mailto:support@xspacegrow.com" className="text-blue-600 hover:underline">
-                support@xspacegrow.com
+              <a href="mailto:support@SpaceGrow.com" className="text-blue-600 hover:underline">
+                support@SpaceGrow.com
               </a>
             </p>
           </div>

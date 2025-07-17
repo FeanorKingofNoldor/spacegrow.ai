@@ -4,15 +4,15 @@ class Api::V1::Esp32::SensorDataController < Api::V1::Esp32::BaseController
     payload = parse_json_payload
     return render_invalid_json unless payload
 
-    result = Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::SensorDataProcessingService.call(
+    result = DeviceCommunication::Esp32::SensorDataProcessingService.call(
       device: current_device,
       payload: payload
     )
 
-    if result.success?
+    if result[:success]
       render json: { status: 'success' }, status: :created
     else
-      render json: { error: result.error }, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: :unprocessable_entity
     end
   end
 

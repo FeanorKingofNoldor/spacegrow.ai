@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * XSPACEGROW SUSPENSION SYSTEM TEST SUITE
+ * SpaceGrow SUSPENSION SYSTEM TEST SUITE
  * 
  * Tests the "Always Accept, Then Upsell" device management system including:
  * - Device status transitions (pending → active → suspended)

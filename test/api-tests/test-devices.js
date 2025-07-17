@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * XSPACEGROW DEVICE MANAGEMENT TEST SUITE - STORE INTEGRATED VERSION
+ * SpaceGrow DEVICE MANAGEMENT TEST SUITE - STORE INTEGRATED VERSION
  * 
  * Tests device CRUD operations with proper store/order integration
  * Updated to use real store endpoints instead of mocks

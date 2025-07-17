@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * XSPACEGROW AUTHENTICATION & AUTHORIZATION TEST SUITE
+ * SpaceGrow AUTHENTICATION & AUTHORIZATION TEST SUITE
  * 
  * Tests all authentication flows, JWT lifecycle, role-based access, and security
  * 

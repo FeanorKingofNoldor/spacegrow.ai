@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# XSpaceGrow Subscription & Billing Test Runner
+# SpaceGrow Subscription & Billing Test Runner
 # Tests subscription lifecycle, plan changes, device limits, and business rules
 
 set -e
@@ -23,7 +23,7 @@ log_section() { echo -e "${PURPLE}🔸 $1${NC}"; }
 API_BASE_URL=${API_BASE_URL:-"http://localhost:3000"}
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo -e "${PURPLE}💳 XSpaceGrow Subscription & Billing Tests${NC}"
+echo -e "${PURPLE}💳 SpaceGrow Subscription & Billing Tests${NC}"
 echo -e "${PURPLE}===========================================${NC}"
 
 # Check if we're in the right directory

@@ -3,27 +3,27 @@ class Api::V1::Esp32::DevicesController < Api::V1::Esp32::BaseController
   skip_before_action :authenticate_device!, only: [:register, :validate]
 
   def register
-    result = Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::DeviceRegistrationService.call(token: params[:token])
+    result = DeviceCommunication::Esp32::DeviceRegistrationService.call(token: params[:token])
     
-    if result.success?
+    if result[:success]
       render json: {
         status: 'success',
-        token: result.token,
-        commands: result.commands
+        token: result[:token],
+        commands: result[:commands]
       }
     else
-      render json: { error: result.error }, status: :unauthorized
+      render json: { error: result[:error] }, status: :unauthorized
     end
   end
 
   def validate
-    result = DeviceManagement::DeviceManagement::DeviceManagement::ActivationService.call(
+    result = DeviceManagement::ActivationService.call(
       token: params[:token],
       device_type: DeviceType.find_by(id: params[:device_type_id])
     )
     
-    if result.success?
-      device = result.device
+    if result[:success]
+      device = result[:device]
       device.update!(last_connection: Time.current)
       
       render json: {
@@ -42,13 +42,13 @@ class Api::V1::Esp32::DevicesController < Api::V1::Esp32::BaseController
     else
       render json: { 
         error: 'Device activation failed',
-        details: result.error 
+        details: result[:error] 
       }, status: :unprocessable_entity
     end
   end
 
   def status
-    status_result = Devices::DeviceManagement::DeviceManagement::DeviceManagement::StatusService.call(@device)
+    status_result = DeviceManagement::StatusService.call(@device)
     
     render json: {
       status: 'success',
@@ -64,15 +64,15 @@ class Api::V1::Esp32::DevicesController < Api::V1::Esp32::BaseController
   end
 
   def commands
-    result = Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::DeviceCommunication::Esp32::CommandRetrievalService.call(@device)
+    result = DeviceCommunication::Esp32::CommandRetrievalService.call(@device)
     
-    if result.success?
+    if result[:success]
       render json: {
         status: 'success',
-        commands: result.commands
+        commands: result[:commands]
       }
     else
-      render json: { error: result.error }, status: :forbidden
+      render json: { error: result[:error] }, status: :forbidden
     end
   end
 

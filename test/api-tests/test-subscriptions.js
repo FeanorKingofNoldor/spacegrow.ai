@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * XSPACEGROW SUBSCRIPTION & BILLING TEST SUITE - COMPLETE VERSION
+ * SpaceGrow SUBSCRIPTION & BILLING TEST SUITE - COMPLETE VERSION
  * 
  * Tests subscription lifecycle, plan changes, device limits, billing logic,
  * onboarding flow, device activation integration, and business rules validation

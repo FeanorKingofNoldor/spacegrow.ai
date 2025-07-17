@@ -8,7 +8,7 @@ class Api::V1::Frontend::CommandsController < Api::V1::Frontend::ProtectedContro
     
     result = DeviceCommunication::CommandService.new(@device).execute(command, args)
     
-    if result.success?
+    if result[:success]
       render json: {
         status: 'success',
         message: 'Command queued successfully'
@@ -16,7 +16,7 @@ class Api::V1::Frontend::CommandsController < Api::V1::Frontend::ProtectedContro
     else
       render json: {
         status: 'error',
-        error: result.error
+        error: result[:error]
       }, status: :unprocessable_entity
     end
   end

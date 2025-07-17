@@ -1,6 +1,6 @@
 # app/mailers/nurture_mailer.rb
 class NurtureMailer < ApplicationMailer
-  default from: 'growth@xspacegrow.com'
+  default from: 'growth@spacegrow.ai'
 
   def educational_content(user, content_data)
     @user = user
@@ -157,7 +157,7 @@ class NurtureMailer < ApplicationMailer
     when 91..180
       "We really miss having you as part of our community..."
     else
-      "We'd love to welcome you back to XSpaceGrow..."
+      "We'd love to welcome you back to SpaceGrow..."
     end
   end
 

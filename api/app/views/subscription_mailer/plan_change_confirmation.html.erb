@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plan Change Confirmation - XSpaceGrow</title>
+  <title>Plan Change Confirmation - SpaceGrow</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
     .container { max-width: 600px; margin: 0 auto; background-color: white; }
@@ -32,7 +32,7 @@
     <!-- Header -->
     <div class="header">
       <h1>📋 Plan Change Confirmed</h1>
-      <p>Your XSpaceGrow subscription has been updated</p>
+      <p>Your SpaceGrow subscription has been updated</p>
       <div class="confirmed-badge">
         CHANGE CONFIRMED
       </div>
@@ -42,7 +42,7 @@
     <div class="content">
       <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
 
-      <p>Your plan change request has been successfully processed. Your XSpaceGrow subscription has been updated with your new plan benefits and pricing.</p>
+      <p>Your plan change request has been successfully processed. Your SpaceGrow subscription has been updated with your new plan benefits and pricing.</p>
 
       <!-- Change Summary -->
       <div class="change-summary">
@@ -190,7 +190,7 @@
         <h4>Questions About Your Plan Change? 🤝</h4>
         <p>Our team is here to help you make the most of your new plan:</p>
         <ul>
-          <li>📧 <strong>Email:</strong> <a href="mailto:support@xspacegrow.com">support@xspacegrow.com</a></li>
+          <li>📧 <strong>Email:</strong> <a href="mailto:support@SpaceGrow.com">support@SpaceGrow.com</a></li>
           <li>💬 <strong>Live Chat:</strong> Available in your dashboard</li>
           <li>📞 <strong>Phone:</strong> 1-800-XSPACE-1</li>
           <li>📚 <strong>Help Center:</strong> <a href="<%= Rails.application.config.app_host %>/help">Plan guides and tutorials</a></li>
@@ -198,15 +198,15 @@
       </div>
 
       <p style="margin-top: 30px;">
-        Thank you for choosing XSpaceGrow. We're excited to support your IoT monitoring journey with your updated plan!<br><br>
-        <strong>The XSpaceGrow Team</strong>
+        Thank you for choosing SpaceGrow. We're excited to support your IoT monitoring journey with your updated plan!<br><br>
+        <strong>The SpaceGrow Team</strong>
       </p>
     </div>
 
     <!-- Footer -->
     <div class="footer">
       <p>
-        XSpaceGrow • IoT Device Management Platform<br>
+        SpaceGrow • IoT Device Management Platform<br>
         <a href="<%= Rails.application.config.app_host %>">Dashboard</a> • 
         <a href="<%= Rails.application.config.app_host %>/account/subscription">Subscription</a> • 
         <a href="<%= Rails.application.config.app_host %>/support">Support</a>

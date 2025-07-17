@@ -81,7 +81,7 @@ module Api
     if Rails.env.production?
       config.action_cable.adapter = :redis
       config.action_cable.url = ENV.fetch('REDIS_URL', 'redis://localhost:6379/1')
-      config.action_cable.channel_prefix = "xspacegrow_#{Rails.env}"
+      config.action_cable.channel_prefix = "SpaceGrow_#{Rails.env}"
     end
     
     # ✅ PRODUCTION: CORS configuration for API
@@ -108,7 +108,7 @@ module Api
     # ✅ PRODUCTION: Session store configuration for ActionCable
     # This is needed even in API-only mode for ActionCable session authentication
     config.session_store :cookie_store, 
-      key: '_xspacegrow_session',
+      key: '_SpaceGrow_session',
       httponly: true,
       secure: Rails.env.production?,
       same_site: :lax

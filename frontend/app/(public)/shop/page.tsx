@@ -223,7 +223,7 @@ export default function EpicShopPage() {
               </div>
               <h1 className="text-6xl md:text-8xl font-bold mb-6">
                 <span className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent animate-pulse">
-                  XSpaceGrow
+                  SpaceGrow
                 </span>
               </h1>
               <p className="text-2xl md:text-3xl text-white mb-8 max-w-4xl mx-auto leading-relaxed">

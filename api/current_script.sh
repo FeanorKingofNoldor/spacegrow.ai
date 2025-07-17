@@ -521,7 +521,7 @@ class Api::V1::Frontend::OnboardingController < Api::V1::Frontend::ProtectedCont
     if subscription.persisted?
       render json: {
         status: 'success',
-        message: "Welcome to XSpaceGrow! Your #{plan.name} plan is now active.",
+        message: "Welcome to SpaceGrow! Your #{plan.name} plan is now active.",
         data: {
           subscription: subscription_json(subscription)
         }
@@ -617,7 +617,7 @@ class Api::V1::Frontend::SubscriptionsController < Api::V1::Frontend::ProtectedC
       message = if current_user.subscription
                   "Successfully switched to #{plan.name} plan!"
                 else
-                  "Welcome to XSpaceGrow! Your #{plan.name} plan is now active."
+                  "Welcome to SpaceGrow! Your #{plan.name} plan is now active."
                 end
 
       render json: {
@@ -725,7 +725,7 @@ class Api::V1::Frontend::PagesController < Api::V1::Frontend::ProtectedControlle
   def index
     render json: {
       status: 'success',
-      message: 'Welcome to XSpaceGrow API'
+      message: 'Welcome to SpaceGrow API'
     }
   end
 
@@ -795,7 +795,7 @@ class Api::V1::Frontend::PagesController < Api::V1::Frontend::ProtectedControlle
       status: 'success',
       data: {
         title: 'Support',
-        contact_email: 'support@xspacegrow.com'
+        contact_email: 'support@SpaceGrow.com'
       }
     }
   end

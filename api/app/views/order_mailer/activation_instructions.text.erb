@@ -1,11 +1,11 @@
 # app/views/order_mailer/activation_instructions.text.erb
 
-XSpaceGrow - Device Activation Instructions
+SpaceGrow - Device Activation Instructions
 ===========================================
 
 Hi <%= @user.display_name || @user.email.split('@').first.capitalize %>,
 
-Your <%= @device_name %> is ready to be activated and connected to your XSpaceGrow dashboard!
+Your <%= @device_name %> is ready to be activated and connected to your SpaceGrow dashboard!
 
 YOUR ACTIVATION TOKEN
 =====================
@@ -27,7 +27,7 @@ ACTIVATION STEPS
    Follow the on-device prompts to connect to your WiFi network and complete the setup.
 
 4. MONITOR YOUR DEVICE
-   Once activated, your device will appear in your XSpaceGrow dashboard for monitoring and control.
+   Once activated, your device will appear in your SpaceGrow dashboard for monitoring and control.
 
 YOUR <%= @device_name.upcase %> FEATURES
 <% if @device_type.name == 'Environmental Monitor V1' %>
@@ -65,4 +65,4 @@ Your activation token expires on <%= @expires_at.strftime("%B %d, %Y") %>.
 Please activate your device before this date to ensure proper functionality.
 
 ---
-© <%= Date.current.year %> XSpaceGrow. All rights reserved.
+© <%= Date.current.year %> SpaceGrow. All rights reserved.

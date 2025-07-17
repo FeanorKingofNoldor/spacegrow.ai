@@ -268,7 +268,7 @@ class UnsubscribeController < ApplicationController
   # Get resubscribe options
   def get_resubscribe_options
     {
-      email: 'support@xspacegrow.com',
+      email: 'support@spacegrow.ai',
       phone: '1-800-XSPACE-1',
       preferences_url: "#{Rails.application.config.app_host}/account/notifications"
     }

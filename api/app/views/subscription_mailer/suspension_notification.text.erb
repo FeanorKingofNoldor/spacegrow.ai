@@ -4,7 +4,7 @@ Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,
 
 SERVICE TEMPORARILY SUSPENDED
 
-We regret to inform you that your XSpaceGrow <%= @plan.name %> plan has been temporarily suspended due to <%= @suspension_reason.downcase %>. Your IoT devices and monitoring services are currently inactive.
+We regret to inform you that your SpaceGrow <%= @plan.name %> plan has been temporarily suspended due to <%= @suspension_reason.downcase %>. Your IoT devices and monitoring services are currently inactive.
 
 SUSPENSION DETAILS
 ==================
@@ -71,17 +71,17 @@ NEED IMMEDIATE ASSISTANCE?
 ==========================
 Our reactivation team is standing by:
 🔥 Urgent Line: 1-800-XSPACE-1 (press 1 for reactivation)
-📧 Email: reactivation@xspacegrow.com
+📧 Email: reactivation@SpaceGrow.com
 💬 Live Chat: Available 24/7 in your account portal
 
 Average reactivation time: 2-4 hours after payment resolution
 
 We understand this suspension may be inconvenient. Our team is here to help restore your service as quickly as possible.
 
-The XSpaceGrow Reactivation Team
+The SpaceGrow Reactivation Team
 
 ---
-XSpaceGrow • IoT Device Management Platform
+SpaceGrow • IoT Device Management Platform
 Reactivate Service: <%= @reactivation_url %>
 Emergency Support: <%= Rails.application.config.app_host %>/support
 

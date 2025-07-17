@@ -1,6 +1,6 @@
 # app/mailers/subscription_mailer.rb
 class SubscriptionMailer < ApplicationMailer
-  default from: 'billing@xspacegrow.com'
+  default from: 'billing@spacegrow.ai'
 
   def payment_receipt(subscription, receipt_data)
     @subscription = subscription
@@ -61,7 +61,7 @@ class SubscriptionMailer < ApplicationMailer
     
     mail(
       to: @user.email,
-      subject: "🔒 XSpaceGrow Service Suspended - #{@grace_period_days} Day Grace Period"
+      subject: "🔒 SpaceGrow Service Suspended - #{@grace_period_days} Day Grace Period"
     )
   end
 
@@ -78,7 +78,7 @@ class SubscriptionMailer < ApplicationMailer
     
     mail(
       to: @user.email,
-      subject: "✅ Welcome Back! Your XSpaceGrow Service is Active"
+      subject: "✅ Welcome Back! Your SpaceGrow Service is Active"
     )
   end
 
@@ -155,7 +155,7 @@ class SubscriptionMailer < ApplicationMailer
   end
 
   def app_host
-    Rails.application.config.app_host || 'https://xspacegrow.com'
+    Rails.application.config.app_host || 'https://spacegrow.ai'
   end
 
   def dashboard_url

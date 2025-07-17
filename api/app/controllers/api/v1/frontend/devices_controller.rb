@@ -20,12 +20,12 @@ class Api::V1::Frontend::DevicesController < Api::V1::Frontend::ProtectedControl
   end
 
   def create
-    result = DeviceManagement::DeviceManagement::DeviceManagement::OperationService.create_device(current_user, device_params)
+    result = DeviceManagement::OperationService.create_device(current_user, device_params)
     
-    if result.success?
-      render_success(device_json(result.device), result.message)
+    if result[:success]
+      render_success(device_json(result[:device]), result[:message])
     else
-      render_error(result.error, result.errors || [])
+      render_error(result[:error], result[:errors] || [])
     end
   end
 
@@ -59,32 +59,32 @@ class Api::V1::Frontend::DevicesController < Api::V1::Frontend::ProtectedControl
   def suspend
     authorize @device
     
-    result = DeviceManagement::DeviceManagement::DeviceManagement::OperationService.suspend_device(@device, params[:reason])
+    result = DeviceManagement::OperationService.suspend_device(@device, params[:reason])
     
-    if result.success?
+    if result[:success]
       render_success({
         device: device_json(@device, include_suspension: true),
-        **result.suspension_data
-      }, result.message)
+        **result[:suspension_data]
+      }, result[:message])
     else
-      render_error(result.error, result.errors || [])
+      render_error(result[:error], result[:errors] || [])
     end
   end
 
   def wake
     authorize @device
     
-    result = DeviceManagement::DeviceManagement::DeviceManagement::OperationService.wake_device(@device)
+    result = DeviceManagement::OperationService.wake_device(@device)
     
-    if result.success?
+    if result[:success]
       render_success({
         device: device_json(@device, include_suspension: true)
-      }, result.message)
+      }, result[:message])
     else
-      if result.limit_data
-        render_error(result.error, [], 422)
+      if result[:limit_data]
+        render_error(result[:error], [], 422)
       else
-        render_error(result.error, result.errors || [])
+        render_error(result[:error], result[:errors] || [])
       end
     end
   end

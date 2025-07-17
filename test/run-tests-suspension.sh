@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# XSpaceGrow Suspension System Test Runner
+# SpaceGrow Suspension System Test Runner
 # Tests the "Always Accept, Then Upsell" device management system
 
 set -e
@@ -25,7 +25,7 @@ log_header() { echo -e "${CYAN}🚀 $1${NC}"; }
 API_BASE_URL=${API_BASE_URL:-"http://localhost:3000"}
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo -e "${PURPLE}🔄 XSpaceGrow Suspension System Tests${NC}"
+echo -e "${PURPLE}🔄 SpaceGrow Suspension System Tests${NC}"
 echo -e "${PURPLE}====================================${NC}"
 echo ""
 

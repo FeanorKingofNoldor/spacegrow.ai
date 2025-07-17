@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * XSPACEGROW WEBSOCKET COMMUNICATION TEST SUITE
+ * SpaceGrow WEBSOCKET COMMUNICATION TEST SUITE
  * 
  * Tests ActionCable connections, real-time sensor updates, device status broadcasts,
  * command queuing, and WebSocket authentication

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * XSPACEGROW API TEST SUITE RUNNER
+ * SpaceGrow API TEST SUITE RUNNER
  * 
  * Comprehensive test orchestration for all API components including:
  * - Authentication & Authorization
@@ -84,7 +84,7 @@ const log = {
 
 // List available test suites
 function listTestSuites() {
-  log.header('XSpaceGrow API Test Suite Runner');
+  log.header('SpaceGrow API Test Suite Runner');
   console.log(chalk.gray('Available test suites:\n'));
   
   Object.entries(testSuites).forEach(([key, suite]) => {
@@ -150,7 +150,7 @@ async function runTestSuite(suiteName) {
 
 // Run all test suites
 async function runAllTests() {
-  log.header('Running Complete XSpaceGrow API Test Suite');
+  log.header('Running Complete SpaceGrow API Test Suite');
   
   const results = {
     summary: { total: 0, passed: 0, failed: 0 },
@@ -210,7 +210,7 @@ async function runAllTests() {
   
   if (results.summary.failed === 0) {
     log.success('🎉 All test suites passed!');
-    log.success('🚀 XSpaceGrow API system fully validated');
+    log.success('🚀 SpaceGrow API system fully validated');
   } else {
     log.warning(`⚠️  ${results.summary.failed} test suite(s) failed`);
   }

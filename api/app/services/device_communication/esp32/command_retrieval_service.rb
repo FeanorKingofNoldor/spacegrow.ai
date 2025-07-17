@@ -21,12 +21,12 @@ module DeviceCommunication::Esp32
 
     private
 
-    def success(data)
-      OpenStruct.new(success?: true, **data)
+    def success(data = {})
+      { success: true }.merge(data)
     end
 
     def failure(error)
-      OpenStruct.new(success?: false, error: error)
+      { success: false, error: error }
     end
   end
 end

@@ -61,7 +61,7 @@ class Api::V1::Frontend::OnboardingController < Api::V1::Frontend::ProtectedCont
       message = if current_user.subscription&.persisted?
                   "Successfully switched to #{plan.name} plan!"
                 else
-                  "Welcome to XSpaceGrow! Your #{plan.name} plan is now active."
+                  "Welcome to SpaceGrow! Your #{plan.name} plan is now active."
                 end
 
       render json: {

@@ -50,7 +50,7 @@ end
 
 Product.find_or_create_by!(name: 'Mounting Hardware Set') do |p|
   p.description = 'Universal mounting brackets and hardware'
-  p.detailed_description = 'Versatile mounting solution for all XSpaceGrow devices. Includes adjustable brackets, screws, anchors, and cable management accessories. Compatible with all monitor types.'
+  p.detailed_description = 'Versatile mounting solution for all SpaceGrow devices. Includes adjustable brackets, screws, anchors, and cable management accessories. Compatible with all monitor types.'
   p.price = 24.99
   p.active = true
   p.featured = false

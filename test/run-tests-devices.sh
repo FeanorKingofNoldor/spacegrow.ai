@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# XSpaceGrow Device Management Test Runner
+# SpaceGrow Device Management Test Runner
 # Tests device CRUD, sensor data, status calculations, and device limits
 
 set -e
@@ -21,7 +21,7 @@ log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 API_BASE_URL=${API_BASE_URL:-"http://localhost:3000"}
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "🔧 XSpaceGrow Device Management Tests"
+echo "🔧 SpaceGrow Device Management Tests"
 echo "====================================="
 
 # Check if we're in the right directory

@@ -1,6 +1,6 @@
 # app/mailers/order_mailer.rb - EXTENDED
 class OrderMailer < ApplicationMailer
-  default from: 'orders@xspacegrow.com'
+  default from: 'orders@spacegrow.ai'
 
   def confirmation(order)
     @order = order
@@ -12,7 +12,7 @@ class OrderMailer < ApplicationMailer
     
     mail(
       to: @user.email,
-      subject: "Order Confirmation ##{@order_number} - XSpaceGrow"
+      subject: "Order Confirmation ##{@order_number} - SpaceGrow"
     )
   end
 
@@ -75,7 +75,7 @@ class OrderMailer < ApplicationMailer
     
     mail(
       to: @user.email,
-      subject: "💳 Complete Your XSpaceGrow Order - Order ##{order.id}"
+      subject: "💳 Complete Your SpaceGrow Order - Order ##{order.id}"
     )
   end
 
@@ -98,7 +98,7 @@ class OrderMailer < ApplicationMailer
     
     mail(
       to: @user.email,
-      subject: "🚀 Get Started with Your XSpaceGrow Devices - Setup Guide"
+      subject: "🚀 Get Started with Your SpaceGrow Devices - Setup Guide"
     )
   end
 
@@ -147,7 +147,7 @@ class OrderMailer < ApplicationMailer
       when 'Environmental Monitor V1'
         guides[device_type] = {
           steps: [
-            "Download the XSpaceGrow mobile app",
+            "Download the SpaceGrow mobile app",
             "Power on your Environmental Monitor",
             "Follow the in-app pairing instructions",
             "Enter your activation token when prompted",
@@ -160,7 +160,7 @@ class OrderMailer < ApplicationMailer
       when 'Liquid Monitor V1'
         guides[device_type] = {
           steps: [
-            "Download the XSpaceGrow mobile app",
+            "Download the SpaceGrow mobile app",
             "Connect the probe to your Liquid Monitor",
             "Power on the device",
             "Follow the in-app setup wizard",
@@ -174,7 +174,7 @@ class OrderMailer < ApplicationMailer
       else
         guides[device_type] = {
           steps: [
-            "Download the XSpaceGrow mobile app",
+            "Download the SpaceGrow mobile app",
             "Power on your device",
             "Follow the in-app setup instructions",
             "Enter your activation token when prompted"

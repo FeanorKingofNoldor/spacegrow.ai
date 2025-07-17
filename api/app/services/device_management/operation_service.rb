@@ -20,10 +20,10 @@ module DeviceManagement
     def create_device(device_params)
       # Check device limits
       unless @limit_service.can_add_device?
-        return OpenStruct.new(
-          success?: false,
+        return {
+          success: false,
           error: "Device limit of #{@limit_service.device_limit} reached for your current plan"
-        )
+        }
       end
 
       # Create device as pending
@@ -33,17 +33,17 @@ module DeviceManagement
       if device.save
         handle_activation_token(device)
         
-        OpenStruct.new(
-          success?: true,
+        {
+          success: true,
           device: device,
           message: build_success_message(device)
-        )
+        }
       else
-        OpenStruct.new(
-          success?: false,
+        {
+          success: false,
           error: 'Device creation failed',
           errors: device.errors.full_messages
-        )
+        }
       end
     end
 
@@ -51,15 +51,15 @@ module DeviceManagement
       reason ||= 'User requested suspension'
       
       if device.suspended?
-        return OpenStruct.new(
-          success?: false,
+        return {
+          success: false,
           error: 'Device is already suspended'
-        )
+        }
       end
       
       if device.suspend!(reason: reason)
-        OpenStruct.new(
-          success?: true,
+        {
+          success: true,
           device: device,
           message: 'Device suspended successfully',
           suspension_data: {
@@ -67,28 +67,28 @@ module DeviceManagement
             suspended_reason: device.suspended_reason,
             grace_period_ends_at: device.grace_period_ends_at
           }
-        )
+        }
       else
-        OpenStruct.new(
-          success?: false,
+        {
+          success: false,
           error: 'Device suspension failed',
           errors: device.errors.full_messages
-        )
+        }
       end
     end
 
     def wake_device(device)
       unless device.suspended?
-        return OpenStruct.new(
-          success?: false,
+        return {
+          success: false,
           error: 'Device is not suspended'
-        )
+        }
       end
 
       # Check if user can add more devices
       unless @limit_service.can_add_device?
-        return OpenStruct.new(
-          success?: false,
+        return {
+          success: false,
           error: 'Cannot wake device: device limit reached',
           limit_data: {
             current_operational: @user.devices.operational.count,
@@ -96,21 +96,21 @@ module DeviceManagement
             available_slots: @limit_service.available_slots,
             upsell_options: generate_upsell_options
           }
-        )
+        }
       end
       
       if device.wake!
-        OpenStruct.new(
-          success?: true,
+        {
+          success: true,
           device: device,
           message: 'Device woken up successfully'
-        )
+        }
       else
-        OpenStruct.new(
-          success?: false,
+        {
+          success: false,
           error: 'Device wake failed',
           errors: device.errors.full_messages
-        )
+        }
       end
     end
 

@@ -67,15 +67,15 @@ class User < ApplicationRecord
 
   # ✅ UPDATED: Use DeviceManagement::DeviceManagement::LimitService for complex logic
   def device_limit
-    DeviceManagement::DeviceManagement::DeviceManagement::LimitService.new(self).device_limit
+    DeviceManagement::LimitService.new(self).device_limit
   end
 
   def available_device_slots
-    DeviceManagement::DeviceManagement::DeviceManagement::LimitService.new(self).available_slots
+    DeviceManagement::LimitService.new(self).available_slots
   end
 
   def can_add_device?
-    DeviceManagement::DeviceManagement::DeviceManagement::LimitService.new(self).can_add_device?
+    DeviceManagement::LimitService.new(self).can_add_device?
   end
 
   def can_activate_device?

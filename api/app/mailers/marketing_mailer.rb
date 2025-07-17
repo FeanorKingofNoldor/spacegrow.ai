@@ -1,6 +1,6 @@
 # app/mailers/marketing_mailer.rb
 class MarketingMailer < ApplicationMailer
-  default from: 'marketing@xspacegrow.com'
+  default from: 'marketing@spacegrow.ai'
 
   def pro_onboarding(order, pro_data)
     @order = order

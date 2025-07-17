@@ -63,9 +63,9 @@ export const config = {
 
   // ✅ App Metadata
   app: {
-    name: 'XSpaceGrow',
+    name: 'SpaceGrow',
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-    supportEmail: 'support@xspacegrow.com',
+    supportEmail: 'support@SpaceGrow.com',
   },
 } as const;
 

@@ -45,7 +45,7 @@ const accessoriesProducts: Product[] = [
   {
     id: '5',
     name: 'pH Probe Replacement',
-    description: 'High-quality replacement pH probe compatible with all XSpaceGrow liquid monitoring systems. Factory calibrated and ready to use.',
+    description: 'High-quality replacement pH probe compatible with all SpaceGrow liquid monitoring systems. Factory calibrated and ready to use.',
     price: 89.99,
     category: 'Accessories',
     features: ['Factory Calibrated', 'BNC Connector', '6 Month Warranty', 'Temperature Compensation', 'Quick Response'],
@@ -60,7 +60,7 @@ const accessoriesProducts: Product[] = [
   {
     id: '6',
     name: 'EC Probe Replacement',
-    description: 'Precision EC probe replacement for accurate conductivity measurements. Compatible with all XSpaceGrow monitoring systems.',
+    description: 'Precision EC probe replacement for accurate conductivity measurements. Compatible with all SpaceGrow monitoring systems.',
     price: 79.99,
     category: 'Accessories',
     features: ['High Precision', 'Temperature Compensation', 'Long Life Design', 'Easy Installation', '6 Month Warranty'],
@@ -75,7 +75,7 @@ const accessoriesProducts: Product[] = [
   {
     id: '7',
     name: 'Mounting Hardware Kit',
-    description: 'Complete mounting solution for XSpaceGrow devices. Includes wall mounts, brackets, and all necessary hardware.',
+    description: 'Complete mounting solution for SpaceGrow devices. Includes wall mounts, brackets, and all necessary hardware.',
     price: 24.99,
     category: 'Accessories',
     features: ['Universal Mounting', 'Stainless Steel Hardware', 'Adjustable Brackets', 'Indoor/Outdoor Use', 'Easy Installation'],
@@ -90,7 +90,7 @@ const accessoriesProducts: Product[] = [
   {
     id: '8',
     name: 'Power Supply - 12V 2A',
-    description: 'Reliable power supply for XSpaceGrow devices. Includes multiple plug adapters for worldwide compatibility.',
+    description: 'Reliable power supply for SpaceGrow devices. Includes multiple plug adapters for worldwide compatibility.',
     price: 34.99,
     category: 'Accessories',
     features: ['12V 2A Output', 'Multiple Plugs', 'Overcurrent Protection', 'CE/FCC Certified', '3 Year Warranty'],
@@ -173,7 +173,7 @@ export default function AccessoriesPage() {
 
         {/* Category Benefits */}
         <div className="mb-8 bg-gray-800/50 backdrop-blur border border-gray-700 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Why Choose XSpaceGrow Accessories?</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Why Choose SpaceGrow Accessories?</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-green-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -181,7 +181,7 @@ export default function AccessoriesPage() {
               </div>
               <div>
                 <h3 className="text-white font-medium">Perfect Compatibility</h3>
-                <p className="text-gray-400 text-sm">Designed specifically for XSpaceGrow systems</p>
+                <p className="text-gray-400 text-sm">Designed specifically for SpaceGrow systems</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

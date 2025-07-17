@@ -15,10 +15,10 @@ module Esp32Authenticatable
       ip_address: request.remote_ip
     )
 
-    if result.success?
-      @device = result.device
+    if result[:success]
+      @device = result[:device]
     else
-      render json: { error: result.error }, status: :unauthorized
+      render json: { error: result[:error] }, status: :unauthorized
     end
   end
 

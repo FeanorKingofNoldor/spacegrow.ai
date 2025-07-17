@@ -34,7 +34,7 @@
     <div class="content">
       <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
 
-      <p>We were unable to process your subscription payment for your XSpaceGrow <%= @plan.name %> plan. To ensure uninterrupted service for your IoT devices, please update your payment information immediately.</p>
+      <p>We were unable to process your subscription payment for your SpaceGrow <%= @plan.name %> plan. To ensure uninterrupted service for your IoT devices, please update your payment information immediately.</p>
 
       <!-- Alert Box -->
       <div class="alert-box">
@@ -100,7 +100,7 @@
         <ul>
           <li><strong>Expired Card:</strong> Update with your new card expiration date</li>
           <li><strong>Insufficient Funds:</strong> Ensure adequate balance or use a different payment method</li>
-          <li><strong>Bank Decline:</strong> Contact your bank to authorize XSpaceGrow transactions</li>
+          <li><strong>Bank Decline:</strong> Contact your bank to authorize SpaceGrow transactions</li>
           <li><strong>Address Mismatch:</strong> Verify billing address matches your bank records</li>
           <li><strong>International Cards:</strong> Ensure your card supports international transactions</li>
         </ul>
@@ -109,7 +109,7 @@
       <!-- Service Impact -->
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 30px 0;">
         <h3>🛡️ Don't Lose Your Data Protection</h3>
-        <p>Your XSpaceGrow <%= @plan.name %> plan provides:</p>
+        <p>Your SpaceGrow <%= @plan.name %> plan provides:</p>
         <ul>
           <li>✅ Real-time device monitoring and alerts</li>
           <li>✅ Historical data preservation</li>
@@ -125,7 +125,7 @@
         <h4>Need Help? 🤝</h4>
         <p>Our billing support team is ready to assist:</p>
         <ul>
-          <li>📧 Email: <a href="mailto:billing@xspacegrow.com">billing@xspacegrow.com</a></li>
+          <li>📧 Email: <a href="mailto:billing@SpaceGrow.com">billing@SpaceGrow.com</a></li>
           <li>💬 Live Chat: Available 24/7 in your dashboard</li>
           <li>📞 Phone: 1-800-XSPACE-1 (urgent billing issues)</li>
         </ul>
@@ -133,14 +133,14 @@
 
       <p style="margin-top: 30px;">
         We value your business and want to keep your IoT monitoring running smoothly. Please resolve this payment issue at your earliest convenience.<br><br>
-        <strong>The XSpaceGrow Billing Team</strong>
+        <strong>The SpaceGrow Billing Team</strong>
       </p>
     </div>
 
     <!-- Footer -->
     <div class="footer">
       <p>
-        XSpaceGrow • IoT Device Management Platform<br>
+        SpaceGrow • IoT Device Management Platform<br>
         <a href="<%= Rails.application.config.app_host %>">Dashboard</a> • 
         <a href="<%= Rails.application.config.app_host %>/account/billing">Update Payment</a> • 
         <a href="<%= Rails.application.config.app_host %>/support">Support</a>

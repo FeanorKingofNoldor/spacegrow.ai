@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# XSpaceGrow Authentication & Authorization Test Runner
+# SpaceGrow Authentication & Authorization Test Runner
 # Tests JWT tokens, user roles, permissions, and security
 
 set -e
@@ -21,7 +21,7 @@ log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 API_BASE_URL=${API_BASE_URL:-"http://localhost:3000"}
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "🔐 XSpaceGrow Authentication Tests"
+echo "🔐 SpaceGrow Authentication Tests"
 echo "=================================="
 
 # Check if we're in the right directory

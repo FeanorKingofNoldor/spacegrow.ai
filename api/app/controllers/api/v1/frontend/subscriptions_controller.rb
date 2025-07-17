@@ -148,7 +148,7 @@ def select_plan
       render_success({
         subscription: subscription_json(subscription),
         slot_usage: Billing::DeviceSlotManager.new(current_user).slot_summary
-      }, "Welcome to XSpaceGrow! Your #{plan.name} plan is now active.")
+      }, "Welcome to SpaceGrow! Your #{plan.name} plan is now active.")
     else
       render_error("Couldn't activate your plan. Please try again.", subscription.errors.full_messages)
     end

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Service Suspended - XSpaceGrow</title>
+  <title>Service Suspended - SpaceGrow</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
     .container { max-width: 600px; margin: 0 auto; background-color: white; }
@@ -24,7 +24,7 @@
     <!-- Header -->
     <div class="header">
       <h1>🔒 Service Suspended</h1>
-      <p>Your XSpaceGrow account requires immediate attention</p>
+      <p>Your SpaceGrow account requires immediate attention</p>
       <div class="suspended-badge">
         SERVICE TEMPORARILY SUSPENDED
       </div>
@@ -34,7 +34,7 @@
     <div class="content">
       <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
 
-      <p>We regret to inform you that your XSpaceGrow <%= @plan.name %> plan has been temporarily suspended due to <%= @suspension_reason.downcase %>. Your IoT devices and monitoring services are currently inactive.</p>
+      <p>We regret to inform you that your SpaceGrow <%= @plan.name %> plan has been temporarily suspended due to <%= @suspension_reason.downcase %>. Your IoT devices and monitoring services are currently inactive.</p>
 
       <!-- Suspension Details -->
       <div class="suspension-box">
@@ -129,7 +129,7 @@
         <p>Our reactivation team is standing by:</p>
         <ul>
           <li>🔥 <strong>Urgent Line:</strong> 1-800-XSPACE-1 (press 1 for reactivation)</li>
-          <li>📧 <strong>Email:</strong> <a href="mailto:reactivation@xspacegrow.com">reactivation@xspacegrow.com</a></li>
+          <li>📧 <strong>Email:</strong> <a href="mailto:reactivation@SpaceGrow.com">reactivation@SpaceGrow.com</a></li>
           <li>💬 <strong>Live Chat:</strong> Available 24/7 in your account portal</li>
         </ul>
         <p style="font-size: 14px; margin-top: 15px;">
@@ -139,14 +139,14 @@
 
       <p style="margin-top: 30px;">
         We understand this suspension may be inconvenient. Our team is here to help restore your service as quickly as possible.<br><br>
-        <strong>The XSpaceGrow Reactivation Team</strong>
+        <strong>The SpaceGrow Reactivation Team</strong>
       </p>
     </div>
 
     <!-- Footer -->
     <div class="footer">
       <p>
-        XSpaceGrow • IoT Device Management Platform<br>
+        SpaceGrow • IoT Device Management Platform<br>
         <a href="<%= @reactivation_url %>">Reactivate Service</a> • 
         <a href="<%= Rails.application.config.app_host %>/support">Emergency Support</a>
       </p>

@@ -49,7 +49,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('xspacegrow_cart');
+    const savedCart = localStorage.getItem('SpaceGrow_cart');
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
@@ -57,14 +57,14 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         console.log('🛒 Loaded cart from localStorage:', parsedCart);
       } catch (error) {
         console.error('🚨 Failed to load cart from localStorage:', error);
-        localStorage.removeItem('xspacegrow_cart');
+        localStorage.removeItem('SpaceGrow_cart');
       }
     }
   }, []);
 
   // Save cart to localStorage whenever cart changes
   useEffect(() => {
-    localStorage.setItem('xspacegrow_cart', JSON.stringify(cart));
+    localStorage.setItem('SpaceGrow_cart', JSON.stringify(cart));
     console.log('🛒 Saved cart to localStorage:', cart);
   }, [cart]);
 

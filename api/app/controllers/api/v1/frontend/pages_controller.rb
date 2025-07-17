@@ -2,7 +2,7 @@ class Api::V1::Frontend::PagesController < Api::V1::Frontend::ProtectedControlle
   def index
     render json: {
       status: 'success',
-      message: 'Welcome to XSpaceGrow API'
+      message: 'Welcome to SpaceGrow API'
     }
   end
 
@@ -72,7 +72,7 @@ class Api::V1::Frontend::PagesController < Api::V1::Frontend::ProtectedControlle
       status: 'success',
       data: {
         title: 'Support',
-        contact_email: 'support@xspacegrow.com'
+        contact_email: 'support@spacegrow.ai'
       }
     }
   end

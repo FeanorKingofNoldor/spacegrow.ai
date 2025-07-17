@@ -1,6 +1,6 @@
-# XSpaceGrow API Test Suite
+# SpaceGrow API Test Suite
 
-Comprehensive testing suite for the XSpaceGrow IoT platform API, covering authentication, device management, subscription billing, WebSocket communication, and performance testing.
+Comprehensive testing suite for the SpaceGrow IoT platform API, covering authentication, device management, subscription billing, WebSocket communication, and performance testing.
 
 ## 🚀 Quick Start
 
@@ -384,4 +384,4 @@ Include the following when reporting issues:
 - Enhanced debugging capabilities
 - Cleaner output and progress tracking
 
-This test suite ensures your XSpaceGrow API is production-ready with comprehensive coverage of all critical functionality!
+This test suite ensures your SpaceGrow API is production-ready with comprehensive coverage of all critical functionality!

@@ -1,7 +1,7 @@
 {
-  "name": "xspacegrow-api-tests",
+  "name": "SpaceGrow-api-tests",
   "version": "1.0.0",
-  "description": "Comprehensive test suite for XSpaceGrow API including authentication, device management, subscription billing, suspension system, WebSocket communication, and load testing",
+  "description": "Comprehensive test suite for SpaceGrow API including authentication, device management, subscription billing, suspension system, WebSocket communication, and load testing",
   "main": "index.js",
   "scripts": {
     "test": "node index.js all",
@@ -25,7 +25,7 @@
   "keywords": [
     "api",
     "testing",
-    "xspacegrow",
+    "SpaceGrow",
     "iot",
     "subscription",
     "billing",
@@ -35,7 +35,7 @@
     "load-testing",
     "authentication"
   ],
-  "author": "XSpaceGrow Team",
+  "author": "SpaceGrow Team",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.10.0",
@@ -56,10 +56,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/xspacegrow/api-tests.git"
+    "url": "https://github.com/SpaceGrow/api-tests.git"
   },
   "bugs": {
-    "url": "https://github.com/xspacegrow/api-tests/issues"
+    "url": "https://github.com/SpaceGrow/api-tests/issues"
   },
-  "homepage": "https://github.com/xspacegrow/api-tests#readme"
+  "homepage": "https://github.com/SpaceGrow/api-tests#readme"
 }

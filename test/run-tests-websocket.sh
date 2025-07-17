@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# XSpaceGrow WebSocket Communication Test Runner
+# SpaceGrow WebSocket Communication Test Runner
 # Tests ActionCable connections, real-time updates, command sending, and WebSocket performance
 
 set -e
@@ -22,7 +22,7 @@ API_BASE_URL=${API_BASE_URL:-"http://localhost:3000"}
 WS_URL=${WS_URL:-"ws://localhost:3000/cable"}
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "🔌 XSpaceGrow WebSocket Communication Tests"
+echo "🔌 SpaceGrow WebSocket Communication Tests"
 echo "=========================================="
 
 # Check if we're in the right directory

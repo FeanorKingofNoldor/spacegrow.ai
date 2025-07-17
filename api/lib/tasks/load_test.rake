@@ -316,7 +316,7 @@ namespace :load_test do
     loop do
       system('clear') || system('cls')
       
-      puts "📊 XSpaceGrow Load Test Monitor"
+      puts "📊 SpaceGrow Load Test Monitor"
       puts "=" * 50
       puts "Time: #{Time.current.strftime('%Y-%m-%d %H:%M:%S')}"
       puts ""

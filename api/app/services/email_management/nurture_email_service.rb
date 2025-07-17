@@ -324,7 +324,7 @@ module EmailManagement
               '$200K+ saved in first 6 months',
               '99.2% equipment uptime achieved'
             ],
-            quote: 'XSpaceGrow helped us transform from reactive to predictive maintenance.',
+            quote: 'SpaceGrow helped us transform from reactive to predictive maintenance.',
             roi_percentage: 340
           },
           {

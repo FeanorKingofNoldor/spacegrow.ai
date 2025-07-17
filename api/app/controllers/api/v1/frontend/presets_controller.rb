@@ -8,24 +8,24 @@ class Api::V1::Frontend::PresetsController < Api::V1::Frontend::ProtectedControl
   before_action :validate_preset_ownership, only: [:update, :destroy]
 
   def by_device_type
-    presets = DeviceConfiguration::DeviceConfiguration::DeviceConfiguration::PresetManagementService.new(current_user).get_predefined_presets(params[:device_type_id])
+    presets = DeviceConfiguration::PresetManagementService.new(current_user).get_predefined_presets(params[:device_type_id])
     render_success(presets_collection_json(presets))
   end
 
   def user_by_device_type
-    presets = DeviceConfiguration::DeviceConfiguration::DeviceConfiguration::PresetManagementService.new(current_user).get_user_presets(params[:device_type_id])
+    presets = DeviceConfiguration::PresetManagementService.new(current_user).get_user_presets(params[:device_type_id])
     render_success(presets_collection_json(presets))
   end
 
   def create
     authorize @device, :update?
     
-    result = DeviceConfiguration::DeviceConfiguration::DeviceConfiguration::PresetManagementService.new(current_user).create_preset(@device, preset_params)
+    result = DeviceConfiguration::PresetManagementService.new(current_user).create_preset(@device, preset_params)
     
-    if result.success?
-      render_success(preset_json(result.preset), result.message)
+    if result[:success]
+      render_success(preset_json(result[:preset]), result[:message])
     else
-      render_error('Preset creation failed', result.errors)
+      render_error('Preset creation failed', result[:errors])
     end
   end
 
@@ -38,27 +38,27 @@ class Api::V1::Frontend::PresetsController < Api::V1::Frontend::ProtectedControl
   end
 
   def update
-    result = DeviceConfiguration::DeviceConfiguration::DeviceConfiguration::PresetManagementService.new(current_user).update_preset(@preset, preset_params)
+    result = DeviceConfiguration::PresetManagementService.new(current_user).update_preset(@preset, preset_params)
     
-    if result.success?
-      render_success(preset_json(result.preset), result.message)
+    if result[:success]
+      render_success(preset_json(result[:preset]), result[:message])
     else
-      render_error('Preset update failed', result.errors)
+      render_error('Preset update failed', result[:errors])
     end
   end
 
   def destroy
-    result = DeviceConfiguration::DeviceConfiguration::DeviceConfiguration::PresetManagementService.new(current_user).delete_preset(@preset)
+    result = DeviceConfiguration::PresetManagementService.new(current_user).delete_preset(@preset)
     
-    if result.success?
-      render_success(nil, result.message)
+    if result[:success]
+      render_success(nil, result[:message])
     else
-      render_error(result.error)
+      render_error(result[:error])
     end
   end
 
   def validate
-    result = DeviceConfiguration::DeviceConfiguration::DeviceConfiguration::PresetManagementService.new(current_user).validate_preset_settings(
+    result = DeviceConfiguration::PresetManagementService.new(current_user).validate_preset_settings(
       params[:device_type_id],
       params[:settings]
     )

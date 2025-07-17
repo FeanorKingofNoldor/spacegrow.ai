@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Receipt - XSpaceGrow</title>
+  <title>Payment Receipt - SpaceGrow</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
     .container { max-width: 600px; margin: 0 auto; background-color: white; }
@@ -24,7 +24,7 @@
     <!-- Header -->
     <div class="header">
       <h1>✅ Payment Received</h1>
-      <p>Thank you for your continued trust in XSpaceGrow</p>
+      <p>Thank you for your continued trust in SpaceGrow</p>
       <div class="success-badge">
         PAYMENT SUCCESSFUL
       </div>
@@ -34,7 +34,7 @@
     <div class="content">
       <p>Hi <%= @user.first_name || @user.email.split('@').first.titleize %>,</p>
 
-      <p>We've successfully processed your subscription payment. Your XSpaceGrow service continues uninterrupted, and all your devices remain fully operational.</p>
+      <p>We've successfully processed your subscription payment. Your SpaceGrow service continues uninterrupted, and all your devices remain fully operational.</p>
 
       <!-- Payment Amount -->
       <div class="amount-highlight">
@@ -102,7 +102,7 @@
             <li>✅ Dedicated account manager</li>
             <li>✅ Custom SLA agreements</li>
           <% else %>
-            <li>✅ Full access to XSpaceGrow platform</li>
+            <li>✅ Full access to SpaceGrow platform</li>
             <li>✅ Real-time device monitoring</li>
             <li>✅ Smart alerting system</li>
             <li>✅ Comprehensive support</li>
@@ -149,22 +149,22 @@
         <h4>Questions About Your Bill? 🤝</h4>
         <p>Our billing support team is here to help:</p>
         <ul>
-          <li>📧 Email: <a href="mailto:billing@xspacegrow.com">billing@xspacegrow.com</a></li>
+          <li>📧 Email: <a href="mailto:billing@SpaceGrow.com">billing@SpaceGrow.com</a></li>
           <li>💬 Live Chat: Available in your dashboard</li>
           <li>📞 Phone: 1-800-XSPACE-1 (billing inquiries)</li>
         </ul>
       </div>
 
       <p style="margin-top: 30px;">
-        Thank you for being a valued XSpaceGrow customer!<br><br>
-        <strong>The XSpaceGrow Billing Team</strong>
+        Thank you for being a valued SpaceGrow customer!<br><br>
+        <strong>The SpaceGrow Billing Team</strong>
       </p>
     </div>
 
     <!-- Footer -->
     <div class="footer">
       <p>
-        XSpaceGrow • IoT Device Management Platform<br>
+        SpaceGrow • IoT Device Management Platform<br>
         <a href="<%= Rails.application.config.app_host %>">Dashboard</a> • 
         <a href="<%= Rails.application.config.app_host %>/account/billing">Billing</a> • 
         <a href="<%= Rails.application.config.app_host %>/support">Support</a>

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# run-tests-load.sh - XSpaceGrow Enhanced Load Testing Suite
+# run-tests-load.sh - SpaceGrow Enhanced Load Testing Suite
 set -e
 
 # Colors for output
@@ -18,7 +18,7 @@ WS_URL="${WS_URL:-ws://localhost:3000/cable}"
 RESULTS_DIR="api-tests"
 TIMESTAMP=$(date +%s%3N)
 
-echo -e "${PURPLE}🔥 XSpaceGrow Enhanced Load Testing Suite${NC}"
+echo -e "${PURPLE}🔥 SpaceGrow Enhanced Load Testing Suite${NC}"
 echo -e "${PURPLE}===========================================${NC}"
 
 # Export load testing environment variable for Rails to pick up
