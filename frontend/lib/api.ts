@@ -208,7 +208,7 @@ export const api = {
     
     // ✅ UPDATED: Include display_name in signup
     signup: (email: string, password: string, password_confirmation: string, display_name?: string) =>
-      apiClient.post('/api/v1/auth/signup', { 
+      apiClient.post('/api/v1/auth/register', { 
         user: { email, password, password_confirmation, display_name } 
       }),
     
@@ -218,15 +218,15 @@ export const api = {
     
     // ✅ NEW: Profile update method
     updateProfile: (updates: { display_name?: string; timezone?: string }) =>
-      apiClient.patch('/api/v1/auth/update_profile', { user: updates }),
+      apiClient.patch('/api/v1/auth/profile', { user: updates }),
     
     forgotPassword: (email: string) =>
       apiClient.post('/api/v1/auth/forgot_password', { email }),
     resetPassword: (reset_password_token: string, password: string, password_confirmation: string) =>
-      apiClient.put('/api/v1/auth/reset_password', { reset_password_token, password, password_confirmation }),
+      apiClient.patch('/api/v1/auth/reset_password', { reset_password_token, password, password_confirmation }),
 
     changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) =>
-      apiClient.patch('/api/v1/auth/change_password', { 
+      apiClient.patch('/api/v1/auth/password', { 
         user: {
           current_password: currentPassword,
           password: newPassword,
@@ -257,7 +257,7 @@ export const api = {
   dashboard: {
     overview: () => apiClient.get('/api/v1/frontend/dashboard'),
     devices: () => apiClient.get('/api/v1/frontend/dashboard/devices'),
-    device: (id: string) => apiClient.get(`/api/v1/frontend/dashboard/device/${id}`),
+    device: (id: string) => apiClient.get(`/api/v1/frontend/dashboard/devices/${id}`),
   },
 
   // ✅ UPDATED: Devices with suspension support
@@ -265,7 +265,7 @@ export const api = {
     list: () => apiClient.get('/api/v1/frontend/devices'),
     get: (id: string) => apiClient.get(`/api/v1/frontend/devices/${id}`),
     create: (data: any) => apiClient.post('/api/v1/frontend/devices', { device: data }),
-    update: (id: string, data: any) => apiClient.put(`/api/v1/frontend/devices/${id}`, { device: data }),
+    update: (id: string, data: any) => apiClient.patch(`/api/v1/frontend/devices/${id}`, { device: data }),
     delete: (id: string) => apiClient.delete(`/api/v1/frontend/devices/${id}`),
     updateStatus: (id: string, status: string) =>
       apiClient.patch(`/api/v1/frontend/devices/${id}/update_status`, { device: { status } }),
@@ -278,7 +278,7 @@ export const api = {
       apiClient.post(`/api/v1/frontend/devices/${id}/wake`, {}),
     
     sendCommand: (id: string, command: string, args?: Record<string, any>) =>
-      apiClient.post(`/api/v1/frontend/devices/${id}/command`, { command, args }),
+      apiClient.post(`/api/v1/frontend/devices/${id}/commands`, { command, args }),
     
     getReadings: (id: string, timeframe?: string) =>
       apiClient.get(`/api/v1/frontend/devices/${id}/readings${timeframe ? `?timeframe=${timeframe}` : ''}`),
@@ -297,7 +297,7 @@ export const api = {
   subscriptions: {
     list: () => apiClient.get('/api/v1/frontend/subscriptions'),
     current: () => apiClient.get('/api/v1/frontend/subscriptions/current'),
-    cancel: () => apiClient.post('/api/v1/frontend/subscriptions/cancel', {}),
+    cancel: () => apiClient.delete('/api/v1/frontend/subscriptions/cancel'),
     addDeviceSlot: () => apiClient.post('/api/v1/frontend/subscriptions/add_device_slot', {}),
     removeDeviceSlot: (deviceId: number) =>
       apiClient.delete(`/api/v1/frontend/subscriptions/remove_device_slot/${deviceId}`),
@@ -318,7 +318,7 @@ export const api = {
     // Plan management
     getPlans: () => apiClient.get('/api/v1/frontend/subscriptions/plans'),
     previewPlanChange: (planId: number, interval: 'month' | 'year') =>
-      apiClient.post('/api/v1/frontend/subscriptions/preview_plan_change', { plan_id: planId, interval }),
+      apiClient.post('/api/v1/frontend/subscriptions/preview_change', { plan_id: planId, interval }),
     changePlan: (request: PlanChangeRequest) =>
       apiClient.post('/api/v1/frontend/subscriptions/change_plan', request),
     getDevicesForSelection: () =>
@@ -343,7 +343,7 @@ export const api = {
     products: () => apiClient.get('/api/v1/store/products'),
     featuredProducts: () => apiClient.get('/api/v1/store/products/featured'),
     product: (id: string) => apiClient.get(`/api/v1/store/products/${id}`),
-    checkStock: (id: string) => apiClient.get(`/api/v1/store/products/${id}/check_stock`),
+    checkStock: (id: string) => apiClient.post(`/api/v1/store/products/${id}/check_stock`),
   },
 
   // Chart Data
@@ -355,7 +355,7 @@ export const api = {
   admin: {
     getUsers: () => apiClient.get('/api/v1/admin/users'),
     getUser: (id: string) => apiClient.get(`/api/v1/admin/users/${id}`),
-    updateUser: (id: string, data: any) => apiClient.put(`/api/v1/admin/users/${id}`, data),
+    updateUser: (id: string, data: any) => apiClient.patch(`/api/v1/admin/users/${id}`, data),
     deleteUser: (id: string) => apiClient.delete(`/api/v1/admin/users/${id}`),
     
     // ✅ UPDATED: Admin device management with suspension terminology
@@ -372,7 +372,7 @@ export const api = {
       }),
     
     getSubscriptions: () => apiClient.get('/api/v1/admin/subscriptions'),
-    updateSubscription: (id: string, data: any) => apiClient.put(`/api/v1/admin/subscriptions/${id}`, data),
+    updateSubscription: (id: string, data: any) => apiClient.patch(`/api/v1/admin/subscriptions/${id}`, data),
   },
 
   // Health check

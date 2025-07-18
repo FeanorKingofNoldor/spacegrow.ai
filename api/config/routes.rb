@@ -1,4 +1,4 @@
-# config/routes.rb - COMPLETE ROUTES AUDIT
+# config/routes.rb - COMPLETE MERGED ROUTES
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -48,6 +48,24 @@ Rails.application.routes.draw do
         post '/register', to: 'registrations#create'
         patch '/confirm', to: 'registrations#confirm'           # Email confirmation
       end
+
+      # =======================================================================
+      # ONBOARDING ROUTES (NEW - Auth Required)
+      # =======================================================================
+      
+      namespace :onboarding do
+        get '/plans', to: 'plans#index'                         # List available plans
+        post '/select_plan', to: 'plans#select'                 # Select a plan
+        post '/complete', to: 'onboarding#complete'             # Complete onboarding
+        post '/skip', to: 'onboarding#skip'                     # Skip onboarding
+      end
+
+      # =======================================================================
+      # CHART DATA ROUTES (NEW - Auth Required)
+      # =======================================================================
+      
+      # Chart Data for Dashboard/Gauges
+      get '/chart_data/latest', to: 'chart_data#latest'         # Latest chart data for gauges
 
       # =======================================================================
       # ESP32 DEVICE COMMUNICATION (Device Token Auth)
@@ -122,6 +140,12 @@ Rails.application.routes.draw do
         post '/devices/:id/suspend', to: 'devices#suspend'      # Suspend device
         post '/devices/:id/wake', to: 'devices#wake'           # Wake from suspension
         
+        # NEW: Device-specific aggregated routes
+        get '/devices/:id/readings', to: 'devices#readings'     # Aggregated device readings
+        get '/devices/:id/alerts', to: 'devices#alerts'         # Device alert history
+        get '/devices/:id/presets', to: 'devices#presets'       # Device-instance presets
+        put '/devices/:id/preset', to: 'devices#apply_preset'   # Apply preset to device
+        
         # Device Commands
         get '/devices/:id/commands', to: 'devices#commands'     # Device commands
         post '/devices/:id/commands', to: 'devices#send_command' # Send command
@@ -142,15 +166,32 @@ Rails.application.routes.draw do
 
         # Subscription Management
         get '/subscriptions', to: 'subscriptions#index'                              # List plans & current subscription
+        get '/subscriptions/current', to: 'subscriptions#current'                    # Current subscription details
+        get '/subscriptions/devices_for_selection', to: 'subscriptions#devices_for_selection' # Available devices for activation
         get '/subscriptions/device_management', to: 'subscriptions#device_management' # Device slot management
         post '/subscriptions/activate_device', to: 'subscriptions#activate_device'   # Activate specific device
         post '/subscriptions/wake_devices', to: 'subscriptions#wake_devices'         # Wake multiple devices
         post '/subscriptions/suspend_devices', to: 'subscriptions#suspend_devices'   # Suspend multiple devices
         post '/subscriptions/preview_change', to: 'subscriptions#preview_change'     # Preview plan change
         post '/subscriptions/change_plan', to: 'subscriptions#change_plan'           # Execute plan change
+        post '/subscriptions/schedule_plan_change', to: 'subscriptions#schedule_plan_change' # Schedule future plan change
         delete '/subscriptions/cancel', to: 'subscriptions#cancel'                   # Cancel subscription
         post '/subscriptions/add_device_slot', to: 'subscriptions#add_device_slot'   # Add device slot
         delete '/subscriptions/remove_device_slot', to: 'subscriptions#remove_device_slot' # Remove device slot
+
+        # NEW: Billing & Payment Management
+        namespace :billing do
+          # Invoice Management
+          get '/invoices', to: 'invoices#index'                  # List user invoices
+          get '/invoices/:id', to: 'invoices#show'               # Invoice details
+          get '/invoices/:id/download', to: 'invoices#download'  # Download invoice PDF
+          
+          # Payment Methods
+          get '/payment_methods', to: 'payment_methods#index'    # List payment methods
+          post '/payment_methods', to: 'payment_methods#create'  # Add payment method
+          delete '/payment_methods/:id', to: 'payment_methods#destroy' # Remove payment method
+          patch '/payment_methods/:id/set_default', to: 'payment_methods#set_default' # Set default payment method
+        end
 
         # Notification Preferences
         resource :notification_preferences, only: [:show, :update] do
@@ -193,61 +234,180 @@ Rails.application.routes.draw do
       end
 
       # =======================================================================
-      # ADMIN ROUTES (Admin Auth Required)
+      # ADMIN ROUTES (Admin Auth Required) - EXPANDED COMPREHENSIVE ADMIN SYSTEM
       # =======================================================================
       
       namespace :admin do
-        # Admin Dashboard
-        get '/dashboard', to: 'dashboard#index'                 # Admin stats & overview
+        # ===== DASHBOARD =====
+        get '/dashboard', to: 'dashboard#index'
+        get '/dashboard/alerts', to: 'dashboard#alerts'
+        get '/dashboard/metrics', to: 'dashboard#metrics'
 
-        # User Management
-        get '/users', to: 'users#index'                         # List all users
-        get '/users/:id', to: 'users#show'                      # User details
-        patch '/users/:id', to: 'users#update'                  # Update user
-        delete '/users/:id', to: 'users#destroy'                # Delete user
-        post '/users/:id/suspend', to: 'users#suspend'          # Suspend user
-        post '/users/:id/unsuspend', to: 'users#unsuspend'      # Unsuspend user
-        post '/users/:id/reset_password', to: 'users#reset_password' # Force password reset
+        # ===== USER MANAGEMENT =====
+        resources :users, only: [:index, :show, :update] do
+          member do
+            patch :update_role
+            patch :suspend
+            patch :reactivate
+            get :activity_log
+          end
+          
+          collection do
+            post :bulk_operations
+          end
+        end
 
-        # Device Management
-        get '/devices', to: 'devices#index'                     # List all devices
-        get '/devices/:id', to: 'devices#show'                  # Device details
-        patch '/devices/:id', to: 'devices#update'              # Update device
-        delete '/devices/:id', to: 'devices#destroy'            # Delete device
-        post '/devices/:id/force_activate', to: 'devices#force_activate' # Force activate
-        post '/devices/:id/force_suspend', to: 'devices#force_suspend'   # Force suspend
+        # ===== ORDER MANAGEMENT =====
+        resources :orders, only: [:index, :show, :update] do
+          member do
+            patch :update_status
+            post :refund
+            post :retry_payment
+          end
+          
+          collection do
+            get :analytics
+            post :export
+            get :payment_failures
+          end
+        end
 
-        # Order Management
-        get '/orders', to: 'orders#index'                       # List all orders
-        get '/orders/:id', to: 'orders#show'                    # Order details
-        patch '/orders/:id', to: 'orders#update'                # Update order status
-        post '/orders/:id/refund', to: 'orders#refund'          # Process refund
+        # ===== SUBSCRIPTION MANAGEMENT =====
+        resources :subscriptions, only: [:index, :show, :update] do
+          member do
+            patch :update_status
+            post :force_plan_change
+          end
+          
+          collection do
+            get :billing_analytics
+            get :churn_analysis
+            get :payment_issues
+          end
+        end
 
-        # Subscription Management
-        get '/subscriptions', to: 'subscriptions#index'         # List all subscriptions
-        get '/subscriptions/:id', to: 'subscriptions#show'      # Subscription details
-        patch '/subscriptions/:id', to: 'subscriptions#update'  # Update subscription
-        post '/subscriptions/:id/force_cancel', to: 'subscriptions#force_cancel' # Force cancel
+        # ===== DEVICE FLEET MANAGEMENT =====
+        resources :devices, only: [:index, :show, :update] do
+          member do
+            patch :update_status
+            post :force_reconnect
+            get :troubleshooting
+          end
+          
+          collection do
+            get :health_monitoring
+            post :bulk_operations
+            get :analytics
+          end
+        end
 
+        # ===== SUPPORT & CUSTOMER SERVICE =====
+        namespace :support do
+          get '/', to: 'support#index'
+          get '/analytics', to: 'support#analytics'
+          get '/trending_issues', to: 'support#trending_issues'
+          get '/customer_satisfaction', to: 'support#customer_satisfaction'
+          get '/operational_metrics', to: 'support#operational_metrics'
+          get '/escalation_analysis', to: 'support#escalation_analysis'
+        end
+
+        # ===== SYSTEM HEALTH & MONITORING =====
+        namespace :system do
+          get '/health', to: 'system#health'
+          get '/performance', to: 'system#performance'
+          get '/monitoring', to: 'system#monitoring'
+          get '/maintenance', to: 'system#maintenance'
+          get '/logs', to: 'system#logs'
+          get '/alerts', to: 'system#alerts'
+          get '/infrastructure', to: 'system#infrastructure'
+          post '/diagnostics', to: 'system#diagnostics'
+        end
+
+        # ===== ANALYTICS & REPORTING =====
+        namespace :analytics do
+          get '/overview', to: 'analytics#overview'
+          get '/business_metrics', to: 'analytics#business_metrics'
+          get '/operational_metrics', to: 'analytics#operational_metrics'
+          get '/user_analytics', to: 'analytics#user_analytics'
+          get '/device_analytics', to: 'analytics#device_analytics'
+          get '/financial_analytics', to: 'analytics#financial_analytics'
+          post '/export_analytics', to: 'analytics#export_analytics'
+        end
+
+        # ===== ADMIN ALERTS & NOTIFICATIONS =====
+        resources :alerts, only: [:index, :show, :update] do
+          member do
+            patch :acknowledge
+            patch :resolve
+            patch :dismiss
+          end
+          
+          collection do
+            get :active
+            get :recent
+            post :test_notification
+          end
+        end
+
+        # ===== ADMIN ACTIVITY & AUDIT LOGS =====
+        namespace :activity do
+          get '/logs', to: 'activity#logs'
+          get '/audit_trail/:target_type/:target_id', to: 'activity#audit_trail'
+          get '/admin_summary/:admin_id', to: 'activity#admin_summary'
+          get '/system_overview', to: 'activity#system_overview'
+        end
+
+        # ===== BULK OPERATIONS =====
+        namespace :bulk do
+          post '/users', to: 'bulk#users'
+          post '/devices', to: 'bulk#devices'
+          post '/subscriptions', to: 'bulk#subscriptions'
+          post '/notifications', to: 'bulk#notifications'
+        end
+
+        # ===== DATA EXPORT =====
+        namespace :export do
+          post '/users', to: 'export#users'
+          post '/orders', to: 'export#orders'
+          post '/devices', to: 'export#devices'
+          post '/analytics', to: 'export#analytics'
+          get '/download/:export_id', to: 'export#download'
+        end
+
+        # ===== SYSTEM CONFIGURATION =====
+        namespace :config do
+          get '/settings', to: 'config#settings'
+          patch '/settings', to: 'config#update_settings'
+          get '/feature_flags', to: 'config#feature_flags'
+          patch '/feature_flags', to: 'config#update_feature_flags'
+          get '/maintenance_mode', to: 'config#maintenance_mode'
+          patch '/maintenance_mode', to: 'config#toggle_maintenance'
+        end
+
+        # ===== ADMIN USER MANAGEMENT =====
+        namespace :admin_users do
+          get '/', to: 'admin_users#index'
+          post '/invite', to: 'admin_users#invite'
+          patch '/:id/permissions', to: 'admin_users#update_permissions'
+          delete '/:id', to: 'admin_users#remove_access'
+        end
+
+        # ===== REAL-TIME MONITORING =====
+        namespace :realtime do
+          get '/metrics', to: 'realtime#metrics'
+          get '/events', to: 'realtime#events'
+          get '/alerts', to: 'realtime#alerts'
+          get '/system_status', to: 'realtime#system_status'
+        end
+
+        # ===== EXISTING SIMPLE ADMIN ROUTES (PRESERVED) =====
+        
         # Product Management
         get '/products', to: 'products#index'                   # List all products
         get '/products/:id', to: 'products#show'                # Product details
         post '/products', to: 'products#create'                 # Create product
         patch '/products/:id', to: 'products#update'            # Update product
         delete '/products/:id', to: 'products#destroy'          # Delete product
-
-        # Analytics & Reports
-        get '/analytics', to: 'analytics#index'                 # Admin analytics
-        get '/analytics/users', to: 'analytics#users'           # User analytics
-        get '/analytics/revenue', to: 'analytics#revenue'       # Revenue analytics
-        get '/analytics/devices', to: 'analytics#devices'       # Device analytics
-        post '/analytics/export', to: 'analytics#export'        # Export admin data
-
-        # System Management
-        get '/system', to: 'system#index'                       # System status
-        get '/system/health', to: 'system#health'               # Health check
-        get '/system/logs', to: 'system#logs'                   # System logs
-        post '/system/maintenance', to: 'system#toggle_maintenance' # Maintenance mode
       end
 
       # =======================================================================

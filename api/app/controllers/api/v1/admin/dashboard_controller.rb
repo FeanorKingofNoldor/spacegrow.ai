@@ -1,36 +1,38 @@
+# app/controllers/api/v1/admin/dashboard_controller.rb
 class Api::V1::Admin::DashboardController < Api::V1::Admin::BaseController
+  include ApiResponseHandling
+
   def index
-    render json: {
-      status: 'success',
-      data: {
-        stats: admin_stats,
-        recent_activity: recent_activity
-      }
-    }
+    service = Admin::DashboardMetricsService.new
+    result = service.daily_operations_overview
+
+    if result[:success]
+      render_success(result.except(:success), "Dashboard metrics loaded successfully")
+    else
+      render_error(result[:error])
+    end
   end
 
-  private
+  def alerts
+    service = Admin::DashboardMetricsService.new
+    result = service.critical_alerts
 
-  def admin_stats
-    {
-      total_users: User.count,
-      total_devices: Device.count,
-      active_devices: Device.active.count,
-      total_orders: Order.count,
-      total_revenue: Order.where(status: 'paid').sum(:total),
-      subscriptions: {
-        active: Subscription.active.count,
-        past_due: Subscription.past_due.count,
-        canceled: Subscription.canceled.count
-      }
-    }
+    if result[:success]
+      render_success(result.except(:success), "Critical alerts loaded")
+    else
+      render_error(result[:error])
+    end
   end
 
-  def recent_activity
-    {
-      recent_users: User.order(created_at: :desc).limit(5).as_json(only: [:id, :email, :role, :created_at]),
-      recent_orders: Order.order(created_at: :desc).limit(5).as_json(only: [:id, :total, :status, :created_at]),
-      recent_devices: Device.order(created_at: :desc).limit(5).as_json(only: [:id, :name, :status, :created_at])
-    }
+  def metrics
+    time_period = params[:period] || 'today'
+    service = Admin::DashboardMetricsService.new
+    result = service.time_period_metrics(time_period)
+
+    if result[:success]
+      render_success(result.except(:success), "Metrics for #{time_period} loaded")
+    else
+      render_error(result[:error])
+    end
   end
 end
