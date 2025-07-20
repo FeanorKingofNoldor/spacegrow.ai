@@ -1,0 +1,62 @@
+<% style_tag "recurring_jobs/stylesheets-scheduler/recurring_jobs.css" %>
+
+<section class="sidekiq-scheduler">
+  <header>
+    <h2><%= t('recurring_jobs') %></h2>
+    <form action="<%= root_path %>recurring-jobs/toggle-all" method="POST" class="filter">
+      <%= csrf_tag %>
+      <div class="btn-group pull-right flip">
+        <button type="submit" class="btn btn-xs btn-warn" name="action" value="enable"><%= t('enable_all') %></button>
+        <button type="submit" class="btn btn-xs btn-warn" name="action" value="disable"><%= t('disable_all') %></button>
+      </div>
+    </form>
+  </header>
+
+  <section class="job-list">
+    <% @presented_jobs.each do |job| %>
+      <section class="job <%= job.enabled? ? "" : "disabled-job" %>">
+        <div class="row">
+          <div class="column-2">
+            <div class="job-name"><%= job.name %></div>
+          </div>
+          <div class="column-2 queue">
+            <a href="<%= root_path %>queues/<%= job.queue %>"><%= job.queue %></a>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="column-3">
+            <div class="class-name"><%= job['class'] %></div>
+          </div>
+          <div class="column-3">
+            <div><%= t('interval') %>: <%= job.interval %></div>
+          </div>
+          <div class="column-3">
+            <div><%= t('arguments') %>: <%= job['args'] %></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="column-3">
+            <form class="inline" action="<%= root_path %>recurring-jobs/<%= ERB::Util.url_encode(job.name) %>/enqueue" method="POST">
+              <%= csrf_tag %>
+              <input type="submit" class="btn btn-warn btn-xs" value="<%= t('enqueue_now') %>" />
+            </form>
+            <form class="inline" action="<%= root_path %>recurring-jobs/<%= ERB::Util.url_encode(job.name) %>/toggle" method="POST">
+              <%= csrf_tag %>
+              <input type="submit" class="btn btn-xs <%= job.enabled? ? "btn-inverse" : "btn-warn"%>" value="<%= job.enabled? ? t('disable') : t('enable') %>" />
+            </form>
+          </div>
+          <div class="column-3">
+            <div class="last-time"><%= t('last_time') %>: <%= job.last_time %></div>
+          </div>
+          <div class="column-3">
+            <div class="next-time"><%= t('next_time') %>: <%= job.next_time || t('no_next_time') %></div>
+          </div>
+
+        </div>
+        <div class="description"><%= job['description'] %></div>
+
+      </section>
+    <% end %>
+  </section>
+</section>

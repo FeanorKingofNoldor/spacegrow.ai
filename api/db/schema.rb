@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_17_093838) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_17_102022) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -103,6 +103,30 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_17_093838) do
     t.index ["user_id", "suspended_at"], name: "index_devices_on_user_id_and_suspended_at"
     t.index ["user_id"], name: "index_devices_on_user_id"
     t.index ["uuid"], name: "index_devices_on_uuid", unique: true
+  end
+
+  create_table "email_unsubscribes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "unsubscribe_type", null: false
+    t.string "reason"
+    t.datetime "unsubscribed_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "user_agent"
+    t.string "ip_address"
+    t.text "feedback"
+    t.string "source", default: "email_link"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_email_unsubscribes_on_created_at"
+    t.index ["reason"], name: "index_email_unsubscribes_on_reason"
+    t.index ["source"], name: "index_email_unsubscribes_on_source"
+    t.index ["unsubscribe_type", "reason", "created_at"], name: "idx_email_unsubscribes_analytics"
+    t.index ["unsubscribe_type"], name: "index_email_unsubscribes_on_unsubscribe_type"
+    t.index ["unsubscribed_at"], name: "index_email_unsubscribes_on_unsubscribed_at"
+    t.index ["user_id", "unsubscribe_type"], name: "idx_email_unsubscribes_user_type", unique: true
+    t.index ["user_id"], name: "index_email_unsubscribes_on_user_id"
+    t.check_constraint "reason IS NULL OR (reason::text = ANY (ARRAY['too_frequent'::character varying::text, 'not_relevant'::character varying::text, 'never_signed_up'::character varying::text, 'privacy_concerns'::character varying::text, 'found_alternative'::character varying::text, 'no_longer_needed'::character varying::text, 'poor_content'::character varying::text, 'other'::character varying::text]))", name: "valid_unsubscribe_reason"
+    t.check_constraint "source::text = ANY (ARRAY['email_link'::character varying::text, 'settings_page'::character varying::text, 'admin_action'::character varying::text, 'api_request'::character varying::text])", name: "valid_unsubscribe_source"
+    t.check_constraint "unsubscribe_type::text = ANY (ARRAY['marketing_all'::character varying::text, 'nurture_sequence'::character varying::text, 'promotional'::character varying::text, 'educational'::character varying::text, 'device_recommendations'::character varying::text, 'case_studies'::character varying::text, 'seasonal_campaigns'::character varying::text, 'win_back_campaigns'::character varying::text])", name: "valid_unsubscribe_type"
   end
 
   create_table "extra_device_slots", force: :cascade do |t|
@@ -313,7 +337,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_17_093838) do
     t.index ["user_id", "marketing_emails_opted_in"], name: "idx_user_notification_preferences_marketing"
     t.index ["user_id"], name: "index_user_notification_preferences_on_user_id", unique: true
     t.check_constraint "digest_day_of_week >= 1 AND digest_day_of_week <= 7", name: "valid_digest_day_of_week"
-    t.check_constraint "digest_frequency::text = ANY (ARRAY['immediate'::character varying, 'daily'::character varying, 'weekly'::character varying, 'disabled'::character varying]::text[])", name: "valid_digest_frequency"
+    t.check_constraint "digest_frequency::text = ANY (ARRAY['immediate'::character varying::text, 'daily'::character varying::text, 'weekly'::character varying::text, 'disabled'::character varying::text])", name: "valid_digest_frequency"
     t.check_constraint "escalation_delay_minutes >= 15 AND escalation_delay_minutes <= 1440", name: "valid_escalation_delay"
   end
 
@@ -369,6 +393,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_17_093838) do
   add_foreign_key "devices", "orders", on_delete: :nullify
   add_foreign_key "devices", "presets", column: "current_preset_id"
   add_foreign_key "devices", "users"
+  add_foreign_key "email_unsubscribes", "users"
   add_foreign_key "extra_device_slots", "subscriptions"
   add_foreign_key "line_items", "orders"
   add_foreign_key "line_items", "products"

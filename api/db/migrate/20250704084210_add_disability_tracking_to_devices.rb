@@ -1,5 +1,5 @@
 # db/migrate/add_disability_tracking_to_devices.rb
-class AddDisabilityTrackingToDevices < ActiveRecord::Migration[7.2]
+class AddDisabilityTrackingToDevices < ActiveRecord::Migration[7.1]
   def change
     add_column :devices, :disabled_reason, :string
     add_column :devices, :disabled_at, :datetime

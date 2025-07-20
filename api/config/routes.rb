@@ -1,9 +1,36 @@
-# config/routes.rb - COMPLETE MERGED ROUTES
+# config/routes.rb - COMPLETE MERGED ROUTES WITH MONITORING
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Defines the root path route ("/")
   root "application#index"
+
+  # =============================================================================
+  # NEW: MONITORING & HEALTH CHECK ENDPOINTS (Public)
+  # =============================================================================
+  
+  # Health check endpoints (public)
+  mount HealthCheck::Engine, at: '/health'
+  
+  # Basic ping endpoint
+  get '/ping', to: proc { [200, { 'Content-Type' => 'text/plain' }, ['pong']] }
+  
+  # Version endpoint
+  get '/version', to: proc { 
+    [200, 
+     { 'Content-Type' => 'application/json' }, 
+     [{
+       version: ENV['APP_VERSION'] || 'unknown',
+       environment: Rails.env,
+       ruby_version: RUBY_VERSION,
+       rails_version: Rails::VERSION::STRING,
+       built_at: ENV['BUILD_TIME'] || 'unknown'
+     }.to_json]
+    ]
+  }
+
+  # Prometheus metrics endpoint (public for scraping)
+  get '/metrics', to: 'prometheus#metrics' if Rails.env.production? || ENV['ENABLE_PROMETHEUS'] == 'true'
 
   # =============================================================================
   # PUBLIC ROUTES (No Authentication Required)
@@ -23,6 +50,14 @@ Rails.application.routes.draw do
   
   namespace :api do
     namespace :v1 do
+      
+      # =======================================================================
+      # NEW: API HEALTH CHECK ENDPOINTS
+      # =======================================================================
+      
+      # Health check for API specifically
+      get '/health', to: 'health#check'
+      get '/status', to: 'health#status'
       
       # =======================================================================
       # AUTHENTICATION ROUTES (No Auth Required for Login/Register)
@@ -50,7 +85,7 @@ Rails.application.routes.draw do
       end
 
       # =======================================================================
-      # ONBOARDING ROUTES (NEW - Auth Required)
+      # ONBOARDING ROUTES (Auth Required)
       # =======================================================================
       
       namespace :onboarding do
@@ -61,7 +96,7 @@ Rails.application.routes.draw do
       end
 
       # =======================================================================
-      # CHART DATA ROUTES (NEW - Auth Required)
+      # CHART DATA ROUTES (Auth Required)
       # =======================================================================
       
       # Chart Data for Dashboard/Gauges
@@ -94,116 +129,89 @@ Rails.application.routes.draw do
         get '/products/:id', to: 'products#show'                # Product details
         post '/products/:id/check_stock', to: 'products#check_stock' # Check availability
         
-        # Alternative store root
-        get '/', to: 'store#index'                              # Store homepage
-        get '/:id', to: 'store#show'                            # Alternative product view
-
-        # Shopping Cart (Auth Required)
-        get '/cart', to: 'carts#show'                           # View cart
-        post '/cart/add', to: 'carts#add_item'                 # Add item to cart
-        delete '/cart/remove', to: 'carts#remove_item'         # Remove item
-        patch '/cart/update', to: 'carts#update_quantity'      # Update quantity
-        delete '/cart', to: 'carts#clear'                      # Clear cart
-
-        # Orders (Auth Required)
-        get '/orders', to: 'orders#index'                       # List user orders
-        get '/orders/:id', to: 'orders#show'                    # Order details
-        post '/orders', to: 'orders#create'                     # Create order
-        patch '/orders/:id', to: 'orders#update'                # Update order
-        post '/orders/:id/mark_paid', to: 'orders#mark_paid'    # Mark as paid (testing)
-
-        # Checkout (Auth Required)
-        get '/checkout', to: 'checkout#show'                     # Checkout page
-        post '/checkout', to: 'checkout#create'                 # Create Stripe session
-
-        # Stripe Webhooks (No Auth - Stripe signature verification)
-        post '/webhooks/stripe', to: 'stripe_webhooks#create'   # Stripe webhook handler
+        # Shopping Cart (Auth required)
+        resource :cart, only: [:show, :update, :destroy] do
+          post '/items', to: 'cart#add_item'                    # Add to cart
+          patch '/items/:item_id', to: 'cart#update_item'       # Update quantity
+          delete '/items/:item_id', to: 'cart#remove_item'      # Remove from cart
+          delete '/clear', to: 'cart#clear'                     # Clear cart
+        end
+        
+        # Checkout Process (Auth required)
+        namespace :checkout do
+          post '/calculate', to: 'checkout#calculate'           # Calculate totals
+          post '/payment_intent', to: 'checkout#create_payment_intent' # Stripe payment intent
+          post '/complete', to: 'checkout#complete'             # Complete purchase
+          get '/success/:order_id', to: 'checkout#success'      # Order confirmation
+        end
       end
 
       # =======================================================================
-      # FRONTEND APPLICATION ROUTES (User Auth Required)
+      # FRONTEND USER ROUTES (Auth Required)
       # =======================================================================
       
       namespace :frontend do
-        # Dashboard
-        get '/dashboard', to: 'dashboard#index'                 # Main dashboard data
-        get '/dashboard/devices', to: 'dashboard#devices'       # Device list
-        get '/dashboard/devices/:id', to: 'dashboard#device'    # Device details
+        
+        # Dashboard (Main user interface)
+        get '/dashboard', to: 'dashboard#index'                 # Main dashboard
+        get '/dashboard/summary', to: 'dashboard#summary'       # Dashboard summary data
 
         # Device Management
-        get '/devices', to: 'devices#index'                     # List user devices  
-        get '/devices/:id', to: 'devices#show'                  # Device details
-        post '/devices', to: 'devices#create'                   # Create device
-        patch '/devices/:id', to: 'devices#update'              # Update device
-        delete '/devices/:id', to: 'devices#destroy'            # Delete device
-        post '/devices/:id/activate', to: 'devices#activate'    # Activate device
-        post '/devices/:id/suspend', to: 'devices#suspend'      # Suspend device
-        post '/devices/:id/wake', to: 'devices#wake'           # Wake from suspension
-        
-        # NEW: Device-specific aggregated routes
-        get '/devices/:id/readings', to: 'devices#readings'     # Aggregated device readings
-        get '/devices/:id/alerts', to: 'devices#alerts'         # Device alert history
-        get '/devices/:id/presets', to: 'devices#presets'       # Device-instance presets
-        put '/devices/:id/preset', to: 'devices#apply_preset'   # Apply preset to device
-        
-        # Device Commands
-        get '/devices/:id/commands', to: 'devices#commands'     # Device commands
-        post '/devices/:id/commands', to: 'devices#send_command' # Send command
+        resources :devices, only: [:index, :show, :create, :update] do
+          member do
+            patch :update_settings
+            patch :update_name
+            post :send_command
+            get :sensor_data
+            get :analytics
+          end
+          
+          collection do
+            get :available_slots
+            post :activate_next
+          end
+        end
 
-        # Sensor Data (Read-only for frontend)
-        get '/devices/:device_id/sensors', to: 'sensor_data#index'           # List sensors
-        get '/devices/:device_id/sensors/:sensor_id', to: 'sensor_data#show' # Sensor details
-        get '/devices/:device_id/sensors/:sensor_id/data', to: 'sensor_data#data' # Sensor readings
+        # Device Configuration & Presets
+        namespace :device_configuration do
+          resources :presets, only: [:index, :show, :create, :update, :destroy] do
+            collection do
+              get :predefined
+            end
+          end
+          
+          post '/presets/:id/apply', to: 'presets#apply'
+          post '/validate', to: 'device_configuration#validate'
+        end
 
-        # Device Presets
-        get '/presets/device_type/:device_type_id', to: 'presets#by_device_type'      # Predefined presets
-        get '/presets/user/:device_type_id', to: 'presets#user_by_device_type'       # User presets
-        get '/presets/:id', to: 'presets#show'                                       # Preset details
-        post '/presets', to: 'presets#create'                                        # Create preset
-        patch '/presets/:id', to: 'presets#update'                                   # Update preset
-        delete '/presets/:id', to: 'presets#destroy'                                 # Delete preset
-        post '/presets/validate', to: 'presets#validate'                             # Validate preset settings
+        # Order History & Billing
+        resources :orders, only: [:index, :show] do
+          member do
+            post :retry_payment
+            get :invoice
+          end
+        end
 
         # Subscription Management
-        get '/subscriptions', to: 'subscriptions#index'                              # List plans & current subscription
-        get '/subscriptions/current', to: 'subscriptions#current'                    # Current subscription details
-        get '/subscriptions/devices_for_selection', to: 'subscriptions#devices_for_selection' # Available devices for activation
-        get '/subscriptions/device_management', to: 'subscriptions#device_management' # Device slot management
-        post '/subscriptions/activate_device', to: 'subscriptions#activate_device'   # Activate specific device
-        post '/subscriptions/wake_devices', to: 'subscriptions#wake_devices'         # Wake multiple devices
-        post '/subscriptions/suspend_devices', to: 'subscriptions#suspend_devices'   # Suspend multiple devices
-        post '/subscriptions/preview_change', to: 'subscriptions#preview_change'     # Preview plan change
-        post '/subscriptions/change_plan', to: 'subscriptions#change_plan'           # Execute plan change
-        post '/subscriptions/schedule_plan_change', to: 'subscriptions#schedule_plan_change' # Schedule future plan change
-        delete '/subscriptions/cancel', to: 'subscriptions#cancel'                   # Cancel subscription
-        post '/subscriptions/add_device_slot', to: 'subscriptions#add_device_slot'   # Add device slot
-        delete '/subscriptions/remove_device_slot', to: 'subscriptions#remove_device_slot' # Remove device slot
-
-        # NEW: Billing & Payment Management
-        namespace :billing do
-          # Invoice Management
-          get '/invoices', to: 'invoices#index'                  # List user invoices
-          get '/invoices/:id', to: 'invoices#show'               # Invoice details
-          get '/invoices/:id/download', to: 'invoices#download'  # Download invoice PDF
-          
-          # Payment Methods
-          get '/payment_methods', to: 'payment_methods#index'    # List payment methods
-          post '/payment_methods', to: 'payment_methods#create'  # Add payment method
-          delete '/payment_methods/:id', to: 'payment_methods#destroy' # Remove payment method
-          patch '/payment_methods/:id/set_default', to: 'payment_methods#set_default' # Set default payment method
+        resource :subscription, only: [:show, :update] do
+          post :change_plan
+          post :cancel
+          post :reactivate
+          get :billing_history
+          get :usage_analytics
         end
 
         # Notification Preferences
         resource :notification_preferences, only: [:show, :update] do
-          post :marketing_opt_in                                # Opt into marketing
-          post :marketing_opt_out                               # Opt out of marketing
-          post :suppress                                        # Temporarily suppress all
-          delete :suppress, action: :unsuppress                # Remove suppression
-          get :categories                                       # List notification categories
-          get :test                                             # Test preferences (dev/staging only)
+          post :marketing_opt_in
+          post :marketing_opt_out
+          post :suppress
+          delete :suppress, action: :unsuppress
+          get :categories
+          get :test # development/staging only
         end
 
-        # User Profile Management
+        # User Profile & Settings
         get '/profile', to: 'profile#show'                      # User profile
         patch '/profile', to: 'profile#update'                  # Update profile
         patch '/profile/password', to: 'profile#change_password' # Change password
@@ -311,7 +319,7 @@ Rails.application.routes.draw do
           get '/escalation_analysis', to: 'support#escalation_analysis'
         end
 
-        # ===== SYSTEM HEALTH & MONITORING =====
+        # ===== SYSTEM HEALTH & MONITORING (EXISTING + ENHANCED) =====
         namespace :system do
           get '/health', to: 'system#health'
           get '/performance', to: 'system#performance'
@@ -321,6 +329,14 @@ Rails.application.routes.draw do
           get '/alerts', to: 'system#alerts'
           get '/infrastructure', to: 'system#infrastructure'
           post '/diagnostics', to: 'system#diagnostics'
+        end
+
+        # ===== NEW: REAL-TIME METRICS API ENDPOINTS =====
+        namespace :metrics do
+          get '/prometheus', to: 'metrics#prometheus_data'
+          get '/system_resources', to: 'metrics#system_resources'
+          get '/service_status', to: 'metrics#service_status'
+          get '/business_metrics', to: 'metrics#business_metrics'
         end
 
         # ===== ANALYTICS & REPORTING =====
@@ -423,27 +439,37 @@ Rails.application.routes.draw do
         post '/sendgrid', to: 'sendgrid#create'                 # Email webhooks
         post '/analytics', to: 'analytics#create'               # Analytics webhooks
       end
-
-      # =======================================================================
-      # HEALTH & STATUS ENDPOINTS (Public/Internal)
-      # =======================================================================
-      
-      get '/health', to: 'health#check'                         # Health check
-      get '/status', to: 'health#status'                        # Detailed status
-      get '/version', to: 'health#version'                      # Application version
     end
   end
 
   # =============================================================================
-  # SIDEKIQ WEB INTERFACE (Admin Only - Add authentication)
+  # ADMIN-ONLY MONITORING INTERFACES (Web UIs)
   # =============================================================================
   
-  require 'sidekiq/web'
-  require 'sidekiq-scheduler/web'
-  
-  # Sidekiq Web UI (protect with admin authentication)
+  # Protect admin monitoring interfaces with authentication
   authenticate :user, ->(user) { user.admin? } do
+    # Sidekiq Web Interface (EXISTING - Preserved)
+    require 'sidekiq/web'
+    require 'sidekiq-scheduler/web' if defined?(Sidekiq::Scheduler)
     mount Sidekiq::Web => '/admin/sidekiq'
+    
+    # NEW: PgHero Database Monitoring
+    mount PgHero::Engine, at: '/admin/pghero'
+  end
+
+  # =============================================================================
+  # DEVELOPMENT-ONLY MONITORING ROUTES
+  # =============================================================================
+  
+  if Rails.env.development?
+    # In development, allow easier access to monitoring tools
+    namespace :dev do
+      mount Sidekiq::Web => '/sidekiq'
+      mount PgHero::Engine => '/pghero'
+      
+      # Letter Opener for email preview
+      mount LetterOpenerWeb::Engine, at: '/emails' if defined?(LetterOpenerWeb)
+    end
   end
 
   # =============================================================================

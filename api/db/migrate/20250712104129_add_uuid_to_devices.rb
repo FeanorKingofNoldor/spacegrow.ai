@@ -1,5 +1,5 @@
 # db/migrate/add_uuid_to_devices.rb
-class AddUuidToDevices < ActiveRecord::Migration[7.0]
+class AddUuidToDevices < ActiveRecord::Migration[7.1]
   def change
     add_column :devices, :uuid, :string
     add_index :devices, :uuid, unique: true

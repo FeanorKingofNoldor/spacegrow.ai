@@ -1,5 +1,5 @@
 # db/migrate/enhance_subscriptions_table.rb  
-class EnhanceSubscriptionsTable < ActiveRecord::Migration[7.0]
+class EnhanceSubscriptionsTable < ActiveRecord::Migration[7.1]
   def change
     # Add any missing columns that might be needed
     add_column :subscriptions, :cancel_at_period_end, :boolean, default: false unless column_exists?(:subscriptions, :cancel_at_period_end)

@@ -1,0 +1,18 @@
+inherit_gem:
+  rubocop-discourse: default.yml
+
+AllCops:
+  Exclude:
+    - 'gemfiles/**/*'
+    - 'vendor/**/*'
+
+Discourse/Plugins/NoMonkeyPatching:
+  Enabled: false
+
+Discourse/Plugins/NamespaceMethods:
+  Exclude:
+    - bin/prometheus_exporter
+
+Style/InvertibleUnlessCondition:
+  Exclude:
+    - '*.gemspec' 

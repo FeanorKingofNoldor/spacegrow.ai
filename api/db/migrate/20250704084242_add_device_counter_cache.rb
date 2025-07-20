@@ -1,5 +1,5 @@
 # db/migrate/add_device_counter_cache.rb
-class AddDeviceCounterCache < ActiveRecord::Migration[7.0] 
+class AddDeviceCounterCache < ActiveRecord::Migration[7.1] 
   def change
     add_column :users, :devices_count, :integer, default: 0 unless column_exists?(:users, :devices_count)
     

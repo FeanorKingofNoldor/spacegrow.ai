@@ -47,7 +47,7 @@ class Api::V1::Store::StripeWebhooksController < Api::V1::Store::BaseController
   private
 
   def construct_verified_event(payload, sig_header)
-    webhook_secret = Rails.application.credentials.stripe[:webhook_secret]
+    webhook_secret = Rails.application.credentials.dig(Rails.env.to_sym, :stripe, :webhook_secret)
     
     if webhook_secret.blank?
       Rails.logger.error "❌ [StripeWebhooksController] Missing webhook secret in credentials"

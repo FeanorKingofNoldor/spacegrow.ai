@@ -6,8 +6,8 @@ pro_user_email = 'pro@pro.com'
 unless User.exists?(email: regular_user_email)
   User.create!(
     email: regular_user_email,
-    password: 'password',
-    password_confirmation: 'password',
+    password: 'Password1!',
+    password_confirmation: 'Password1!',
     role: 'user'
   )
 end
@@ -16,8 +16,8 @@ end
 unless User.exists?(email: pro_user_email)
   User.create!(
     email: pro_user_email,
-    password: 'password',
-    password_confirmation: 'password',
+    password: 'Password1!',
+    password_confirmation: 'Password1!',
     role: 'pro'
   )
 end

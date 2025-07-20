@@ -1,5 +1,5 @@
 # db/migrate/add_scheduled_plan_changes.rb
-class AddScheduledPlanChanges < ActiveRecord::Migration[7.0]
+class AddScheduledPlanChanges < ActiveRecord::Migration[7.1]
   def change
     create_table :scheduled_plan_changes do |t|
       t.references :subscription, null: false, foreign_key: true

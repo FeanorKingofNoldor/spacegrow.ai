@@ -36,7 +36,6 @@ gem "redis"
 gem "redis-client"
 gem "sidekiq"
 gem "sidekiq-scheduler"
-gem "sidekiq-web"
 
 # =============================================================================
 # OPEN SOURCE MONITORING & ERROR TRACKING
