@@ -1,6 +1,10 @@
 # app/services/admin/user_management_service.rb
 module Admin
   class UserManagementService < ApplicationService
+    def initialize(admin_user_id = nil)
+      @admin_user_id = admin_user_id
+    end
+
     def search_and_filter_users(params)
       begin
         users = User.includes(:subscription, :plan, :devices)
@@ -259,6 +263,8 @@ module Admin
     private
 
     # ===== SEARCH AND FILTER HELPERS =====
+
+	attr_reader :admin_user_id
     
     def apply_search_filter(users, search_term)
       users.where(
@@ -568,9 +574,7 @@ module Admin
     end
 
     def current_admin_id
-      # This would get the current admin user ID from context
-      # You might need to pass this in or use Current.user pattern
-      1
+      admin_user_id || raise ArgumentError, "Admin user ID is required for admin operations"
     end
   end
 end

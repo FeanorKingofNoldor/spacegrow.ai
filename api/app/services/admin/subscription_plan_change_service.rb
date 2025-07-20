@@ -1,10 +1,11 @@
 # app/services/admin/subscription_plan_change_service.rb
 module Admin
   class SubscriptionPlanChangeService < ApplicationService
-    def initialize(subscription, target_plan, interval = 'month')
+    def initialize(subscription, target_plan, interval = 'month', admin_user_id: nil)
       @subscription = subscription
       @target_plan = target_plan
       @interval = interval
+      @admin_user_id = admin_user_id
     end
 
     def call
@@ -20,7 +21,7 @@ module Admin
             new_plan: serialize_plan(@target_plan),
             interval: @interval,
             changed_at: Time.current.iso8601,
-            changed_by: current_admin_id,
+            changed_by: @admin_user_id,
             admin_override: true
           },
           device_impact: analyze_device_impact
@@ -33,7 +34,7 @@ module Admin
 
     private
 
-    attr_reader :subscription, :target_plan, :interval
+    attr_reader :subscription, :target_plan, :interval, :admin_user_id
 
     def validate_plan_change
       unless subscription.active?
@@ -168,43 +169,50 @@ module Admin
     end
 
     def log_admin_plan_change
-      AdminActivityLog.create!(
-        admin_user_id: current_admin_id,
-        target_type: 'Subscription',
-        target_id: subscription.id,
-        action: 'plan_change',
-        metadata: {
-          old_plan_id: @old_plan.id,
-          old_plan_name: @old_plan.name,
-          new_plan_id: target_plan.id,
-          new_plan_name: target_plan.name,
-          interval: interval,
-          admin_override: true,
-          user_email: subscription.user.email,
-          device_impact: analyze_device_impact
-        }
-      )
+      begin
+        # Try to log to AdminActivityLog if it exists
+        if defined?(AdminActivityLog)
+          AdminActivityLog.create!(
+            admin_user_id: admin_user_id,
+            target_type: 'Subscription',
+            target_id: subscription.id,
+            action: 'plan_change',
+            metadata: {
+              old_plan_id: @old_plan.id,
+              old_plan_name: @old_plan.name,
+              new_plan_id: target_plan.id,
+              new_plan_name: target_plan.name,
+              interval: interval,
+              admin_override: true,
+              user_email: subscription.user.email,
+              device_impact: analyze_device_impact
+            }
+          )
+        end
+      rescue => e
+        Rails.logger.warn "Failed to log admin plan change to AdminActivityLog: #{e.message}"
+      end
       
-      Rails.logger.info "Admin Plan Change: subscription #{subscription.id} changed from #{@old_plan.name} to #{target_plan.name}"
+      # Always log to Rails logger
+      Rails.logger.info "Admin Plan Change: subscription #{subscription.id} changed from #{@old_plan.name} to #{target_plan.name} by admin #{admin_user_id}"
     end
 
     def send_plan_change_notification
-      # Send email notification to user about plan change
       begin
-        UserMailer.plan_changed_by_admin(
-          subscription.user,
-          @old_plan,
-          target_plan,
-          analyze_device_impact
-        ).deliver_later
+        # Try to send email notification if UserMailer exists
+        if defined?(UserMailer) && UserMailer.respond_to?(:plan_changed_by_admin)
+          UserMailer.plan_changed_by_admin(
+            subscription.user,
+            @old_plan,
+            target_plan,
+            analyze_device_impact
+          ).deliver_later
+        else
+          Rails.logger.info "Plan change notification would be sent to #{subscription.user.email}: Plan changed from #{@old_plan.name} to #{target_plan.name}"
+        end
       rescue => e
         Rails.logger.warn "Failed to send plan change notification: #{e.message}"
       end
-    end
-
-    def current_admin_id
-      # This would be set from the controller context
-      1 # Placeholder - would be passed from controller
     end
   end
 end

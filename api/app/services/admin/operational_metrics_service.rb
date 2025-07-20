@@ -9,14 +9,10 @@ module Admin
     def call
       begin
         operational_metrics = {
-          system_performance: calculate_system_performance_metrics,
           device_operations: calculate_device_operational_metrics,
-          platform_reliability: calculate_platform_reliability_metrics,
           user_operations: calculate_user_operational_metrics,
-          support_operations: calculate_support_operational_metrics,
-          infrastructure_metrics: calculate_infrastructure_metrics,
-          security_metrics: calculate_security_metrics,
-          efficiency_metrics: calculate_operational_efficiency_metrics
+          system_health: calculate_basic_system_health,
+          data_operations: calculate_data_operations_metrics
         }
 
         success(
@@ -27,9 +23,7 @@ module Admin
             end: @date_range.end.iso8601
           },
           operational_summary: generate_operational_summary(operational_metrics),
-          performance_indicators: extract_key_performance_indicators(operational_metrics),
-          alerts_and_issues: identify_operational_alerts(operational_metrics),
-          optimization_opportunities: identify_optimization_opportunities(operational_metrics),
+          health_score: calculate_overall_health_score(operational_metrics),
           last_updated: Time.current.iso8601
         )
       rescue => e
@@ -42,613 +36,385 @@ module Admin
 
     attr_reader :period, :date_range
 
-    def calculate_system_performance_metrics
-      {
-        # Application Performance
-        average_response_time: calculate_average_response_time,
-        api_response_times: calculate_api_response_times,
-        page_load_times: calculate_page_load_times,
-        database_performance: calculate_database_performance,
-        
-        # Throughput
-        requests_per_minute: calculate_requests_per_minute,
-        concurrent_users: calculate_concurrent_users,
-        peak_load_handling: calculate_peak_load_metrics,
-        bottleneck_analysis: identify_system_bottlenecks,
-        
-        # Error Rates
-        system_error_rate: calculate_system_error_rate,
-        api_error_rate: calculate_api_error_rate,
-        error_distribution: analyze_error_distribution,
-        critical_errors: count_critical_errors,
-        
-        # Availability
-        system_uptime: calculate_system_uptime,
-        service_availability: calculate_service_availability,
-        downtime_incidents: analyze_downtime_incidents,
-        mttr: calculate_mean_time_to_recovery
-      }
-    end
-
     def calculate_device_operational_metrics
-      # Leverage rich Device model admin methods
+      # Use existing Device model admin methods - REAL DATA
       device_overview = Device.admin_fleet_overview
       health_trends = Device.admin_health_trends(7)
       performance_summary = Device.admin_performance_summary
+      maintenance_queue = Device.admin_maintenance_queue
       
       {
-        # Fleet Health
+        # Real fleet data from Device model
         fleet_overview: device_overview,
         device_health_trends: health_trends,
         fleet_performance: performance_summary,
-        device_maintenance_queue: Device.admin_maintenance_queue,
+        maintenance_queue: maintenance_queue,
         
-        # Connectivity
-        connection_quality: analyze_device_connection_quality,
-        connectivity_uptime: calculate_device_connectivity_uptime,
-        connection_failure_rate: calculate_connection_failure_rate,
-        network_performance: analyze_network_performance,
+        # Real device metrics calculated from actual data
+        total_devices: Device.count,
+        active_devices: Device.active.count,
+        offline_devices: Device.offline.count,
+        error_devices: Device.with_errors.count,
+        recently_registered: Device.where(created_at: @date_range).count,
         
-        # Device Lifecycle
-        device_registration_rate: calculate_device_registration_rate,
-        device_activation_rate: calculate_device_activation_rate,
-        device_retirement_rate: calculate_device_retirement_rate,
-        device_utilization_metrics: calculate_device_utilization_metrics,
-        
-        # Performance
-        sensor_data_throughput: calculate_sensor_data_throughput,
-        data_processing_performance: calculate_data_processing_performance,
-        device_response_times: calculate_device_response_times,
-        firmware_update_success_rate: calculate_firmware_update_success_rate
-      }
-    end
-
-    def calculate_platform_reliability_metrics
-      {
-        # Service Reliability
-        service_level_agreements: calculate_sla_compliance,
-        reliability_score: calculate_platform_reliability_score,
-        incident_management: analyze_incident_management_metrics,
-        recovery_metrics: calculate_recovery_metrics,
-        
-        # Data Integrity
-        data_accuracy: calculate_data_accuracy_metrics,
-        data_completeness: calculate_data_completeness_metrics,
-        data_consistency: calculate_data_consistency_metrics,
-        backup_and_recovery: analyze_backup_recovery_metrics,
-        
-        # Platform Stability
-        crash_rate: calculate_platform_crash_rate,
-        memory_usage_stability: analyze_memory_usage_stability,
-        resource_leak_detection: detect_resource_leaks,
-        performance_degradation: monitor_performance_degradation
+        # Real connectivity metrics
+        connectivity_rate: calculate_device_connectivity_rate,
+        avg_uptime: calculate_average_device_uptime
       }
     end
 
     def calculate_user_operational_metrics
+      # Real user metrics from actual database queries
       {
-        # User Activity
-        active_user_metrics: calculate_active_user_metrics,
-        user_session_metrics: calculate_user_session_metrics,
-        user_engagement_patterns: analyze_user_engagement_patterns,
-        feature_usage_analytics: analyze_feature_usage,
+        total_users: User.count,
+        active_users_period: User.where(last_sign_in_at: @date_range).count,
+        new_users_period: User.where(created_at: @date_range).count,
+        users_with_devices: User.joins(:devices).distinct.count,
+        users_with_subscriptions: User.joins(:subscription).where(subscriptions: { status: 'active' }).count,
         
-        # User Experience
-        user_satisfaction_scores: calculate_user_satisfaction_scores,
-        user_journey_analytics: analyze_user_journeys,
-        conversion_funnel_performance: analyze_conversion_funnels,
-        user_retention_operations: calculate_user_retention_operations,
-        
-        # User Support
-        user_onboarding_metrics: calculate_onboarding_metrics,
-        help_desk_utilization: calculate_help_desk_utilization,
-        self_service_adoption: calculate_self_service_adoption,
-        user_feedback_metrics: analyze_user_feedback_metrics
+        # Real engagement metrics
+        daily_active_users: calculate_daily_active_users,
+        user_retention_rate: calculate_user_retention_rate,
+        avg_devices_per_user: calculate_avg_devices_per_user
       }
     end
 
-    def calculate_support_operational_metrics
+    def calculate_basic_system_health
+      # Real system metrics we can actually calculate
       {
-        # Ticket Management
-        support_ticket_volume: calculate_support_ticket_volume,
-        ticket_resolution_times: calculate_ticket_resolution_times,
-        first_contact_resolution_rate: calculate_fcr_rate,
-        escalation_rates: calculate_escalation_rates,
-        
-        # Support Quality
-        customer_satisfaction_scores: calculate_support_satisfaction,
-        agent_performance_metrics: calculate_agent_performance,
-        support_channel_effectiveness: analyze_support_channels,
-        knowledge_base_effectiveness: calculate_kb_effectiveness,
-        
-        # Support Efficiency
-        agent_utilization: calculate_agent_utilization,
-        support_cost_per_ticket: calculate_cost_per_ticket,
-        automation_effectiveness: calculate_support_automation,
-        proactive_support_metrics: calculate_proactive_support_metrics
+        database_health: assess_database_health,
+        active_job_health: assess_active_job_health,
+        redis_health: assess_redis_health,
+        storage_usage: assess_storage_usage
       }
     end
 
-    def calculate_infrastructure_metrics
+    def calculate_data_operations_metrics
+      # Real sensor data metrics
       {
-        # Server Performance
-        server_utilization: calculate_server_utilization,
-        cpu_usage_patterns: analyze_cpu_usage_patterns,
-        memory_utilization: calculate_memory_utilization,
-        disk_usage_metrics: calculate_disk_usage_metrics,
-        
-        # Network Performance
-        network_throughput: calculate_network_throughput,
-        bandwidth_utilization: calculate_bandwidth_utilization,
-        latency_metrics: calculate_network_latency,
-        packet_loss_rates: calculate_packet_loss_rates,
-        
-        # Storage Performance
-        storage_performance: calculate_storage_performance,
-        backup_completion_rates: calculate_backup_success_rates,
-        data_transfer_speeds: calculate_data_transfer_speeds,
-        storage_capacity_planning: analyze_storage_capacity,
-        
-        # Cloud Infrastructure
-        cloud_resource_utilization: calculate_cloud_utilization,
-        auto_scaling_effectiveness: analyze_auto_scaling,
-        cost_optimization: analyze_infrastructure_costs,
-        multi_region_performance: analyze_multi_region_performance
+        total_sensor_readings: SensorData.where(created_at: @date_range).count,
+        avg_readings_per_day: calculate_avg_readings_per_day,
+        data_growth_rate: calculate_data_growth_rate,
+        top_sensor_types: calculate_top_sensor_types,
+        device_data_distribution: calculate_device_data_distribution
       }
     end
 
-    def calculate_security_metrics
-      {
-        # Security Incidents
-        security_incident_count: count_security_incidents,
-        vulnerability_assessment: assess_security_vulnerabilities,
-        threat_detection_effectiveness: calculate_threat_detection,
-        incident_response_times: calculate_security_response_times,
-        
-        # Access Control
-        authentication_success_rates: calculate_auth_success_rates,
-        failed_login_attempts: count_failed_login_attempts,
-        privileged_access_monitoring: monitor_privileged_access,
-        access_review_compliance: calculate_access_review_compliance,
-        
-        # Data Security
-        data_encryption_coverage: calculate_encryption_coverage,
-        data_loss_prevention: calculate_dlp_effectiveness,
-        privacy_compliance: assess_privacy_compliance,
-        audit_trail_completeness: calculate_audit_completeness,
-        
-        # Security Monitoring
-        security_alert_volume: calculate_security_alert_volume,
-        false_positive_rates: calculate_false_positive_rates,
-        security_tool_effectiveness: assess_security_tools,
-        compliance_metrics: calculate_compliance_metrics
-      }
-    end
+    # ===== REAL CALCULATION METHODS =====
 
-    def calculate_operational_efficiency_metrics
-      {
-        # Process Efficiency
-        automation_coverage: calculate_automation_coverage,
-        manual_process_reduction: calculate_manual_process_reduction,
-        workflow_optimization: analyze_workflow_optimization,
-        cycle_time_reduction: calculate_cycle_time_improvements,
-        
-        # Resource Efficiency
-        resource_utilization_optimization: calculate_resource_optimization,
-        cost_per_transaction: calculate_cost_per_transaction,
-        efficiency_gains: calculate_efficiency_gains,
-        waste_reduction_metrics: calculate_waste_reduction,
-        
-        # Quality Metrics
-        defect_rates: calculate_operational_defect_rates,
-        rework_percentages: calculate_rework_percentages,
-        quality_improvement_metrics: calculate_quality_improvements,
-        process_standardization: assess_process_standardization
-      }
-    end
-
-    # System Performance Calculations
-    def calculate_average_response_time
-      # Would integrate with APM tools like New Relic, DataDog
-      "125ms" # Placeholder
-    end
-
-    def calculate_api_response_times
-      {
-        'GET /api/v1/devices' => "95ms",
-        'POST /api/v1/sensor_data' => "145ms",
-        'GET /api/v1/users' => "80ms",
-        'PUT /api/v1/devices/:id' => "110ms"
-      }
-    end
-
-    def calculate_system_error_rate
-      # Calculate error rate based on logs or APM data
-      2.1 # Placeholder percentage
-    end
-
-    def calculate_system_uptime
-      # Calculate uptime percentage
-      99.85 # Placeholder percentage
-    end
-
-    # Device Operations - Leveraging rich Device model
-    def analyze_device_connection_quality
+    def calculate_device_connectivity_rate
       total_devices = Device.count
-      return 'no_data' if total_devices == 0
-      
-      # Use Device model admin methods
-      fleet_overview = Device.admin_fleet_overview
-      online_percentage = fleet_overview[:connection_stats][:online] / total_devices.to_f * 100
-      
-      case online_percentage
-      when 95..100 then 'excellent'
-      when 85..94 then 'good'
-      when 70..84 then 'fair'
-      else 'poor'
-      end
-    end
-
-    def calculate_device_connectivity_uptime
-      # Calculate average device uptime
-      devices_with_connections = Device.where.not(last_connection: nil)
-      return 0 if devices_with_connections.empty?
-      
-      total_uptime = devices_with_connections.sum do |device|
-        device.admin_uptime_estimate || 0
-      end
-      
-      (total_uptime / devices_with_connections.count).round(2)
-    end
-
-    def calculate_device_registration_rate
-      Device.where(created_at: @date_range).count
-    end
-
-    def calculate_device_activation_rate
-      devices_registered = Device.where(created_at: @date_range).count
-      return 0 if devices_registered == 0
-      
-      devices_activated = Device.where(created_at: @date_range, status: 'active').count
-      
-      (devices_activated.to_f / devices_registered * 100).round(2)
-    end
-
-    def calculate_sensor_data_throughput
-      # Calculate sensor data points per period
-      SensorData.where(created_at: @date_range).count
-    end
-
-    # User Operations
-    def calculate_active_user_metrics
-      {
-        daily_active_users: User.where(last_sign_in_at: 1.day.ago..).count,
-        weekly_active_users: User.where(last_sign_in_at: 1.week.ago..).count,
-        monthly_active_users: User.where(last_sign_in_at: 1.month.ago..).count,
-        session_duration_avg: "12.5 minutes" # Placeholder
-      }
-    end
-
-    def calculate_user_session_metrics
-      {
-        average_session_duration: "12.5 minutes",
-        sessions_per_user: 3.2,
-        bounce_rate: 25.0,
-        pages_per_session: 5.8
-      }
-    end
-
-    def analyze_feature_usage
-      # Analyze feature adoption and usage patterns
-      {
-        device_management: 85.0,
-        sensor_data_visualization: 78.0,
-        alerts_configuration: 62.0,
-        reporting: 45.0,
-        api_usage: 35.0
-      }
-    end
-
-    # Support Operations
-    def calculate_support_ticket_volume
-      # Placeholder - would integrate with support system
-      {
-        total_tickets: 145,
-        new_tickets: 32,
-        open_tickets: 28,
-        resolved_tickets: 117
-      }
-    end
-
-    def calculate_ticket_resolution_times
-      {
-        average_resolution_time: "18.5 hours",
-        median_resolution_time: "12.0 hours",
-        first_response_time: "2.3 hours",
-        escalation_time: "6.8 hours"
-      }
-    end
-
-    def calculate_fcr_rate
-      # First Contact Resolution rate
-      72.5 # Placeholder percentage
-    end
-
-    # Infrastructure Metrics
-    def calculate_server_utilization
-      {
-        cpu_utilization: 65.0,
-        memory_utilization: 72.0,
-        disk_utilization: 58.0,
-        network_utilization: 45.0
-      }
-    end
-
-    def analyze_cpu_usage_patterns
-      {
-        peak_hours: [9, 10, 14, 15, 16],
-        average_usage: 65.0,
-        peak_usage: 85.0,
-        usage_trend: 'stable'
-      }
-    end
-
-    # Security Metrics
-    def count_security_incidents
-      # Count security incidents in the period
-      0 # Placeholder
-    end
-
-    def calculate_auth_success_rates
-      # Authentication success rate
-      98.7 # Placeholder percentage
-    end
-
-    def count_failed_login_attempts
-      # Count failed authentication attempts
-      127 # Placeholder
-    end
-
-    # Summary and Analysis Methods
-    def generate_operational_summary(metrics)
-      {
-        overall_health: assess_overall_operational_health(metrics),
-        system_performance: assess_system_performance_health(metrics[:system_performance]),
-        device_operations: assess_device_operations_health(metrics[:device_operations]),
-        platform_reliability: assess_platform_reliability_health(metrics[:platform_reliability]),
-        user_satisfaction: assess_user_satisfaction_health(metrics[:user_operations]),
-        infrastructure_status: assess_infrastructure_health(metrics[:infrastructure_metrics]),
-        security_posture: assess_security_posture(metrics[:security_metrics])
-      }
-    end
-
-    def extract_key_performance_indicators(metrics)
-      {
-        # System KPIs
-        system_uptime: metrics[:system_performance][:system_uptime],
-        average_response_time: metrics[:system_performance][:average_response_time],
-        error_rate: metrics[:system_performance][:system_error_rate],
-        
-        # Device KPIs
-        device_connectivity_rate: calculate_device_connectivity_percentage(metrics),
-        device_health_score: calculate_device_health_score(metrics),
-        sensor_data_throughput: metrics[:device_operations][:sensor_data_throughput],
-        
-        # User KPIs
-        daily_active_users: metrics[:user_operations][:active_user_metrics][:daily_active_users],
-        user_satisfaction: metrics[:user_operations][:user_satisfaction_scores],
-        
-        # Support KPIs
-        first_contact_resolution: metrics[:support_operations][:first_contact_resolution_rate],
-        average_resolution_time: metrics[:support_operations][:ticket_resolution_times][:average_resolution_time],
-        
-        # Infrastructure KPIs
-        server_utilization: metrics[:infrastructure_metrics][:server_utilization][:cpu_utilization],
-        storage_utilization: metrics[:infrastructure_metrics][:server_utilization][:disk_utilization]
-      }
-    end
-
-    def identify_operational_alerts(metrics)
-      alerts = []
-      
-      # System performance alerts
-      error_rate = metrics[:system_performance][:system_error_rate]
-      if error_rate > 5
-        alerts << {
-          type: 'critical',
-          category: 'system_performance',
-          message: "High error rate detected: #{error_rate}%",
-          threshold: 5,
-          current_value: error_rate
-        }
-      end
-      
-      # Device connectivity alerts
-      device_health = calculate_device_health_score(metrics)
-      if device_health < 70
-        alerts << {
-          type: 'warning',
-          category: 'device_operations',
-          message: "Device health score below threshold: #{device_health}%",
-          threshold: 70,
-          current_value: device_health
-        }
-      end
-      
-      # Infrastructure alerts
-      cpu_utilization = metrics[:infrastructure_metrics][:server_utilization][:cpu_utilization]
-      if cpu_utilization > 80
-        alerts << {
-          type: 'warning',
-          category: 'infrastructure',
-          message: "High CPU utilization: #{cpu_utilization}%",
-          threshold: 80,
-          current_value: cpu_utilization
-        }
-      end
-      
-      alerts
-    end
-
-    def identify_optimization_opportunities(metrics)
-      opportunities = []
-      
-      # Performance optimization
-      response_time = metrics[:system_performance][:average_response_time].to_f
-      if response_time > 200 # milliseconds
-        opportunities << {
-          category: 'performance',
-          opportunity: 'API response time optimization',
-          potential_impact: 'improve_user_experience',
-          effort: 'medium',
-          priority: 'high'
-        }
-      end
-      
-      # Resource optimization
-      cpu_utilization = metrics[:infrastructure_metrics][:server_utilization][:cpu_utilization]
-      if cpu_utilization < 40
-        opportunities << {
-          category: 'infrastructure',
-          opportunity: 'Server resource optimization - consider downsizing',
-          potential_impact: 'cost_reduction',
-          effort: 'low',
-          priority: 'medium'
-        }
-      end
-      
-      # Automation optimization
-      automation_coverage = metrics[:efficiency_metrics][:automation_coverage]
-      if automation_coverage < 70
-        opportunities << {
-          category: 'efficiency',
-          opportunity: 'Increase process automation coverage',
-          potential_impact: 'operational_efficiency',
-          effort: 'high',
-          priority: 'medium'
-        }
-      end
-      
-      opportunities
-    end
-
-    # Helper methods for health assessments
-    def assess_overall_operational_health(metrics)
-      scores = [
-        assess_system_performance_health_score(metrics[:system_performance]),
-        assess_device_operations_health_score(metrics[:device_operations]),
-        assess_platform_reliability_health_score(metrics[:platform_reliability]),
-        assess_infrastructure_health_score(metrics[:infrastructure_metrics])
-      ]
-      
-      average_score = scores.sum / scores.length
-      
-      case average_score
-      when 85..100 then 'excellent'
-      when 70..84 then 'good'
-      when 55..69 then 'fair'
-      else 'poor'
-      end
-    end
-
-    def calculate_device_connectivity_percentage(metrics)
-      # Extract from device operations metrics
-      fleet_overview = metrics[:device_operations][:fleet_overview]
-      total_devices = fleet_overview[:total_devices]
       return 0 if total_devices == 0
       
-      online_devices = fleet_overview[:connection_stats][:online]
-      (online_devices.to_f / total_devices * 100).round(2)
+      active_devices = Device.active.count
+      ((active_devices.to_f / total_devices) * 100).round(2)
     end
 
-    def calculate_device_health_score(metrics)
-      # Calculate overall device health score
-      fleet_performance = metrics[:device_operations][:fleet_performance]
+    def calculate_average_device_uptime
+      # Calculate based on device last_seen timestamps
+      active_devices = Device.active.includes(:sensor_data)
+      return 0 if active_devices.empty?
       
-      if fleet_performance && fleet_performance[:health_distribution]
-        healthy = fleet_performance[:health_distribution][:healthy] || 0
-        warning = fleet_performance[:health_distribution][:warning] || 0
-        critical = fleet_performance[:health_distribution][:critical] || 0
+      uptimes = active_devices.map do |device|
+        last_seen = device.sensor_data.maximum(:created_at)
+        next 0 unless last_seen
         
-        # Weighted score: healthy=100%, warning=50%, critical=0%
-        total = healthy + warning + critical
-        return 0 if total == 0
+        # Calculate uptime percentage based on expected check-ins
+        expected_checkins = (@date_range.end - @date_range.begin) / 1.hour
+        actual_hours = device.sensor_data.where(created_at: @date_range).group_by_hour(:created_at).count.size
         
-        weighted_score = (healthy * 100 + warning * 50) / total
-        weighted_score.round(1)
-      else
-        85.0 # Default if no data
+        next 0 if expected_checkins == 0
+        ((actual_hours.to_f / expected_checkins) * 100).round(2)
+      end
+      
+      uptimes.compact.sum / uptimes.compact.size
+    end
+
+    def calculate_daily_active_users
+      # Users who have logged in or have device activity in the period
+      User.where(last_sign_in_at: @date_range)
+          .or(User.joins(devices: :sensor_data).where(sensor_data: { created_at: @date_range }))
+          .distinct
+          .count
+    end
+
+    def calculate_user_retention_rate
+      # Calculate retention rate for users created in previous period
+      previous_period = calculate_previous_period(@date_range)
+      new_users_previous = User.where(created_at: previous_period)
+      active_in_current = new_users_previous.where(last_sign_in_at: @date_range)
+      
+      return 0 if new_users_previous.count == 0
+      ((active_in_current.count.to_f / new_users_previous.count) * 100).round(2)
+    end
+
+    def calculate_avg_devices_per_user
+      total_users = User.count
+      return 0 if total_users == 0
+      
+      (Device.count.to_f / total_users).round(2)
+    end
+
+    def calculate_avg_readings_per_day
+      total_readings = SensorData.where(created_at: @date_range).count
+      days_in_period = (@date_range.end.to_date - @date_range.begin.to_date).to_i + 1
+      
+      return 0 if days_in_period == 0
+      (total_readings.to_f / days_in_period).round(0)
+    end
+
+    def calculate_data_growth_rate
+      current_period_data = SensorData.where(created_at: @date_range).count
+      previous_period = calculate_previous_period(@date_range)
+      previous_period_data = SensorData.where(created_at: previous_period).count
+      
+      return 0 if previous_period_data == 0
+      (((current_period_data - previous_period_data).to_f / previous_period_data) * 100).round(2)
+    end
+
+    def calculate_top_sensor_types
+      SensorData.joins(:device_sensor)
+               .joins(device_sensor: :sensor_type)
+               .where(created_at: @date_range)
+               .group('sensor_types.name')
+               .count
+               .sort_by { |_, count| -count }
+               .first(5)
+               .to_h
+    end
+
+    def calculate_device_data_distribution
+      Device.joins(:sensor_data)
+            .where(sensor_data: { created_at: @date_range })
+            .group('devices.id')
+            .count
+            .values
+            .then do |readings_per_device|
+              return {} if readings_per_device.empty?
+              
+              {
+                min_readings: readings_per_device.min,
+                max_readings: readings_per_device.max,
+                avg_readings: (readings_per_device.sum.to_f / readings_per_device.size).round(2),
+                median_readings: readings_per_device.sort[readings_per_device.size / 2]
+              }
+            end
+    end
+
+    # ===== HEALTH ASSESSMENT METHODS =====
+
+    def assess_database_health
+      begin
+        # Test database responsiveness
+        start_time = Time.current
+        ActiveRecord::Base.connection.execute("SELECT 1")
+        response_time = ((Time.current - start_time) * 1000).round(2)
+        
+        {
+          status: response_time < 100 ? 'healthy' : 'slow',
+          response_time_ms: response_time,
+          connection_pool_size: ActiveRecord::Base.connection_pool.size,
+          active_connections: ActiveRecord::Base.connection_pool.connections.size
+        }
+      rescue => e
+        {
+          status: 'error',
+          error: e.message
+        }
       end
     end
 
-    # Health assessment methods
-    def assess_system_performance_health(performance_metrics)
-      uptime = performance_metrics[:system_uptime]
-      error_rate = performance_metrics[:system_error_rate]
-      
-      if uptime > 99.9 && error_rate < 1
-        'excellent'
-      elsif uptime > 99.5 && error_rate < 3
-        'good'
-      elsif uptime > 99.0 && error_rate < 5
-        'fair'
-      else
-        'poor'
+    def assess_active_job_health
+      begin
+        # Check for failed jobs and queue sizes
+        failed_jobs = ActiveJob::Base.queue_adapter.respond_to?(:failed) ? 
+                     ActiveJob::Base.queue_adapter.failed.size : 0
+        
+        {
+          status: failed_jobs < 10 ? 'healthy' : 'attention_needed',
+          failed_jobs_count: failed_jobs
+        }
+      rescue => e
+        {
+          status: 'unknown',
+          error: e.message
+        }
       end
     end
 
-    def assess_device_operations_health(device_metrics)
-      health_score = calculate_device_health_score({ device_operations: device_metrics })
+    def assess_redis_health
+      begin
+        # Test Redis connectivity if available
+        if defined?(Redis) && Rails.cache.respond_to?(:redis)
+          start_time = Time.current
+          Rails.cache.redis.ping
+          response_time = ((Time.current - start_time) * 1000).round(2)
+          
+          {
+            status: response_time < 50 ? 'healthy' : 'slow',
+            response_time_ms: response_time
+          }
+        else
+          { status: 'not_configured' }
+        end
+      rescue => e
+        {
+          status: 'error',
+          error: e.message
+        }
+      end
+    end
+
+    def assess_storage_usage
+      begin
+        # Get basic storage info
+        {
+          total_sensor_data_records: SensorData.count,
+          total_devices: Device.count,
+          total_users: User.count,
+          database_size_estimate: estimate_database_size
+        }
+      rescue => e
+        {
+          status: 'error',
+          error: e.message
+        }
+      end
+    end
+
+    def estimate_database_size
+      # Rough estimate based on record counts
+      sensor_data_size = SensorData.count * 0.1 # Assume ~100 bytes per reading
+      device_size = Device.count * 0.5 # Assume ~500 bytes per device
+      user_size = User.count * 1 # Assume ~1KB per user
       
-      case health_score
-      when 85..100 then 'excellent'
-      when 70..84 then 'good'
-      when 55..69 then 'fair'
+      "#{(sensor_data_size + device_size + user_size).round(2)} KB (estimated)"
+    end
+
+    # ===== SUMMARY AND SCORING METHODS =====
+
+    def generate_operational_summary(metrics)
+      {
+        device_health: assess_device_health(metrics[:device_operations]),
+        user_activity: assess_user_activity(metrics[:user_operations]),
+        system_status: assess_system_status(metrics[:system_health]),
+        data_processing: assess_data_processing(metrics[:data_operations])
+      }
+    end
+
+    def calculate_overall_health_score(metrics)
+      device_score = calculate_device_health_score(metrics[:device_operations])
+      user_score = calculate_user_activity_score(metrics[:user_operations])
+      system_score = calculate_system_health_score(metrics[:system_health])
+      data_score = calculate_data_health_score(metrics[:data_operations])
+      
+      # Weighted average
+      ((device_score * 0.4) + (user_score * 0.3) + (system_score * 0.2) + (data_score * 0.1)).round(1)
+    end
+
+    def assess_device_health(device_metrics)
+      connectivity_rate = device_metrics[:connectivity_rate]
+      
+      case connectivity_rate
+      when 90..100 then 'excellent'
+      when 75..89 then 'good'
+      when 60..74 then 'fair'
       else 'poor'
       end
     end
 
-    def assess_platform_reliability_health(reliability_metrics)
-      # Assess based on reliability score and incident metrics
-      'good' # Placeholder
-    end
-
-    def assess_user_satisfaction_health(user_metrics)
-      # Assess based on user satisfaction scores and engagement
-      'good' # Placeholder
-    end
-
-    def assess_infrastructure_health(infrastructure_metrics)
-      cpu_util = infrastructure_metrics[:server_utilization][:cpu_utilization]
-      memory_util = infrastructure_metrics[:server_utilization][:memory_utilization]
+    def assess_user_activity(user_metrics)
+      retention_rate = user_metrics[:user_retention_rate]
       
-      if cpu_util < 70 && memory_util < 80
+      case retention_rate
+      when 80..100 then 'excellent'
+      when 60..79 then 'good'
+      when 40..59 then 'fair'
+      else 'poor'
+      end
+    end
+
+    def assess_system_status(system_metrics)
+      db_healthy = system_metrics[:database_health][:status] == 'healthy'
+      redis_healthy = system_metrics[:redis_health][:status] == 'healthy'
+      
+      if db_healthy && redis_healthy
         'excellent'
-      elsif cpu_util < 80 && memory_util < 85
+      elsif db_healthy
         'good'
-      elsif cpu_util < 90 && memory_util < 90
-        'fair'
       else
         'poor'
       end
     end
 
-    def assess_security_posture(security_metrics)
-      incidents = security_metrics[:security_incident_count]
-      auth_success = security_metrics[:authentication_success_rates]
+    def assess_data_processing(data_metrics)
+      growth_rate = data_metrics[:data_growth_rate]
       
-      if incidents == 0 && auth_success > 98
-        'excellent'
-      elsif incidents <= 2 && auth_success > 95
-        'good'
-      elsif incidents <= 5 && auth_success > 90
-        'fair'
-      else
-        'poor'
+      case growth_rate
+      when 0..20 then 'stable'
+      when 21..50 then 'growing'
+      when 51..100 then 'rapid_growth'
+      else 'exponential_growth'
       end
     end
 
-    # Utility methods
+    def calculate_device_health_score(device_metrics)
+      connectivity_rate = device_metrics[:connectivity_rate] || 0
+      uptime = device_metrics[:avg_uptime] || 0
+      
+      # Weighted score
+      ((connectivity_rate * 0.6) + (uptime * 0.4)).round(1)
+    end
+
+    def calculate_user_activity_score(user_metrics)
+      retention_rate = user_metrics[:user_retention_rate] || 0
+      activity_ratio = user_metrics[:active_users_period].to_f / [user_metrics[:total_users], 1].max * 100
+      
+      # Weighted score
+      ((retention_rate * 0.7) + (activity_ratio * 0.3)).round(1)
+    end
+
+    def calculate_system_health_score(system_metrics)
+      scores = []
+      
+      # Database health score
+      if system_metrics[:database_health][:status] == 'healthy'
+        scores << 100
+      elsif system_metrics[:database_health][:status] == 'slow'
+        scores << 70
+      else
+        scores << 30
+      end
+      
+      # Redis health score
+      if system_metrics[:redis_health][:status] == 'healthy'
+        scores << 100
+      elsif system_metrics[:redis_health][:status] == 'slow'
+        scores << 70
+      else
+        scores << 50
+      end
+      
+      scores.sum / scores.size
+    end
+
+    def calculate_data_health_score(data_metrics)
+      # Score based on data consistency and growth
+      readings_today = data_metrics[:avg_readings_per_day]
+      
+      if readings_today > 1000
+        90
+      elsif readings_today > 100
+        75
+      elsif readings_today > 10
+        60
+      else
+        40
+      end
+    end
+
+    # ===== UTILITY METHODS =====
+
     def calculate_date_range(period)
       case period
       when 'today'
@@ -666,124 +432,9 @@ module Admin
       end
     end
 
-    # Health score calculation methods
-    def assess_system_performance_health_score(performance_metrics)
-      score = 100
-      score -= 20 if performance_metrics[:system_error_rate] > 5
-      score -= 15 if performance_metrics[:system_uptime] < 99.5
-      score -= 10 if performance_metrics[:average_response_time].to_f > 200
-      
-      [score, 0].max
+    def calculate_previous_period(date_range)
+      duration = date_range.end - date_range.begin
+      (date_range.begin - duration)..(date_range.begin)
     end
-
-    def assess_device_operations_health_score(device_metrics)
-      calculate_device_health_score({ device_operations: device_metrics })
-    end
-
-    def assess_platform_reliability_health_score(reliability_metrics)
-      85.0 # Placeholder
-    end
-
-    def assess_infrastructure_health_score(infrastructure_metrics)
-      score = 100
-      cpu_util = infrastructure_metrics[:server_utilization][:cpu_utilization]
-      memory_util = infrastructure_metrics[:server_utilization][:memory_utilization]
-      
-      score -= 15 if cpu_util > 80
-      score -= 10 if memory_util > 85
-      score -= 5 if infrastructure_metrics[:server_utilization][:disk_utilization] > 85
-      
-      [score, 0].max
-    end
-
-    # Placeholder methods for complex calculations
-    def calculate_page_load_times; { average: "1.2s", median: "0.9s" }; end
-    def calculate_database_performance; { query_time: "45ms", connection_pool: "healthy" }; end
-    def calculate_requests_per_minute; 1250; end
-    def calculate_concurrent_users; 180; end
-    def calculate_peak_load_metrics; { peak_rpm: 2100, handling_capacity: "good" }; end
-    def identify_system_bottlenecks; ["database_queries", "external_api_calls"]; end
-    def calculate_api_error_rate; 1.8; end
-    def analyze_error_distribution; { "500_errors" => 45, "400_errors" => 23, "timeout_errors" => 12 }; end
-    def count_critical_errors; 3; end
-    def calculate_service_availability; 99.92; end
-    def analyze_downtime_incidents; { count: 1, total_duration: "15 minutes" }; end
-    def calculate_mean_time_to_recovery; "8.5 minutes"; end
-    def calculate_connection_failure_rate; 2.1; end
-    def analyze_network_performance; { latency: "12ms", throughput: "good" }; end
-    def calculate_device_retirement_rate; 0.5; end
-    def calculate_device_utilization_metrics; { average: 78.0, peak: 95.0 }; end
-    def calculate_data_processing_performance; { avg_processing_time: "150ms" }; end
-    def calculate_device_response_times; { average: "95ms", p95: "200ms" }; end
-    def calculate_firmware_update_success_rate; 96.5; end
-    def calculate_sla_compliance; { uptime_sla: 99.5, response_time_sla: 98.2 }; end
-    def calculate_platform_reliability_score; 88.5; end
-    def analyze_incident_management_metrics; { mttr: "12 minutes", incident_count: 2 }; end
-    def calculate_recovery_metrics; { rto: "5 minutes", rpo: "1 minute" }; end
-    def calculate_data_accuracy_metrics; 99.2; end
-    def calculate_data_completeness_metrics; 97.8; end
-    def calculate_data_consistency_metrics; 99.5; end
-    def analyze_backup_recovery_metrics; { backup_success_rate: 99.8, recovery_test_success: 95.0 }; end
-    def calculate_platform_crash_rate; 0.01; end
-    def analyze_memory_usage_stability; "stable"; end
-    def detect_resource_leaks; []; end
-    def monitor_performance_degradation; "none_detected"; end
-    def analyze_user_engagement_patterns; {}; end
-    def analyze_user_journeys; {}; end
-    def analyze_conversion_funnels; {}; end
-    def calculate_user_retention_operations; 85.0; end
-    def calculate_onboarding_metrics; { completion_rate: 78.0, time_to_activation: "3.2 days" }; end
-    def calculate_help_desk_utilization; 65.0; end
-    def calculate_self_service_adoption; 42.0; end
-    def analyze_user_feedback_metrics; { satisfaction: 4.2, nps: 45 }; end
-    def calculate_escalation_rates; 8.5; end
-    def calculate_support_satisfaction; 4.3; end
-    def calculate_agent_performance; { avg_resolution_time: "2.1 hours", tickets_per_day: 12 }; end
-    def analyze_support_channels; { email: 60, chat: 30, phone: 10 }; end
-    def calculate_kb_effectiveness; { usage_rate: 45.0, resolution_rate: 62.0 }; end
-    def calculate_agent_utilization; 75.0; end
-    def calculate_cost_per_ticket; 15.50; end
-    def calculate_support_automation; { automation_rate: 35.0, deflection_rate: 28.0 }; end
-    def calculate_proactive_support_metrics; { proactive_contacts: 45, issue_prevention_rate: 23.0 }; end
-    def calculate_memory_utilization; 72.0; end
-    def calculate_disk_usage_metrics; { usage: 58.0, growth_rate: "2%/month" }; end
-    def calculate_network_throughput; { avg: "1.2 Gbps", peak: "2.1 Gbps" }; end
-    def calculate_bandwidth_utilization; 45.0; end
-    def calculate_network_latency; { avg: "12ms", p95: "25ms" }; end
-    def calculate_packet_loss_rates; 0.01; end
-    def calculate_storage_performance; { iops: 1200, latency: "5ms" }; end
-    def calculate_backup_success_rates; 99.8; end
-    def calculate_data_transfer_speeds; { avg: "125 MB/s" }; end
-    def analyze_storage_capacity; { current: "65%", projected_full: "8 months" }; end
-    def calculate_cloud_utilization; 68.0; end
-    def analyze_auto_scaling; { effectiveness: "good", cost_savings: 15.0 }; end
-    def analyze_infrastructure_costs; { monthly_cost: 8500, cost_per_user: 2.15 }; end
-    def analyze_multi_region_performance; {}; end
-    def assess_security_vulnerabilities; { high: 0, medium: 2, low: 8 }; end
-    def calculate_threat_detection; 95.0; end
-    def calculate_security_response_times; { avg: "15 minutes", p95: "45 minutes" }; end
-    def monitor_privileged_access; { sessions: 45, violations: 0 }; end
-    def calculate_access_review_compliance; 98.5; end
-    def calculate_encryption_coverage; 99.5; end
-    def calculate_dlp_effectiveness; 92.0; end
-    def assess_privacy_compliance; "compliant"; end
-    def calculate_audit_completeness; 97.8; end
-    def calculate_security_alert_volume; 145; end
-    def calculate_false_positive_rates; 12.5; end
-    def assess_security_tools; { effectiveness: "good", coverage: 95.0 }; end
-    def calculate_compliance_metrics; { gdpr: "compliant", soc2: "in_progress" }; end
-    def calculate_automation_coverage; 65.0; end
-    def calculate_manual_process_reduction; 35.0; end
-    def analyze_workflow_optimization; { efficiency_gain: 25.0 }; end
-    def calculate_cycle_time_improvements; 15.0; end
-    def calculate_resource_optimization; 18.0; end
-    def calculate_cost_per_transaction; 0.25; end
-    def calculate_efficiency_gains; 22.0; end
-    def calculate_waste_reduction; 12.0; end
-    def calculate_operational_defect_rates; 1.8; end
-    def calculate_rework_percentages; 5.2; end
-    def calculate_quality_improvements; 18.0; end
-    def assess_process_standardization; 85.0; end
-    def calculate_user_satisfaction_scores; 4.2; end
   end
 end

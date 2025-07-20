@@ -15,7 +15,6 @@ module Admin
           churn_patterns: analyze_churn_patterns(churned_subscriptions),
           cohort_analysis: perform_cohort_churn_analysis,
           risk_assessment: identify_churn_risk_users,
-          recovery_opportunities: identify_recovery_opportunities,
           financial_impact: calculate_churn_financial_impact(churned_subscriptions),
           prevention_insights: generate_prevention_insights(churned_subscriptions),
           recent_churned: serialize_recent_churned(churned_subscriptions.limit(10))
@@ -97,8 +96,7 @@ module Admin
         churn_by_month: analyze_monthly_churn_patterns,
         churn_by_plan_type: analyze_churn_by_plan_type(churned_subscriptions),
         churn_seasonality: analyze_churn_seasonality,
-        early_churn_indicators: identify_early_churn_indicators,
-        late_churn_patterns: identify_late_churn_patterns(churned_subscriptions)
+        early_vs_late_churn: analyze_early_vs_late_churn(churned_subscriptions)
       }
     end
 
@@ -128,30 +126,24 @@ module Admin
     end
 
     def identify_churn_risk_users
-      # Users showing signs they might churn
+      # Users showing signs they might churn based on real behavioral data
       risk_indicators = {}
       
-      # Payment issues
+      # Payment issues - real risk factor
       payment_risk_users = User.joins(:orders)
         .where(orders: { status: 'payment_failed', created_at: 7.days.ago.. })
         .joins(:subscription)
         .where(subscriptions: { status: ['active', 'past_due'] })
         .distinct
       
-      # Inactive users
+      # Inactive users - real behavioral indicator
       inactive_risk_users = User.joins(:subscription)
         .where(subscriptions: { status: 'active' })
         .where(last_sign_in_at: ..30.days.ago)
       
-      # Over device limit users
-      over_limit_users = User.joins(:subscription)
-        .where(subscriptions: { status: 'active' })
-        .select { |user| user.devices.count > user.device_limit }
-      
-      # Users with support tickets
-      support_risk_users = User.joins(:subscription)
-        .where(subscriptions: { status: 'active' })
-        # Would join with support tickets if available
+      # Over device limit users - real system constraint
+      active_users_with_subscriptions = User.joins(:subscription).where(subscriptions: { status: 'active' })
+      over_limit_users = active_users_with_subscriptions.select { |user| user.devices.count > user.device_limit }
       
       risk_indicators = {
         payment_issues: {
@@ -168,38 +160,25 @@ module Admin
           count: over_limit_users.count,
           users: serialize_risk_users(over_limit_users.first(5)),
           risk_level: 'medium'
-        },
-        support_issues: {
-          count: 0, # Placeholder
-          users: [],
-          risk_level: 'medium'
         }
       }
       
-      # Calculate overall risk score
+      # Calculate overall risk score based on real data
       total_at_risk = payment_risk_users.count + inactive_risk_users.count + over_limit_users.count
       total_active = Subscription.active.count
       
-      risk_indicators[:overall_risk_score] = total_active > 0 ? (total_at_risk.to_f / total_active * 100).round(2) : 0
+      risk_indicators[:overall_risk_score] = total_active > 0 ? 
+        (total_at_risk.to_f / total_active * 100).round(2) : 0
       risk_indicators[:total_at_risk] = total_at_risk
       
       risk_indicators
-    end
-
-    def identify_recovery_opportunities
-      {
-        past_due_recoverable: analyze_past_due_recovery,
-        payment_retry_opportunities: analyze_payment_retry_opportunities,
-        win_back_campaigns: analyze_win_back_opportunities,
-        intervention_strategies: generate_intervention_strategies
-      }
     end
 
     def calculate_churn_financial_impact(churned_subscriptions)
       lost_mrr = churned_subscriptions.joins(:plan).sum('plans.monthly_price')
       lost_arr = lost_mrr * 12
       
-      # Calculate lifetime value of churned customers
+      # Calculate lifetime value of churned customers using real order data
       churned_user_ids = churned_subscriptions.pluck(:user_id)
       historical_value = Order.where(user_id: churned_user_ids, status: 'completed').sum(:total)
       
@@ -208,15 +187,14 @@ module Admin
         lost_annual_revenue: lost_arr,
         historical_customer_value: historical_value,
         average_lost_value_per_customer: churned_subscriptions.count > 0 ? (historical_value / churned_subscriptions.count).round(2) : 0,
-        potential_recovery_value: calculate_recovery_value,
-        churn_cost_analysis: analyze_churn_costs(churned_subscriptions)
+        recoverable_revenue: calculate_recoverable_revenue
       }
     end
 
     def generate_prevention_insights(churned_subscriptions)
       insights = []
       
-      # Analyze patterns to generate actionable insights
+      # Early churn analysis - actionable insight
       early_churners = churned_subscriptions.where('canceled_at - created_at < INTERVAL \'30 days\'')
       if early_churners.count > churned_subscriptions.count * 0.3
         insights << {
@@ -224,11 +202,12 @@ module Admin
           severity: 'high',
           insight: 'High early churn rate detected - focus on onboarding improvements',
           affected_count: early_churners.count,
+          percentage: ((early_churners.count.to_f / churned_subscriptions.count) * 100).round(1),
           recommended_actions: ['Improve onboarding flow', 'Enhance initial user experience', 'Provide better getting started resources']
         }
       end
       
-      # Payment-related churn
+      # Payment-related churn analysis - actionable insight
       payment_churners = churned_subscriptions.joins(:user).joins(
         'LEFT JOIN orders ON orders.user_id = users.id AND orders.status = \'payment_failed\''
       ).where.not('orders.id' => nil).distinct
@@ -239,11 +218,12 @@ module Admin
           severity: 'high',
           insight: 'Payment issues are a major churn driver',
           affected_count: payment_churners.count,
+          percentage: ((payment_churners.count.to_f / churned_subscriptions.count) * 100).round(1),
           recommended_actions: ['Improve payment retry logic', 'Proactive payment failure outreach', 'Payment method backup systems']
         }
       end
       
-      # Plan-specific churn
+      # Plan-specific churn analysis - actionable insight
       plan_churn_rates = analyze_plan_specific_churn_rates(churned_subscriptions)
       problematic_plans = plan_churn_rates.select { |plan, rate| rate > 15 }
       
@@ -253,6 +233,7 @@ module Admin
           severity: 'medium',
           insight: 'Certain plans have higher churn rates',
           affected_plans: problematic_plans.keys,
+          churn_rates: problematic_plans,
           recommended_actions: ['Review plan value proposition', 'Adjust pricing strategy', 'Enhance plan features']
         }
       end
@@ -260,23 +241,10 @@ module Admin
       insights
     end
 
-    def calculate_date_range
-      case filter_params[:period]
-      when 'week'
-        1.week.ago..Time.current
-      when 'month'
-        1.month.ago..Time.current
-      when 'quarter'
-        3.months.ago..Time.current
-      when 'year'
-        1.year.ago..Time.current
-      else
-        1.month.ago..Time.current
-      end
-    end
+    # ===== REAL CALCULATION METHODS =====
 
     def calculate_period_churn_rate
-      # Calculate churn rate for the current period
+      # Calculate churn rate for the current period using real data
       start_of_period_active = Subscription.where(
         'created_at <= ? AND (canceled_at IS NULL OR canceled_at > ?)',
         date_range.begin,
@@ -308,7 +276,7 @@ module Admin
     end
 
     def calculate_churn_velocity
-      # Rate of churn acceleration/deceleration
+      # Rate of churn acceleration/deceleration using real data
       current_period_churn = Subscription.where(canceled_at: date_range).count
       previous_period = (date_range.end - date_range.begin).seconds.ago..(date_range.begin)
       previous_period_churn = Subscription.where(canceled_at: previous_period).count
@@ -321,13 +289,25 @@ module Admin
     def analyze_top_churn_reasons(churned_subscriptions)
       reasons = {}
       
-      # Payment failures
+      # Payment failures - real data analysis
       payment_churned = churned_subscriptions.joins(:user).joins(
         'LEFT JOIN orders ON orders.user_id = users.id AND orders.status = \'payment_failed\''
       ).where.not('orders.id' => nil).distinct.count
       
+      # Device limit exceeded - real system constraint
+      over_limit_churned = churned_subscriptions.joins(:user).select do |sub|
+        sub.user.devices.count > sub.device_limit
+      end.count
+      
+      # Inactivity-based churn
+      inactive_churned = churned_subscriptions.joins(:user).where(
+        'users.last_sign_in_at < ?', 30.days.ago
+      ).count
+      
       reasons['payment_issues'] = payment_churned
-      reasons['voluntary'] = churned_subscriptions.count - payment_churned
+      reasons['device_limit_exceeded'] = over_limit_churned
+      reasons['inactivity'] = inactive_churned
+      reasons['voluntary'] = churned_subscriptions.count - payment_churned - over_limit_churned - inactive_churned
       
       reasons
     end
@@ -341,7 +321,7 @@ module Admin
     end
 
     def analyze_monthly_churn_patterns
-      # Analyze churn by month to identify patterns
+      # Real monthly pattern analysis
       monthly_churn = Subscription.where(status: 'canceled', canceled_at: 12.months.ago..)
         .group_by_month(:canceled_at)
         .count
@@ -354,7 +334,7 @@ module Admin
     end
 
     def analyze_churn_seasonality
-      # Analyze if there are seasonal patterns in churn
+      # Analyze seasonal patterns using real data
       seasonal_data = Subscription.where(status: 'canceled', canceled_at: 2.years.ago..)
         .group_by_month(:canceled_at)
         .count
@@ -369,25 +349,51 @@ module Admin
       by_month
     end
 
-    def identify_early_churn_indicators
-      # Analyze characteristics of users who churn within 30 days
-      early_churners = Subscription.where('canceled_at - created_at < INTERVAL \'30 days\'')
-      
-      {
-        common_characteristics: analyze_early_churner_characteristics(early_churners),
-        warning_signs: identify_early_warning_signs,
-        prevention_opportunities: generate_early_churn_prevention_strategies
-      }
-    end
-
-    def identify_late_churn_patterns(churned_subscriptions)
+    def analyze_early_vs_late_churn(churned_subscriptions)
+      early_churners = churned_subscriptions.where('canceled_at - created_at < INTERVAL \'30 days\'')
       late_churners = churned_subscriptions.where('canceled_at - created_at > INTERVAL \'90 days\'')
       
       {
-        average_tenure: calculate_average_tenure(late_churners),
-        common_triggers: analyze_late_churn_triggers(late_churners),
-        value_delivered: calculate_value_delivered_before_churn(late_churners)
+        early_churn: {
+          count: early_churners.count,
+          average_tenure_days: calculate_average_tenure(early_churners),
+          common_reasons: analyze_top_churn_reasons(early_churners)
+        },
+        late_churn: {
+          count: late_churners.count,
+          average_tenure_days: calculate_average_tenure(late_churners),
+          value_delivered: calculate_value_delivered_before_churn(late_churners)
+        }
       }
+    end
+
+    def calculate_value_delivered_before_churn(churned_subscriptions)
+      return 0 if churned_subscriptions.empty?
+      
+      # Calculate total value from orders for churned customers
+      churned_user_ids = churned_subscriptions.pluck(:user_id)
+      total_value = Order.where(user_id: churned_user_ids, status: 'completed').sum(:total)
+      
+      (total_value.to_f / churned_subscriptions.count).round(2)
+    end
+
+    def analyze_plan_specific_churn_rates(churned_subscriptions)
+      plan_churn = {}
+      
+      Plan.all.each do |plan|
+        total_subs = Subscription.where(plan: plan).count
+        churned_subs = churned_subscriptions.where(plan: plan).count
+        
+        plan_churn[plan.name] = total_subs > 0 ? 
+          (churned_subs.to_f / total_subs * 100).round(2) : 0
+      end
+      
+      plan_churn
+    end
+
+    def calculate_recoverable_revenue
+      # Revenue that could potentially be recovered from past due subscriptions
+      Subscription.past_due.joins(:plan).sum('plans.monthly_price')
     end
 
     def serialize_recent_churned(subscriptions)
@@ -395,13 +401,11 @@ module Admin
         {
           id: subscription.id,
           user_email: subscription.user.email,
-          user_name: subscription.user.display_name,
           plan_name: subscription.plan&.name,
           canceled_at: subscription.canceled_at.iso8601,
           tenure_days: (subscription.canceled_at - subscription.created_at).to_i / 1.day,
           monthly_value: subscription.plan&.monthly_price || 0,
-          total_paid: subscription.user.orders.where(status: 'completed').sum(:total),
-          churn_reason: determine_likely_churn_reason(subscription)
+          likely_reason: determine_likely_churn_reason(subscription)
         }
       end
     end
@@ -411,128 +415,12 @@ module Admin
         {
           id: user.id,
           email: user.email,
-          display_name: user.display_name,
           plan_name: user.subscription&.plan&.name,
-          risk_factors: user.admin_risk_factors,
-          last_activity: user.last_sign_in_at&.iso8601,
-          monthly_value: user.subscription&.plan&.monthly_price || 0
+          last_sign_in: user.last_sign_in_at&.iso8601,
+          devices_count: user.devices.count,
+          device_limit: user.device_limit
         }
       end
-    end
-
-    # Additional analysis methods
-    def analyze_past_due_recovery
-      past_due_subs = Subscription.past_due.where(updated_at: 7.days.ago..)
-      
-      {
-        count: past_due_subs.count,
-        potential_recovery_value: past_due_subs.joins(:plan).sum('plans.monthly_price'),
-        recovery_probability: 0.6, # Historical data would inform this
-        recommended_actions: ['Payment retry automation', 'Customer outreach', 'Payment method update assistance']
-      }
-    end
-
-    def analyze_payment_retry_opportunities
-      failed_orders = Order.where(
-        status: 'payment_failed',
-        created_at: 3.days.ago..
-      )
-      
-      {
-        count: failed_orders.distinct.count(:user_id),
-        total_value: failed_orders.sum(:total),
-        retry_probability: 0.4,
-        recommended_timeline: '3-7 days'
-      }
-    end
-
-    def analyze_win_back_opportunities
-      recently_churned = Subscription.where(
-        status: 'canceled',
-        canceled_at: 30.days.ago..7.days.ago
-      )
-      
-      {
-        count: recently_churned.count,
-        target_segment: 'voluntary_churners',
-        win_back_probability: 0.15,
-        recommended_incentives: ['Discount offers', 'Feature upgrades', 'Extended trial']
-      }
-    end
-
-    def generate_intervention_strategies
-      [
-        {
-          strategy: 'proactive_payment_support',
-          target: 'users_with_payment_issues',
-          timeline: 'immediate',
-          expected_impact: 'reduce_payment_churn_by_30%'
-        },
-        {
-          strategy: 'onboarding_improvement',
-          target: 'new_users',
-          timeline: '30_days',
-          expected_impact: 'reduce_early_churn_by_20%'
-        },
-        {
-          strategy: 'engagement_campaigns',
-          target: 'inactive_users',
-          timeline: 'ongoing',
-          expected_impact: 'reduce_inactivity_churn_by_25%'
-        }
-      ]
-    end
-
-    # Placeholder methods that would need full implementation
-    def calculate_recovery_value
-      Subscription.past_due.joins(:plan).sum('plans.monthly_price') * 0.6
-    end
-
-    def analyze_churn_costs(churned_subscriptions)
-      {
-        acquisition_cost_lost: churned_subscriptions.count * 50, # Assume $50 CAC
-        support_cost_savings: churned_subscriptions.count * 10,  # Assume $10 monthly support cost
-        net_impact: (churned_subscriptions.count * 50) - (churned_subscriptions.count * 10)
-      }
-    end
-
-    def analyze_plan_specific_churn_rates(churned_subscriptions)
-      # Calculate churn rate by plan
-      plan_churn = {}
-      
-      Plan.all.each do |plan|
-        total_subs = Subscription.where(plan: plan).count
-        churned_subs = churned_subscriptions.where(plan: plan).count
-        
-        plan_churn[plan.name] = total_subs > 0 ? (churned_subs.to_f / total_subs * 100).round(2) : 0
-      end
-      
-      plan_churn
-    end
-
-    def analyze_early_churner_characteristics(early_churners)
-      ['poor_onboarding_experience', 'payment_method_issues', 'unmet_expectations']
-    end
-
-    def identify_early_warning_signs
-      ['no_device_registration_in_48h', 'payment_failure_on_first_charge', 'no_login_after_signup']
-    end
-
-    def generate_early_churn_prevention_strategies
-      ['improved_onboarding_flow', 'proactive_support_outreach', 'expectation_setting_content']
-    end
-
-    def analyze_late_churn_triggers(late_churners)
-      ['feature_limitations', 'competitor_switching', 'business_model_changes']
-    end
-
-    def calculate_value_delivered_before_churn(late_churners)
-      # Calculate average value delivered to customers before they churned
-      late_churners.joins(:user).joins('LEFT JOIN orders ON orders.user_id = users.id AND orders.status = \'completed\'')
-        .group('subscriptions.id')
-        .sum('orders.total')
-        .values
-        .sum / late_churners.count.to_f
     end
 
     def determine_likely_churn_reason(subscription)
@@ -554,6 +442,21 @@ module Admin
       end
       
       'voluntary'
+    end
+
+    def calculate_date_range
+      case filter_params[:period]
+      when 'week'
+        1.week.ago..Time.current
+      when 'month'
+        1.month.ago..Time.current
+      when 'quarter'
+        3.months.ago..Time.current
+      when 'year'
+        1.year.ago..Time.current
+      else
+        1.month.ago..Time.current
+      end
     end
   end
 end

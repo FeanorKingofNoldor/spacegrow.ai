@@ -27,43 +27,45 @@ class Api::V1::Admin::SubscriptionsController < Api::V1::Admin::BaseController
     render_error("Subscription not found", [], 404)
   end
 
-  def update_status
-    subscription = Subscription.find(params[:id])
-    service = Admin::SubscriptionStatusUpdateService.new(
-      subscription, 
-      params[:status], 
-      params[:reason]
-    )
-    result = service.call
+def update_status
+  subscription = Subscription.find(params[:id])
+  service = Admin::SubscriptionStatusUpdateService.new(
+    subscription, 
+    params[:status], 
+    params[:reason],
+    current_user.id  # 👈 ADD THIS LINE
+  )
+  result = service.call
 
-    if result[:success]
-      render_success(result.except(:success), result[:message])
-    else
-      render_error(result[:error])
-    end
-  rescue ActiveRecord::RecordNotFound
-    render_error("Subscription not found", [], 404)
+  if result[:success]
+    render_success(result.except(:success), result[:message])
+  else
+    render_error(result[:error])
   end
+rescue ActiveRecord::RecordNotFound
+  render_error("Subscription not found", [], 404)
+end
 
   def force_plan_change
-    subscription = Subscription.find(params[:id])
-    target_plan = Plan.find(params[:plan_id])
-    
-    service = Admin::SubscriptionPlanChangeService.new(
-      subscription,
-      target_plan,
-      params[:interval] || 'month'
-    )
-    result = service.call
+  subscription = Subscription.find(params[:id])
+  target_plan = Plan.find(params[:plan_id])
+  
+  service = Admin::SubscriptionPlanChangeService.new(
+    subscription,
+    target_plan,
+    params[:interval] || 'month',
+    admin_user_id: current_user&.id  # Add admin context
+  )
+  result = service.call
 
-    if result[:success]
-      render_success(result.except(:success), result[:message])
-    else
-      render_error(result[:error])
-    end
-  rescue ActiveRecord::RecordNotFound
-    render_error("Subscription or plan not found", [], 404)
+  if result[:success]
+    render_success(result.except(:success), result[:message])
+  else
+    render_error(result[:error])
   end
+rescue ActiveRecord::RecordNotFound
+  render_error("Subscription or plan not found", [], 404)
+end
 
   def billing_analytics
     service = Admin::BillingAnalyticsService.new(params[:period])

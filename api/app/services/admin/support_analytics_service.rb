@@ -3,23 +3,19 @@ module Admin
   class SupportAnalyticsService < ApplicationService
     def support_overview(params)
       begin
-        # This service analyzes support requests and identifies trending issues
-        # Since you might not have a SupportRequest model yet, we'll analyze from multiple sources
-        
+        # Focus on actual issues we can detect from system data
         overview = {
-          ticket_metrics: analyze_support_tickets(params),
-          error_trends: analyze_system_errors(params),
-          user_issues: analyze_user_reported_issues(params),
           device_problems: analyze_device_issues(params),
           payment_issues: analyze_payment_support_issues(params),
-          resolution_metrics: calculate_resolution_metrics(params)
+          system_health: analyze_system_health_issues,
+          user_activity: analyze_user_activity_issues
         }
         
         success(
           overview: overview,
           priority_issues: identify_priority_issues(overview),
           action_items: generate_support_action_items(overview),
-          team_workload: calculate_team_workload
+          summary: build_overview_summary(overview)
         )
       rescue => e
         Rails.logger.error "Support overview error: #{e.message}"
@@ -27,584 +23,527 @@ module Admin
       end
     end
 
-    def support_analytics(period = 'month')
+    def device_issues_analysis(params)
       begin
-        date_range = calculate_date_range(period)
-        
-        analytics = {
-          volume_trends: analyze_volume_trends(date_range),
-          resolution_performance: analyze_resolution_performance(date_range),
-          category_breakdown: analyze_issue_categories(date_range),
-          customer_impact: analyze_customer_impact(date_range),
-          team_performance: analyze_team_performance(date_range),
-          satisfaction_scores: analyze_satisfaction_scores(date_range)
-        }
-        
-        success(
-          period: period,
-          date_range: date_range,
-          analytics: analytics,
-          insights: generate_support_insights(analytics),
-          recommendations: generate_support_recommendations(analytics)
-        )
-      rescue => e
-        Rails.logger.error "Support analytics error: #{e.message}"
-        failure("Failed to generate support analytics: #{e.message}")
-      end
-    end
-
-    def trending_issues_analysis(params)
-      begin
-        # Analyze trending issues from multiple data sources
-        trending = {
-          device_errors: analyze_trending_device_errors,
-          payment_failures: analyze_trending_payment_issues,
-          connection_issues: analyze_trending_connection_problems,
-          user_complaints: analyze_trending_user_complaints,
-          system_errors: analyze_trending_system_errors,
-          feature_requests: analyze_trending_feature_requests
-        }
-        
-        # Rank issues by impact and frequency
-        ranked_issues = rank_issues_by_priority(trending)
-        
-        success(
-          trending_issues: trending,
-          priority_ranking: ranked_issues,
-          impact_analysis: calculate_issue_impact(ranked_issues),
-          suggested_responses: suggest_issue_responses(ranked_issues)
-        )
-      rescue => e
-        Rails.logger.error "Trending issues analysis error: #{e.message}"
-        failure("Failed to analyze trending issues: #{e.message}")
-      end
-    end
-
-    def customer_satisfaction_metrics(period = 'month')
-      begin
-        date_range = calculate_date_range(period)
-        
-        satisfaction = {
-          overall_score: calculate_overall_satisfaction_score(date_range),
-          nps_score: calculate_nps_score(date_range),
-          resolution_satisfaction: calculate_resolution_satisfaction(date_range),
-          response_time_satisfaction: calculate_response_time_satisfaction(date_range),
-          satisfaction_trends: analyze_satisfaction_trends(date_range),
-          feedback_analysis: analyze_customer_feedback(date_range)
-        }
-        
-        success(
-          period: period,
-          satisfaction_metrics: satisfaction,
-          improvement_areas: identify_satisfaction_improvement_areas(satisfaction),
-          success_factors: identify_satisfaction_success_factors(satisfaction)
-        )
-      rescue => e
-        Rails.logger.error "Customer satisfaction metrics error: #{e.message}"
-        failure("Failed to calculate satisfaction metrics: #{e.message}")
-      end
-    end
-
-    def operational_metrics(period = 'month')
-      begin
-        date_range = calculate_date_range(period)
-        
-        metrics = {
-          response_times: calculate_response_time_metrics(date_range),
-          resolution_times: calculate_resolution_time_metrics(date_range),
-          workload_distribution: analyze_workload_distribution(date_range),
-          escalation_rates: calculate_escalation_rates(date_range),
-          efficiency_metrics: calculate_efficiency_metrics(date_range),
-          quality_metrics: calculate_quality_metrics(date_range)
-        }
-        
-        success(
-          period: period,
-          operational_metrics: metrics,
-          performance_trends: identify_performance_trends(metrics),
-          bottlenecks: identify_operational_bottlenecks(metrics),
-          optimization_opportunities: identify_optimization_opportunities(metrics)
-        )
-      rescue => e
-        Rails.logger.error "Operational metrics error: #{e.message}"
-        failure("Failed to calculate operational metrics: #{e.message}")
-      end
-    end
-
-    def escalation_analysis(params)
-      begin
-        # Analyze escalation patterns and reasons
         analysis = {
-          escalation_volume: count_escalations(params),
-          escalation_reasons: analyze_escalation_reasons(params),
-          escalation_timing: analyze_escalation_timing(params),
-          customer_impact: analyze_escalation_customer_impact(params),
-          resolution_outcomes: analyze_escalation_outcomes(params),
-          prevention_opportunities: identify_escalation_prevention_opportunities(params)
+          device_errors: analyze_trending_device_errors,
+          connection_issues: analyze_trending_connection_problems,
+          geographic_patterns: analyze_device_geographic_issues,
+          timeline: build_device_issues_timeline(params)
         }
         
         success(
-          escalation_analysis: analysis,
-          escalation_trends: identify_escalation_trends(analysis),
-          prevention_strategies: generate_escalation_prevention_strategies(analysis)
+          device_analysis: analysis,
+          affected_users: calculate_affected_users(analysis),
+          recommendations: generate_device_recommendations(analysis)
         )
       rescue => e
-        Rails.logger.error "Escalation analysis error: #{e.message}"
-        failure("Failed to analyze escalations: #{e.message}")
+        Rails.logger.error "Device issues analysis error: #{e.message}"
+        failure("Failed to analyze device issues: #{e.message}")
+      end
+    end
+
+    def payment_issues_analysis(params)
+      begin
+        analysis = {
+          payment_failures: analyze_trending_payment_issues,
+          subscription_problems: analyze_subscription_issues,
+          revenue_impact: calculate_payment_revenue_impact,
+          timeline: build_payment_issues_timeline(params)
+        }
+        
+        success(
+          payment_analysis: analysis,
+          financial_impact: calculate_financial_impact(analysis),
+          recommendations: generate_payment_recommendations(analysis)
+        )
+      rescue => e
+        Rails.logger.error "Payment issues analysis error: #{e.message}"
+        failure("Failed to analyze payment issues: #{e.message}")
+      end
+    end
+
+    def system_insights(period = 'week')
+      begin
+        date_range = calculate_date_range(period)
+        
+        insights = {
+          device_health_trends: analyze_device_health_trends(date_range),
+          payment_health_trends: analyze_payment_health_trends(date_range),
+          user_experience_indicators: analyze_user_experience_indicators(date_range)
+        }
+        
+        success(
+          period: period,
+          insights: insights,
+          alerts: generate_system_alerts(insights),
+          trend_summary: build_trend_summary(insights)
+        )
+      rescue => e
+        Rails.logger.error "System insights error: #{e.message}"
+        failure("Failed to generate system insights: #{e.message}")
       end
     end
 
     private
 
-    # ===== SUPPORT TICKET ANALYSIS =====
+    # ===== DEVICE ISSUE ANALYSIS =====
     
-    def analyze_support_tickets(params)
-      # This would integrate with your support ticket system
-      # For now, we'll analyze from related data sources
-      
-      {
-        total_tickets: calculate_total_support_volume,
-        open_tickets: calculate_open_support_issues,
-        avg_response_time: calculate_avg_response_time,
-        avg_resolution_time: calculate_avg_resolution_time,
-        ticket_sources: analyze_support_sources,
-        priority_distribution: analyze_priority_distribution
-      }
-    end
-
-    def analyze_system_errors(params)
-      # Analyze system errors that might generate support requests
-      recent_errors = count_recent_system_errors
-      error_patterns = analyze_error_patterns
-      
-      {
-        total_errors: recent_errors,
-        error_categories: error_patterns[:categories],
-        trending_errors: error_patterns[:trending],
-        impact_estimate: estimate_error_support_impact(recent_errors)
-      }
-    end
-
-    def analyze_user_reported_issues(params)
-      # Analyze issues reported through various channels
-      {
-        payment_issues: count_payment_related_issues,
-        device_issues: count_device_related_issues,
-        account_issues: count_account_related_issues,
-        feature_requests: count_feature_requests,
-        bug_reports: count_bug_reports
-      }
-    end
-
     def analyze_device_issues(params)
       offline_devices = Device.where(last_connection: ..1.hour.ago).count
       error_devices = Device.where(status: 'error').count
+      never_connected = Device.where(last_connection: nil).where(created_at: ..1.day.ago).count
       
       {
         offline_devices: offline_devices,
         error_devices: error_devices,
-        potential_support_load: estimate_device_support_load(offline_devices, error_devices),
-        device_issue_categories: categorize_device_issues
+        never_connected_devices: never_connected,
+        total_problematic: offline_devices + error_devices + never_connected,
+        potential_support_load: calculate_device_support_load(offline_devices, error_devices, never_connected),
+        device_issue_categories: categorize_current_device_issues
       }
     end
 
-    def analyze_payment_support_issues(params)
-      failed_payments = Order.where(status: 'payment_failed', created_at: 24.hours.ago..).count
-      past_due_subs = Subscription.past_due.count
-      
-      {
-        failed_payments: failed_payments,
-        past_due_subscriptions: past_due_subs,
-        estimated_support_volume: estimate_payment_support_volume(failed_payments, past_due_subs),
-        payment_issue_trends: analyze_payment_issue_trends
-      }
-    end
-
-    def calculate_resolution_metrics(params)
-      {
-        avg_first_response: "2.5 hours", # Placeholder
-        avg_resolution_time: "24 hours", # Placeholder
-        first_contact_resolution_rate: 68.5, # Placeholder
-        customer_satisfaction_score: 4.2, # Placeholder
-        escalation_rate: 12.3 # Placeholder
-      }
-    end
-
-    # ===== TRENDING ANALYSIS =====
-    
     def analyze_trending_device_errors
       recent_device_errors = Device.where(status: 'error', updated_at: 7.days.ago..)
+      previous_week_errors = Device.where(status: 'error', updated_at: 14.days.ago..7.days.ago)
+      
+      current_count = recent_device_errors.count
+      previous_count = previous_week_errors.count
       
       {
-        count: recent_device_errors.count,
-        trend: 'increasing', # Would calculate actual trend
-        impact_level: 'medium',
-        common_patterns: ['connection_timeout', 'sensor_malfunction'],
-        affected_users: recent_device_errors.distinct.count(:user_id)
-      }
-    end
-
-    def analyze_trending_payment_issues
-      recent_payment_failures = Order.where(status: 'payment_failed', created_at: 7.days.ago..)
-      
-      {
-        count: recent_payment_failures.count,
-        trend: calculate_payment_failure_trend,
-        impact_level: 'high',
-        common_reasons: analyze_payment_failure_reasons(recent_payment_failures),
-        affected_revenue: recent_payment_failures.sum(:total)
+        count: current_count,
+        trend: calculate_trend(current_count, previous_count),
+        impact_level: determine_impact_level(current_count, Device.count),
+        common_patterns: analyze_device_error_patterns(recent_device_errors),
+        affected_users: recent_device_errors.distinct.count(:user_id),
+        by_device_type: recent_device_errors.joins(:device_type).group('device_types.name').count
       }
     end
 
     def analyze_trending_connection_problems
       offline_devices = Device.where(last_connection: ..1.hour.ago)
+      recently_offline = Device.where(last_connection: 1.hour.ago..6.hours.ago)
       
       {
         count: offline_devices.count,
-        trend: 'stable', # Would calculate actual trend
-        impact_level: 'medium',
-        geographic_patterns: analyze_connection_geographic_patterns,
-        time_patterns: analyze_connection_time_patterns
+        recently_offline: recently_offline.count,
+        trend: calculate_connection_trend,
+        impact_level: determine_impact_level(offline_devices.count, Device.count),
+        affected_users: offline_devices.distinct.count(:user_id),
+        by_device_type: offline_devices.joins(:device_type).group('device_types.name').count
       }
     end
 
-    def analyze_trending_user_complaints
-      # This would analyze user feedback, emails, etc.
-      {
-        count: 15, # Placeholder
-        trend: 'decreasing',
-        impact_level: 'low',
-        common_themes: ['slow_response', 'billing_confusion', 'setup_difficulty'],
-        sentiment_analysis: { positive: 60, neutral: 25, negative: 15 }
-      }
-    end
-
-    def analyze_trending_system_errors
-      # This would integrate with your error tracking system
-      {
-        count: 23, # Placeholder
-        trend: 'increasing',
-        impact_level: 'medium',
-        error_types: ['database_timeout', 'api_rate_limit', 'memory_leak'],
-        affected_endpoints: ['/api/v1/devices', '/api/v1/sensor_data']
-      }
-    end
-
-    def analyze_trending_feature_requests
-      # This would analyze feature request submissions
-      {
-        count: 8, # Placeholder
-        trend: 'stable',
-        impact_level: 'low',
-        popular_requests: ['mobile_app', 'advanced_alerts', 'data_export'],
-        request_sources: ['dashboard_feedback', 'support_tickets', 'user_surveys']
-      }
-    end
-
-    # ===== SATISFACTION ANALYSIS =====
+    # ===== PAYMENT ISSUE ANALYSIS =====
     
-    def calculate_overall_satisfaction_score(date_range)
-      # This would integrate with your feedback collection system
-      4.2 # Placeholder
-    end
-
-    def calculate_nps_score(date_range)
-      # Net Promoter Score calculation
-      42 # Placeholder
-    end
-
-    def calculate_resolution_satisfaction(date_range)
-      # Satisfaction with issue resolution
-      4.1 # Placeholder
-    end
-
-    def calculate_response_time_satisfaction(date_range)
-      # Satisfaction with response times
-      3.8 # Placeholder
-    end
-
-    def analyze_satisfaction_trends(date_range)
-      # Analyze satisfaction trends over time
+    def analyze_payment_support_issues(params)
+      failed_payments = Order.where(status: 'payment_failed', created_at: 24.hours.ago..)
+      past_due_subs = Subscription.where(status: 'past_due')
+      
       {
-        overall_trend: 'improving',
-        monthly_scores: [3.9, 4.0, 4.1, 4.2],
-        improvement_rate: 0.1
+        failed_payments: failed_payments.count,
+        past_due_subscriptions: past_due_subs.count,
+        affected_revenue: failed_payments.sum(:total),
+        affected_users: (failed_payments.pluck(:user_id) + past_due_subs.pluck(:user_id)).uniq.count,
+        estimated_support_volume: calculate_payment_support_volume(failed_payments.count, past_due_subs.count),
+        payment_issue_trends: analyze_payment_trend(failed_payments)
       }
     end
 
-    def analyze_customer_feedback(date_range)
-      # Analyze qualitative feedback
+    def analyze_trending_payment_issues
+      recent_failures = Order.where(status: 'payment_failed', created_at: 7.days.ago..)
+      previous_failures = Order.where(status: 'payment_failed', created_at: 14.days.ago..7.days.ago)
+      
+      current_count = recent_failures.count
+      previous_count = previous_failures.count
+      
       {
-        total_feedback: 156, # Placeholder
-        positive_feedback: 89,
-        negative_feedback: 23,
-        neutral_feedback: 44,
-        common_praise: ['quick_response', 'helpful_staff', 'problem_solved'],
-        common_complaints: ['long_wait_times', 'complex_setup', 'billing_issues']
+        count: current_count,
+        trend: calculate_trend(current_count, previous_count),
+        impact_level: determine_impact_level(current_count, Order.count),
+        affected_revenue: recent_failures.sum(:total),
+        affected_users: recent_failures.distinct.count(:user_id),
+        failure_reasons: analyze_payment_failure_patterns(recent_failures)
       }
     end
 
-    # ===== OPERATIONAL METRICS =====
+    def analyze_subscription_issues
+      past_due = Subscription.where(status: 'past_due').count
+      canceled = Subscription.where(status: 'canceled', updated_at: 7.days.ago..).count
+      
+      {
+        past_due_count: past_due,
+        recent_cancellations: canceled,
+        churn_risk_users: past_due,
+        revenue_at_risk: calculate_revenue_at_risk
+      }
+    end
+
+    # ===== SYSTEM HEALTH ANALYSIS =====
     
-    def calculate_response_time_metrics(date_range)
+    def analyze_system_health_issues
       {
-        average: "2.5 hours",
-        median: "1.8 hours",
-        percentile_90: "6.2 hours",
-        sla_compliance: 87.5,
-        trend: 'improving'
+        devices_needing_attention: Device.where(
+          'last_connection < ? OR status = ?', 
+          1.hour.ago, 'error'
+        ).count,
+        users_with_device_issues: Device.where(
+          'last_connection < ? OR status = ?', 
+          1.hour.ago, 'error'
+        ).distinct.count(:user_id),
+        new_device_setup_failures: Device.where(
+          last_connection: nil, 
+          created_at: 1.day.ago..
+        ).count
       }
     end
 
-    def calculate_resolution_time_metrics(date_range)
+    def analyze_user_activity_issues
+      inactive_users = User.where(last_sign_in_at: ..30.days.ago).count
+      users_with_no_devices = User.left_joins(:devices).where(devices: { id: nil }).count
+      
       {
-        average: "18.2 hours",
-        median: "12.4 hours",
-        percentile_90: "48 hours",
-        sla_compliance: 78.3,
-        trend: 'stable'
+        inactive_users: inactive_users,
+        users_without_devices: users_with_no_devices,
+        potential_onboarding_issues: users_with_no_devices
       }
     end
 
-    def analyze_workload_distribution(date_range)
+    # ===== TREND ANALYSIS HELPERS =====
+    
+    def calculate_trend(current, previous)
+      return 'stable' if previous == 0
+      
+      change_percent = ((current - previous).to_f / previous * 100).round(1)
+      
+      case change_percent
+      when -Float::INFINITY..-10 then 'decreasing'
+      when -10..10 then 'stable'
+      else 'increasing'
+      end
+    end
+
+    def determine_impact_level(count, total)
+      percentage = total > 0 ? (count.to_f / total * 100) : 0
+      
+      case percentage
+      when 0..2 then 'low'
+      when 2..10 then 'medium'
+      else 'high'
+      end
+    end
+
+    def calculate_connection_trend
+      current_offline = Device.where(last_connection: ..1.hour.ago).count
+      yesterday_offline = Device.where(last_connection: ..25.hours.ago).where(last_connection: 23.hours.ago..).count
+      
+      calculate_trend(current_offline, yesterday_offline)
+    end
+
+    # ===== PATTERN ANALYSIS =====
+    
+    def analyze_device_error_patterns(error_devices)
+      patterns = []
+      
+      # Check for common error patterns
+      if error_devices.joins(:device_type).where(device_types: { name: 'Environmental Monitor' }).count > 0
+        patterns << 'environmental_monitor_issues'
+      end
+      
+      if error_devices.where('created_at > ?', 7.days.ago).count > error_devices.count / 2
+        patterns << 'new_device_failures'
+      end
+      
+      patterns.any? ? patterns : ['general_connectivity']
+    end
+
+    def analyze_payment_failure_patterns(failed_orders)
+      # Analyze failure reasons if available in your Order model
+      # This would depend on how you store Stripe failure reasons
+      ['card_declined', 'insufficient_funds'] # Simplified
+    end
+
+    def categorize_current_device_issues
+      categories = []
+      
+      offline_count = Device.where(last_connection: ..1.hour.ago).count
+      error_count = Device.where(status: 'error').count
+      never_connected_count = Device.where(last_connection: nil).count
+      
+      categories << 'connectivity' if offline_count > 0
+      categories << 'hardware_errors' if error_count > 0  
+      categories << 'setup_issues' if never_connected_count > 0
+      
+      categories.any? ? categories : ['no_issues']
+    end
+
+    # ===== CALCULATION HELPERS =====
+    
+    def calculate_device_support_load(offline, error, never_connected)
+      # Estimate support ticket likelihood
+      (offline * 0.1) + (error * 0.8) + (never_connected * 0.3)
+    end
+
+    def calculate_payment_support_volume(failed_payments, past_due_subs)
+      (failed_payments * 0.6) + (past_due_subs * 0.3)
+    end
+
+    def calculate_revenue_at_risk
+      Subscription.where(status: 'past_due').joins(:plan).sum('plans.monthly_price')
+    end
+
+    def calculate_affected_users(analysis)
+      device_affected = analysis[:device_errors][:affected_users] || 0
+      payment_affected = analysis[:payment_failures][:affected_users] || 0
+      
+      device_affected + payment_affected
+    end
+
+    def calculate_financial_impact(analysis)
+      revenue_lost = analysis[:payment_failures][:affected_revenue] || 0
+      revenue_at_risk = analysis[:subscription_problems][:revenue_at_risk] || 0
+      
       {
-        total_workload: 245, # Total support items
-        per_agent: 49, # Average per agent
-        workload_balance: 'uneven', # Would calculate distribution
-        peak_hours: [9, 10, 14, 15],
-        bottleneck_periods: ['monday_morning', 'friday_afternoon']
+        immediate_loss: revenue_lost,
+        potential_loss: revenue_at_risk,
+        total_impact: revenue_lost + revenue_at_risk
       }
     end
 
-    def calculate_escalation_rates(date_range)
-      {
-        overall_rate: 12.3,
-        by_category: {
-          'technical' => 18.5,
-          'billing' => 8.2,
-          'account' => 15.1
-        },
-        trend: 'decreasing'
-      }
-    end
-
-    def calculate_efficiency_metrics(date_range)
-      {
-        tickets_per_agent_per_day: 8.5,
-        first_contact_resolution: 68.5,
-        reopened_ticket_rate: 5.2,
-        agent_utilization: 78.3
-      }
-    end
-
-    def calculate_quality_metrics(date_range)
-      {
-        customer_satisfaction: 4.2,
-        quality_score: 87.5,
-        accuracy_rate: 94.2,
-        completeness_score: 91.8
-      }
-    end
-
-    # ===== HELPER METHODS =====
+    # ===== SUMMARY BUILDERS =====
     
     def identify_priority_issues(overview)
       issues = []
       
-      if overview[:device_problems][:error_devices] > 10
+      device_problems = overview[:device_problems]
+      if device_problems[:total_problematic] > 10
         issues << {
-          type: 'device_errors',
-          priority: 'high',
-          count: overview[:device_problems][:error_devices],
-          description: 'High number of devices in error state'
+          type: 'device_issues',
+          severity: device_problems[:total_problematic] > 50 ? 'high' : 'medium',
+          count: device_problems[:total_problematic],
+          description: "#{device_problems[:total_problematic]} devices need attention"
         }
       end
       
-      if overview[:payment_issues][:failed_payments] > 5
+      payment_problems = overview[:payment_issues]
+      if payment_problems[:failed_payments] > 5
         issues << {
-          type: 'payment_failures',
-          priority: 'high',
-          count: overview[:payment_issues][:failed_payments],
-          description: 'Elevated payment failure rate'
+          type: 'payment_issues', 
+          severity: payment_problems[:failed_payments] > 20 ? 'high' : 'medium',
+          count: payment_problems[:failed_payments],
+          description: "#{payment_problems[:failed_payments]} payment failures need review"
         }
       end
       
-      issues.sort_by { |issue| issue[:priority] == 'high' ? 0 : 1 }
+      issues
     end
 
     def generate_support_action_items(overview)
       actions = []
       
-      # Generate actionable items based on the overview data
-      actions << "Review device error patterns - #{overview[:device_problems][:error_devices]} devices need attention"
-      actions << "Address payment issues - #{overview[:payment_issues][:failed_payments]} failed payments require follow-up"
+      device_problems = overview[:device_problems]
+      if device_problems[:error_devices] > 0
+        actions << "Investigate #{device_problems[:error_devices]} devices in error state"
+      end
       
-      if overview[:resolution_metrics][:escalation_rate] > 15
-        actions << "Investigate escalation causes - rate above target threshold"
+      if device_problems[:never_connected_devices] > 0
+        actions << "Review onboarding for #{device_problems[:never_connected_devices]} devices that never connected"
+      end
+      
+      payment_problems = overview[:payment_issues]  
+      if payment_problems[:failed_payments] > 0
+        actions << "Follow up on #{payment_problems[:failed_payments]} failed payments"
+      end
+      
+      if payment_problems[:past_due_subscriptions] > 0
+        actions << "Contact #{payment_problems[:past_due_subscriptions]} users with past due subscriptions"
       end
       
       actions
     end
 
-    def calculate_team_workload
+    def build_overview_summary(overview)
+      total_issues = (overview[:device_problems][:total_problematic] || 0) + 
+                    (overview[:payment_issues][:failed_payments] || 0)
+      
       {
-        total_open_items: 127, # Placeholder
-        avg_per_agent: 25.4,
-        capacity_utilization: 82.3,
-        estimated_resolution_time: "3.2 days"
+        total_issues: total_issues,
+        primary_concern: determine_primary_concern(overview),
+        status: total_issues > 20 ? 'needs_attention' : 'manageable'
       }
     end
 
-    def rank_issues_by_priority(trending)
-      issues = []
+    def determine_primary_concern(overview)
+      device_issues = overview[:device_problems][:total_problematic] || 0
+      payment_issues = overview[:payment_issues][:failed_payments] || 0
       
-      trending.each do |category, data|
-        issues << {
-          category: category,
-          count: data[:count],
-          impact_level: data[:impact_level],
-          trend: data[:trend],
-          priority_score: calculate_priority_score(data)
-        }
-      end
-      
-      issues.sort_by { |issue| -issue[:priority_score] }
-    end
-
-    def calculate_priority_score(issue_data)
-      # Calculate priority based on count, impact, and trend
-      base_score = issue_data[:count] || 0
-      
-      impact_multiplier = case issue_data[:impact_level]
-                         when 'high' then 3
-                         when 'medium' then 2
-                         when 'low' then 1
-                         else 1
-                         end
-      
-      trend_multiplier = case issue_data[:trend]
-                        when 'increasing' then 1.5
-                        when 'stable' then 1.0
-                        when 'decreasing' then 0.8
-                        else 1.0
-                        end
-      
-      (base_score * impact_multiplier * trend_multiplier).round(1)
-    end
-
-    def calculate_issue_impact(ranked_issues)
-      total_impact = ranked_issues.sum { |issue| issue[:priority_score] }
-      
-      ranked_issues.map do |issue|
-        issue.merge(
-          impact_percentage: total_impact > 0 ? ((issue[:priority_score] / total_impact) * 100).round(1) : 0
-        )
-      end
-    end
-
-    def suggest_issue_responses(ranked_issues)
-      responses = {}
-      
-      ranked_issues.each do |issue|
-        responses[issue[:category]] = generate_response_suggestion(issue)
-      end
-      
-      responses
-    end
-
-    def generate_response_suggestion(issue)
-      case issue[:category]
-      when :device_errors
-        "Implement proactive device monitoring and automated diagnostics"
-      when :payment_failures
-        "Review payment processor settings and customer communication flow"
-      when :connection_issues
-        "Investigate network infrastructure and device connectivity patterns"
+      if device_issues > payment_issues
+        'device_connectivity'
+      elsif payment_issues > 0
+        'payment_processing'
       else
-        "Monitor trends and prepare standard response procedures"
+        'system_healthy'
       end
     end
 
-    def generate_support_insights(analytics)
-      insights = []
-      
-      if analytics[:volume_trends][:trend] == 'increasing'
-        insights << "Support volume trending upward - consider resource planning"
-      end
-      
-      if analytics[:satisfaction_scores][:overall] < 4.0
-        insights << "Customer satisfaction below target - review support processes"
-      end
-      
-      insights
-    end
-
-    def generate_support_recommendations(analytics)
+    # ===== RECOMMENDATION GENERATORS =====
+    
+    def generate_device_recommendations(analysis)
       recommendations = []
       
-      if analytics[:resolution_performance][:avg_resolution_time] > 24
-        recommendations << "Implement faster resolution workflows to meet SLA targets"
+      if analysis[:device_errors][:count] > 10
+        recommendations << "Implement proactive device monitoring alerts"
       end
       
-      if analytics[:team_performance][:agent_utilization] > 85
-        recommendations << "Consider additional staffing to prevent burnout"
+      if analysis[:connection_issues][:count] > 20
+        recommendations << "Review network infrastructure and device connectivity guides"
       end
       
       recommendations
     end
 
+    def generate_payment_recommendations(analysis)
+      recommendations = []
+      
+      if analysis[:payment_failures][:count] > 10
+        recommendations << "Review payment failure communications and retry logic"
+      end
+      
+      if analysis[:subscription_problems][:past_due_count] > 5
+        recommendations << "Implement automated payment retry and dunning management"
+      end
+      
+      recommendations
+    end
+
+    # ===== HELPER METHODS =====
+    
     def calculate_date_range(period)
       case period
+      when 'day' then 1.day.ago..Time.current
       when 'week' then 1.week.ago..Time.current
       when 'month' then 1.month.ago..Time.current
-      when 'quarter' then 3.months.ago..Time.current
-      else 1.month.ago..Time.current
+      else 1.week.ago..Time.current
       end
     end
 
-    # ===== PLACEHOLDER CALCULATIONS =====
-    # These would integrate with your actual data sources
-    
-    def calculate_total_support_volume; 156; end
-    def calculate_open_support_issues; 34; end
-    def calculate_avg_response_time; "2.5 hours"; end
-    def calculate_avg_resolution_time; "18.2 hours"; end
-    def analyze_support_sources; { email: 45, chat: 67, phone: 44 }; end
-    def analyze_priority_distribution; { low: 89, medium: 52, high: 15 }; end
-    def count_recent_system_errors; 23; end
-    def analyze_error_patterns; { categories: {}, trending: [] }; end
-    def estimate_error_support_impact(errors); errors * 0.3; end
-    def count_payment_related_issues; 12; end
-    def count_device_related_issues; 28; end
-    def count_account_related_issues; 15; end
-    def count_feature_requests; 8; end
-    def count_bug_reports; 6; end
-    def estimate_device_support_load(offline, error); (offline * 0.2) + (error * 0.8); end
-    def categorize_device_issues; ['connection', 'sensor', 'power']; end
-    def estimate_payment_support_volume(failed, past_due); (failed * 0.6) + (past_due * 0.3); end
-    def analyze_payment_issue_trends; { trend: 'stable', weekly_avg: 8.5 }; end
-    def calculate_payment_failure_trend; 'increasing'; end
-    def analyze_payment_failure_reasons(orders); ['insufficient_funds', 'expired_card']; end
-    def analyze_connection_geographic_patterns; { 'US-West': 'good', 'US-East': 'degraded' }; end
-    def analyze_connection_time_patterns; { peak_issues: [3, 4, 5] }; end
-    def analyze_volume_trends(date_range); { trend: 'stable', daily_avg: 22.3 }; end
-    def analyze_resolution_performance(date_range); { avg_resolution_time: 18.2, trend: 'improving' }; end
-    def analyze_issue_categories(date_range); { technical: 45, billing: 32, account: 23 }; end
-    def analyze_customer_impact(date_range); { high_impact: 12, medium_impact: 34, low_impact: 89 }; end
-    def analyze_team_performance(date_range); { agent_utilization: 78.3, avg_resolution_rate: 8.5 }; end
-    def analyze_satisfaction_scores(date_range); { overall: 4.2, trend: 'improving' }; end
-    def identify_satisfaction_improvement_areas(satisfaction); ['response_time', 'first_contact_resolution']; end
-    def identify_satisfaction_success_factors(satisfaction); ['agent_knowledge', 'problem_resolution']; end
-    def identify_performance_trends(metrics); ['improving_response_time', 'stable_resolution_quality']; end
-    def identify_operational_bottlenecks(metrics); ['monday_morning_volume', 'complex_technical_issues']; end
-    def identify_optimization_opportunities(metrics); ['automate_common_tasks', 'improve_knowledge_base']; end
-    def count_escalations(params); 23; end
-    def analyze_escalation_reasons(params); { complexity: 45, customer_request: 30, sla_breach: 25 }; end
-    def analyze_escalation_timing(params); { avg_time_to_escalate: "4.2 hours", triggers: ['sla_breach', 'customer_request'] }; end
-    def analyze_escalation_customer_impact(params); { high_value_customers: 12, critical_issues: 8 }; end
-    def analyze_escalation_outcomes(params); { resolved: 78, pending: 15, transferred: 7 }; end
-    def identify_escalation_prevention_opportunities(params); ['better_initial_triage', 'agent_training']; end
-    def identify_escalation_trends(analysis); ['increasing_complexity', 'decreasing_volume']; end
-    def generate_escalation_prevention_strategies(analysis); ['improve_knowledge_base', 'enhance_training']; end
+    def analyze_device_health_trends(date_range)
+      {
+        error_trend: calculate_trend(
+          Device.where(status: 'error', updated_at: date_range).count,
+          Device.where(status: 'error', updated_at: (date_range.begin - date_range.size.seconds)..date_range.begin).count
+        ),
+        connection_trend: calculate_connection_trend
+      }
+    end
+
+    def analyze_payment_health_trends(date_range)
+      current_failures = Order.where(status: 'payment_failed', created_at: date_range).count
+      previous_failures = Order.where(status: 'payment_failed', created_at: (date_range.begin - date_range.size.seconds)..date_range.begin).count
+      
+      {
+        payment_failure_trend: calculate_trend(current_failures, previous_failures)
+      }
+    end
+
+    def analyze_user_experience_indicators(date_range)
+      {
+        new_user_success_rate: calculate_new_user_success_rate(date_range),
+        device_setup_success_rate: calculate_device_setup_success_rate(date_range)
+      }
+    end
+
+    def calculate_new_user_success_rate(date_range)
+      new_users = User.where(created_at: date_range).count
+      users_with_devices = User.where(created_at: date_range).joins(:devices).distinct.count
+      
+      return 100 if new_users == 0
+      ((users_with_devices.to_f / new_users) * 100).round(1)
+    end
+
+    def calculate_device_setup_success_rate(date_range)
+      new_devices = Device.where(created_at: date_range).count
+      connected_devices = Device.where(created_at: date_range).where.not(last_connection: nil).count
+      
+      return 100 if new_devices == 0
+      ((connected_devices.to_f / new_devices) * 100).round(1)
+    end
+
+    def generate_system_alerts(insights)
+      alerts = []
+      
+      if insights[:device_health_trends][:error_trend] == 'increasing'
+        alerts << { type: 'device_errors_increasing', severity: 'warning' }
+      end
+      
+      if insights[:payment_health_trends][:payment_failure_trend] == 'increasing'
+        alerts << { type: 'payment_failures_increasing', severity: 'warning' }
+      end
+      
+      alerts
+    end
+
+    def build_trend_summary(insights)
+      {
+        device_health: insights[:device_health_trends][:error_trend],
+        payment_health: insights[:payment_health_trends][:payment_failure_trend],
+        overall_status: determine_overall_trend_status(insights)
+      }
+    end
+
+    def determine_overall_trend_status(insights)
+      trends = [
+        insights[:device_health_trends][:error_trend],
+        insights[:payment_health_trends][:payment_failure_trend]
+      ]
+      
+      return 'concerning' if trends.include?('increasing')
+      return 'stable' if trends.all? { |t| t == 'stable' }
+      'improving'
+    end
+
+    def analyze_device_geographic_issues
+      # Placeholder for geographic analysis if you track device locations
+      { note: "Geographic analysis not implemented - consider adding location tracking" }
+    end
+
+    def build_device_issues_timeline(params)
+      # Build a simple timeline of device issues over the last week
+      (0..6).map do |days_ago|
+        date = days_ago.days.ago.to_date
+        day_start = date.beginning_of_day
+        day_end = date.end_of_day
+        
+        {
+          date: date,
+          error_devices: Device.where(status: 'error', updated_at: day_start..day_end).count,
+          connection_issues: Device.where(last_connection: day_start..day_end).where('last_connection < ?', day_start + 1.hour).count
+        }
+      end.reverse
+    end
+
+    def build_payment_issues_timeline(params)
+      # Build a timeline of payment issues
+      (0..6).map do |days_ago|
+        date = days_ago.days.ago.to_date
+        day_start = date.beginning_of_day
+        day_end = date.end_of_day
+        
+        {
+          date: date,
+          failed_payments: Order.where(status: 'payment_failed', created_at: day_start..day_end).count,
+          failed_amount: Order.where(status: 'payment_failed', created_at: day_start..day_end).sum(:total)
+        }
+      end.reverse
+    end
+
+    def analyze_payment_trend(failed_payments)
+      {
+        trend: failed_payments.count > 10 ? 'concerning' : 'manageable',
+        weekly_average: failed_payments.count / 7.0,
+        peak_day: failed_payments.group_by { |o| o.created_at.wday }.max_by { |_, orders| orders.count }&.first
+      }
+    end
   end
 end

@@ -7,7 +7,6 @@ module Admin
           users: user_metrics,
           devices: device_metrics,
           revenue: revenue_metrics,
-          support: support_metrics,
           alerts: alert_summary,
           system_health: system_health_check
         }
@@ -35,10 +34,6 @@ module Admin
         offline_devices = device_health_issues
         alerts << offline_devices_alert(offline_devices) if offline_devices > 10
 
-        # High error rates
-        error_rate = system_error_rate
-        alerts << error_rate_alert(error_rate) if error_rate > 5
-
         # Subscription cancellations
         cancellations = recent_cancellations
         alerts << cancellation_alert(cancellations) if cancellations > 3
@@ -59,21 +54,24 @@ module Admin
         date_range = calculate_date_range(period)
         
         metrics = {
+          period: period,
+          date_range: {
+            start: date_range.begin.iso8601,
+            end: date_range.end.iso8601
+          },
           user_growth: user_growth_metrics(date_range),
           revenue_trends: revenue_trends(date_range),
           device_adoption: device_adoption_metrics(date_range),
-          support_volume: support_volume_metrics(date_range)
+          period_comparison: calculate_period_comparison(period)
         }
 
         success(
-          period: period,
-          date_range: date_range,
           metrics: metrics,
-          comparisons: calculate_period_comparisons(metrics, period)
+          generated_at: Time.current
         )
       rescue => e
         Rails.logger.error "Time period metrics error: #{e.message}"
-        failure("Failed to load #{period} metrics: #{e.message}")
+        failure("Failed to load time period metrics: #{e.message}")
       end
     end
 
@@ -86,24 +84,41 @@ module Admin
         total_users: User.count,
         new_today: User.where(created_at: Date.current.all_day).count,
         active_subscriptions: Subscription.active.count,
-        churn_risk: users_at_churn_risk,
-        top_plans: subscription_distribution
+        churn_risk: calculate_churn_risk_users,
+        conversion_rate: calculate_overall_conversion_rate
       }
     end
 
-    def users_at_churn_risk
-      # Users with failed payments or long inactivity
-      User.joins(:subscription)
-          .where(subscriptions: { status: 'past_due' })
-          .or(User.where(last_sign_in_at: ..1.month.ago))
-          .count
+    def calculate_churn_risk_users
+      # Users whose subscriptions expire soon or have payment issues
+      at_risk_count = 0
+      
+      # Subscriptions expiring in next 7 days
+      at_risk_count += Subscription.where(
+        current_period_end: Date.current..7.days.from_now,
+        status: 'active'
+      ).count
+      
+      # Users with recent payment failures
+      failed_orders = Order.where(
+        created_at: 7.days.ago..Time.current,
+        status: 'failed'
+      ).distinct.count(:user_id)
+      
+      at_risk_count + failed_orders
     end
 
-    def subscription_distribution
-      Plan.joins(:subscriptions)
-          .where(subscriptions: { status: 'active' })
-          .group(:name)
-          .count
+    def calculate_overall_conversion_rate
+      # Users who signed up and got a subscription within 30 days
+      new_users = User.where(created_at: 30.days.ago..Time.current).count
+      return 0 if new_users == 0
+      
+      converted_users = User.joins(:subscription)
+                           .where(created_at: 30.days.ago..Time.current)
+                           .where(subscriptions: { created_at: 30.days.ago..Time.current })
+                           .count
+                           
+      ((converted_users.to_f / new_users) * 100).round(1)
     end
 
     # ===== DEVICE METRICS =====
@@ -111,11 +126,12 @@ module Admin
     def device_metrics
       {
         total_devices: Device.count,
-        active_devices: Device.active.count,
+        active_devices: Device.where(status: 'active').count,
         offline_devices: Device.where(last_connection: ..1.hour.ago).count,
         new_today: Device.where(created_at: Date.current.all_day).count,
         error_devices: Device.where(status: 'error').count,
-        fleet_utilization: calculate_fleet_utilization
+        fleet_utilization: calculate_fleet_utilization,
+        never_connected: Device.where(last_connection: nil).count
       }
     end
 
@@ -124,8 +140,10 @@ module Admin
     end
 
     def calculate_fleet_utilization
-      total_slots = User.joins(:subscription).sum { |u| u.device_limit }
-      used_slots = Device.active.count
+      # Calculate percentage of device slots in use
+      total_slots = User.joins(:subscription, subscription: :plan)
+                       .sum('plans.device_limit')
+      used_slots = Device.where(status: 'active').count
       return 0 if total_slots == 0
       ((used_slots.to_f / total_slots) * 100).round(1)
     end
@@ -147,7 +165,7 @@ module Admin
     end
 
     def monthly_recurring_revenue
-      Subscription.active.joins(:plan).sum('plans.monthly_price')
+      Subscription.where(status: 'active').joins(:plan).sum('plans.monthly_price')
     end
 
     def average_order_value
@@ -157,46 +175,21 @@ module Admin
     end
 
     def revenue_growth_rate
-      current_month = monthly_recurring_revenue
-      last_month = Subscription.where(created_at: 1.month.ago..Date.current.beginning_of_month)
-                              .joins(:plan).sum('plans.monthly_price')
-      return 0 if last_month == 0
-      (((current_month - last_month).to_f / last_month) * 100).round(1)
+      current_month_revenue = Order.where(
+        created_at: Date.current.beginning_of_month..Date.current.end_of_month,
+        status: 'completed'
+      ).sum(:total)
+      
+      last_month_revenue = Order.where(
+        created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month,
+        status: 'completed'
+      ).sum(:total)
+      
+      return 0 if last_month_revenue == 0
+      (((current_month_revenue - last_month_revenue) / last_month_revenue.to_f) * 100).round(1)
     end
 
-    # ===== SUPPORT METRICS =====
-    
-    def support_metrics
-      {
-        open_tickets: support_requests_count('open'),
-        resolved_today: support_requests_resolved_today,
-        avg_response_time: average_response_time,
-        satisfaction_score: customer_satisfaction_score
-      }
-    end
-
-    def support_requests_count(status)
-      # Placeholder - implement based on your support system
-      # This might be from a SupportRequest model or external service
-      0
-    end
-
-    def support_requests_resolved_today
-      # Placeholder - implement based on your support system
-      0
-    end
-
-    def average_response_time
-      # Placeholder - calculate from your support system
-      "2.5 hours"
-    end
-
-    def customer_satisfaction_score
-      # Placeholder - implement based on your feedback system
-      4.2
-    end
-
-    # ===== ALERT CALCULATIONS =====
+    # ===== ALERT SYSTEM =====
     
     def alert_summary
       {
@@ -208,36 +201,92 @@ module Admin
 
     def count_critical_alerts
       alerts = 0
-      alerts += 1 if recent_payment_failures > 5
-      alerts += 1 if device_health_issues > 10
-      alerts += 1 if system_error_rate > 5
+      
+      # Devices offline for more than 24 hours
+      alerts += 1 if Device.where(last_connection: ..24.hours.ago).count > 20
+      
+      # High payment failure rate
+      alerts += 1 if recent_payment_failures > 10
+      
+      # Many subscription cancellations
+      alerts += 1 if recent_cancellations > 5
+      
       alerts
     end
 
     def count_warning_alerts
       alerts = 0
-      alerts += 1 if users_at_churn_risk > 5
-      alerts += 1 if recent_cancellations > 3
+      
+      # Devices offline for more than 1 hour
+      alerts += 1 if Device.where(last_connection: ..1.hour.ago).count > 10
+      
+      # Low conversion rate
+      alerts += 1 if calculate_overall_conversion_rate < 10
+      
+      # High churn risk
+      alerts += 1 if calculate_churn_risk_users > 20
+      
       alerts
     end
 
     def count_info_alerts
-      # Info alerts for things like system updates, maintenance windows, etc.
-      1 # Placeholder
+      alerts = 0
+      
+      # New user milestones
+      new_today = User.where(created_at: Date.current.all_day).count
+      alerts += 1 if new_today > 10
+      
+      # Revenue milestones
+      daily_revenue = daily_revenue_calculation
+      alerts += 1 if daily_revenue > 1000
+      
+      alerts
     end
 
+    # ===== PAYMENT AND SUBSCRIPTION ALERTS =====
+    
     def recent_payment_failures
-      Order.where(status: 'payment_failed', created_at: 24.hours.ago..Time.current).count
+      Order.where(
+        created_at: 24.hours.ago..Time.current,
+        status: 'failed'
+      ).count
     end
 
     def recent_cancellations
-      Subscription.where(status: 'canceled', updated_at: 24.hours.ago..Time.current).count
+      Subscription.where(
+        updated_at: 24.hours.ago..Time.current,
+        status: 'cancelled'
+      ).count
     end
 
-    def system_error_rate
-      # Calculate error rate from logs or monitoring service
-      # Placeholder implementation
-      2.1
+    def payment_failure_alert(count)
+      {
+        type: 'payment_failures',
+        severity: 'critical',
+        count: count,
+        message: "#{count} payment failures in the last 24 hours",
+        action_required: true
+      }
+    end
+
+    def offline_devices_alert(count)
+      {
+        type: 'offline_devices',
+        severity: 'warning',
+        count: count,
+        message: "#{count} devices appear to be offline",
+        action_required: false
+      }
+    end
+
+    def cancellation_alert(count)
+      {
+        type: 'subscription_cancellations',
+        severity: 'warning',
+        count: count,
+        message: "#{count} subscription cancellations in the last 24 hours",
+        action_required: true
+      }
     end
 
     # ===== SYSTEM HEALTH =====
@@ -246,83 +295,118 @@ module Admin
       {
         database_status: check_database_health,
         redis_status: check_redis_health,
-        sidekiq_status: check_sidekiq_health,
-        response_time: check_response_time
+        uptime: calculate_system_uptime,
+        error_rate: calculate_recent_error_rate,
+        response_time: calculate_average_response_time
       }
     end
 
     def check_database_health
-      User.connection.execute("SELECT 1")
-      "healthy"
-    rescue
-      "unhealthy"
+      begin
+        ActiveRecord::Base.connection.execute("SELECT 1")
+        'healthy'
+      rescue
+        'unhealthy'
+      end
     end
 
     def check_redis_health
-      Rails.cache.write("health_check", "ok")
-      Rails.cache.read("health_check") == "ok" ? "healthy" : "unhealthy"
-    rescue
-      "unhealthy"
+      begin
+        Rails.cache.redis.ping
+        'healthy'
+      rescue
+        'unhealthy'
+      end
     end
 
-    def check_sidekiq_health
-      Sidekiq::Queue.new.size < 100 ? "healthy" : "overloaded"
-    rescue
-      "unhealthy"
+    def calculate_system_uptime
+      # Based on successful requests vs errors in last 24h
+      # This is a simplified calculation - you might want to integrate with real monitoring
+      total_requests = estimate_daily_requests
+      error_requests = calculate_recent_error_count
+      
+      return "99.9%" if total_requests == 0
+      
+      uptime_percentage = ((total_requests - error_requests).to_f / total_requests * 100).round(1)
+      "#{uptime_percentage}%"
     end
 
-    def check_response_time
-      # Placeholder - implement with your monitoring
-      "145ms"
+    def calculate_recent_error_rate
+      # Simplified error rate calculation based on failed orders and device connection issues
+      total_operations = estimate_daily_operations
+      error_operations = recent_payment_failures + device_health_issues
+      
+      return 0 if total_operations == 0
+      ((error_operations.to_f / total_operations) * 100).round(2)
     end
 
-    # ===== ALERT BUILDERS =====
+    def calculate_average_response_time
+      # Simplified response time - in a real system you'd integrate with APM tools
+      "120ms"
+    end
+
+    # ===== TIME PERIOD ANALYTICS =====
     
-    def payment_failure_alert(count)
+    def user_growth_metrics(date_range)
       {
-        type: 'critical',
-        title: 'High Payment Failure Rate',
-        message: "#{count} payment failures in the last 24 hours",
-        action_url: '/admin/orders?status=payment_failed',
-        severity: 'critical'
+        new_users: User.where(created_at: date_range).count,
+        activated_users: User.joins(:subscription).where(created_at: date_range).count,
+        conversion_rate: calculate_conversion_rate(date_range)
       }
     end
 
-    def offline_devices_alert(count)
+    def revenue_trends(date_range)
       {
-        type: 'warning',
-        title: 'Devices Offline',
-        message: "#{count} devices haven't connected in the last hour",
-        action_url: '/admin/devices?status=offline',
-        severity: 'warning'
+        total_revenue: Order.where(created_at: date_range, status: 'completed').sum(:total),
+        subscription_revenue: calculate_subscription_revenue(date_range),
+        one_time_revenue: calculate_one_time_revenue(date_range),
+        average_order_value: calculate_period_avg_order_value(date_range)
       }
     end
 
-    def error_rate_alert(rate)
+    def device_adoption_metrics(date_range)
       {
-        type: 'critical',
-        title: 'High Error Rate',
-        message: "System error rate at #{rate}%",
-        action_url: '/admin/system/logs',
-        severity: 'critical'
+        devices_registered: Device.where(created_at: date_range).count,
+        devices_activated: Device.where(created_at: date_range, status: 'active').count,
+        activation_rate: calculate_device_activation_rate(date_range)
       }
     end
 
-    def cancellation_alert(count)
-      {
-        type: 'warning',
-        title: 'Subscription Cancellations',
-        message: "#{count} subscription cancellations in 24 hours",
-        action_url: '/admin/subscriptions?status=canceled',
-        severity: 'warning'
-      }
+    # ===== CALCULATION HELPERS =====
+    
+    def calculate_conversion_rate(date_range)
+      new_users = User.where(created_at: date_range).count
+      activated_users = User.joins(:subscription).where(created_at: date_range).count
+      return 0 if new_users == 0
+      ((activated_users.to_f / new_users) * 100).round(1)
     end
 
-    # ===== HELPER METHODS =====
+    def calculate_subscription_revenue(date_range)
+      Subscription.where(created_at: date_range).joins(:plan).sum('plans.monthly_price')
+    end
+
+    def calculate_one_time_revenue(date_range)
+      Order.where(created_at: date_range, status: 'completed').sum(:total)
+    end
+
+    def calculate_device_activation_rate(date_range)
+      registered = Device.where(created_at: date_range).count
+      activated = Device.where(created_at: date_range, status: 'active').count
+      return 0 if registered == 0
+      ((activated.to_f / registered) * 100).round(1)
+    end
+
+    def calculate_period_avg_order_value(date_range)
+      orders = Order.where(created_at: date_range, status: 'completed')
+      return 0 if orders.empty?
+      (orders.sum(:total) / orders.count).round(2)
+    end
+
+    # ===== SUMMARY AND UTILITIES =====
     
     def generate_daily_summary(metrics)
       {
-        users_growth: metrics[:users][:new_today],
+        users_added: metrics[:users][:new_today],
         revenue_today: metrics[:revenue][:total_revenue_today],
         devices_added: metrics[:devices][:new_today],
         health_status: overall_health_status(metrics)
@@ -358,64 +442,58 @@ module Admin
       end
     end
 
-    def user_growth_metrics(date_range)
+    def calculate_period_comparison(period)
+      current_range = calculate_date_range(period)
+      previous_range = calculate_previous_period_range(period)
+      
       {
-        new_users: User.where(created_at: date_range).count,
-        activated_users: User.joins(:subscription).where(created_at: date_range).count,
-        conversion_rate: calculate_conversion_rate(date_range)
+        current_period: {
+          users: User.where(created_at: current_range).count,
+          revenue: Order.where(created_at: current_range, status: 'completed').sum(:total),
+          devices: Device.where(created_at: current_range).count
+        },
+        previous_period: {
+          users: User.where(created_at: previous_range).count,
+          revenue: Order.where(created_at: previous_range, status: 'completed').sum(:total),
+          devices: Device.where(created_at: previous_range).count
+        }
       }
     end
 
-    def revenue_trends(date_range)
-      {
-        total_revenue: Order.where(created_at: date_range, status: 'completed').sum(:total),
-        subscription_revenue: calculate_subscription_revenue(date_range),
-        one_time_revenue: calculate_one_time_revenue(date_range)
-      }
+    def calculate_previous_period_range(period)
+      case period
+      when 'today'
+        1.day.ago.all_day
+      when 'week'
+        2.weeks.ago..1.week.ago
+      when 'month'
+        2.months.ago..1.month.ago
+      when 'quarter'
+        6.months.ago..3.months.ago
+      else
+        1.day.ago.all_day
+      end
     end
 
-    def device_adoption_metrics(date_range)
-      {
-        devices_registered: Device.where(created_at: date_range).count,
-        devices_activated: Device.where(created_at: date_range, status: 'active').count,
-        activation_rate: calculate_device_activation_rate(date_range)
-      }
+    # ===== ESTIMATION HELPERS =====
+    
+    def estimate_daily_requests
+      # Rough estimate based on users and devices
+      active_users = User.joins(:subscription).where(subscriptions: { status: 'active' }).count
+      active_devices = Device.where(status: 'active').count
+      
+      # Assume each user makes ~10 requests/day, each device makes ~50 data points/day
+      (active_users * 10) + (active_devices * 50)
     end
 
-    def support_volume_metrics(date_range)
-      {
-        tickets_created: 0, # Implement based on your support system
-        tickets_resolved: 0,
-        avg_resolution_time: "0 hours"
-      }
+    def estimate_daily_operations
+      # Total estimated operations including user actions and device communications
+      estimate_daily_requests + device_health_issues + recent_payment_failures
     end
 
-    def calculate_conversion_rate(date_range)
-      new_users = User.where(created_at: date_range).count
-      activated_users = User.joins(:subscription).where(created_at: date_range).count
-      return 0 if new_users == 0
-      ((activated_users.to_f / new_users) * 100).round(1)
-    end
-
-    def calculate_subscription_revenue(date_range)
-      Subscription.where(created_at: date_range).joins(:plan).sum('plans.monthly_price')
-    end
-
-    def calculate_one_time_revenue(date_range)
-      Order.where(created_at: date_range, status: 'completed').sum(:total)
-    end
-
-    def calculate_device_activation_rate(date_range)
-      registered = Device.where(created_at: date_range).count
-      activated = Device.where(created_at: date_range, status: 'active').count
-      return 0 if registered == 0
-      ((activated.to_f / registered) * 100).round(1)
-    end
-
-    def calculate_period_comparisons(metrics, period)
-      # Compare with previous period
-      # Implementation depends on specific needs
-      {}
+    def calculate_recent_error_count
+      # Count various types of recent errors
+      recent_payment_failures + device_health_issues + (Device.where(status: 'error').count * 5)
     end
   end
 end

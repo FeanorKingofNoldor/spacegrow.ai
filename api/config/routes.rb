@@ -157,13 +157,15 @@ Rails.application.routes.draw do
         get '/dashboard/summary', to: 'dashboard#summary'       # Dashboard summary data
 
         # Device Management
-        resources :devices, only: [:index, :show, :create, :update] do
+        resources :devices, only: [:index, :show, :create, :update, :destroy] do
           member do
             patch :update_settings
             patch :update_name
             post :send_command
             get :sensor_data
             get :analytics
+			post :suspend
+			post :wake
           end
           
           collection do
@@ -199,6 +201,10 @@ Rails.application.routes.draw do
           post :reactivate
           get :billing_history
           get :usage_analytics
+          get :device_management                                # Get device management data
+          post :suspend_devices                                 # Bulk suspend devices
+          post :wake_devices                                    # Bulk wake devices  
+          post :activate_device   
         end
 
         # Notification Preferences
@@ -309,26 +315,19 @@ Rails.application.routes.draw do
           end
         end
 
-        # ===== SUPPORT & CUSTOMER SERVICE =====
-        namespace :support do
-          get '/', to: 'support#index'
-          get '/analytics', to: 'support#analytics'
-          get '/trending_issues', to: 'support#trending_issues'
-          get '/customer_satisfaction', to: 'support#customer_satisfaction'
-          get '/operational_metrics', to: 'support#operational_metrics'
-          get '/escalation_analysis', to: 'support#escalation_analysis'
-        end
+		# ===== SUPPORT & CUSTOMER SERVICE =====
+		namespace :support do
+		get '/', to: 'support#index'
+		get '/device_issues', to: 'support#device_issues'
+		get '/payment_issues', to: 'support#payment_issues'
+		get '/insights', to: 'support#insights'
+		end
 
         # ===== SYSTEM HEALTH & MONITORING (EXISTING + ENHANCED) =====
         namespace :system do
           get '/health', to: 'system#health'
           get '/performance', to: 'system#performance'
           get '/monitoring', to: 'system#monitoring'
-          get '/maintenance', to: 'system#maintenance'
-          get '/logs', to: 'system#logs'
-          get '/alerts', to: 'system#alerts'
-          get '/infrastructure', to: 'system#infrastructure'
-          post '/diagnostics', to: 'system#diagnostics'
         end
 
         # ===== NEW: REAL-TIME METRICS API ENDPOINTS =====

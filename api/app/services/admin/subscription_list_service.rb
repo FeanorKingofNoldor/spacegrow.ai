@@ -1,8 +1,11 @@
 # app/services/admin/subscription_list_service.rb
 module Admin
   class SubscriptionListService < ApplicationService
+    DEFAULT_PAGE_SIZE = 25
+    MAX_PAGE_SIZE = 100
+
     def initialize(filter_params = {})
-      @filter_params = filter_params
+      @filter_params = filter_params.with_indifferent_access
     end
 
     def call
@@ -51,15 +54,23 @@ module Admin
     end
 
     def apply_date_filters(subscriptions)
-      subscriptions = subscriptions.where(created_at: filter_params[:created_after]..) if filter_params[:created_after].present?
-      subscriptions = subscriptions.where(created_at: ..filter_params[:created_before]) if filter_params[:created_before].present?
+      if filter_params[:created_after].present?
+        subscriptions = subscriptions.where(created_at: filter_params[:created_after]..)
+      end
+      
+      if filter_params[:created_before].present?
+        subscriptions = subscriptions.where(created_at: ..filter_params[:created_before])
+      end
+      
       subscriptions
     end
 
     def apply_search_filter(subscriptions)
       return subscriptions unless filter_params[:search].present?
       
-      search_term = filter_params[:search]
+      search_term = filter_params[:search].strip
+      return subscriptions if search_term.blank?
+      
       subscriptions.joins(:user).where(
         "users.email ILIKE ? OR users.display_name ILIKE ? OR subscriptions.id::text = ?",
         "%#{search_term}%", "%#{search_term}%", search_term
@@ -74,27 +85,52 @@ module Admin
         subscriptions.joins(:user).order("users.email #{sort_direction_sql}")
       when 'plan_name'
         subscriptions.joins(:plan).order("plans.name #{sort_direction_sql}")
+      when 'status'
+        subscriptions.order(status: sort_direction)
+      when 'monthly_cost'
+        subscriptions.joins(:plan).order("plans.monthly_price #{sort_direction_sql}")
       else
         subscriptions.order(created_at: :desc)
       end
     end
 
     def apply_pagination(subscriptions)
-      page = filter_params[:page]&.to_i || 1
-      per_page = [filter_params[:per_page]&.to_i || 25, 100].min
+      page = [filter_params[:page].to_i, 1].max
+      per_page = [filter_params[:per_page].to_i.nonzero? || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE].min
       
-      subscriptions.page(page).per(per_page)
+      if subscriptions.respond_to?(:page)
+        subscriptions.page(page).per(per_page)
+      else
+        # Fallback pagination
+        subscriptions.limit(per_page).offset((page - 1) * per_page)
+      end
     end
 
     def build_pagination_data(paginated_subscriptions)
-      {
-        current_page: paginated_subscriptions.current_page,
-        per_page: paginated_subscriptions.limit_value,
-        total_pages: paginated_subscriptions.total_pages,
-        total_count: paginated_subscriptions.total_count,
-        has_next_page: paginated_subscriptions.next_page.present?,
-        has_prev_page: paginated_subscriptions.prev_page.present?
-      }
+      if paginated_subscriptions.respond_to?(:current_page)
+        {
+          current_page: paginated_subscriptions.current_page,
+          per_page: paginated_subscriptions.limit_value,
+          total_pages: paginated_subscriptions.total_pages,
+          total_count: paginated_subscriptions.total_count,
+          has_next_page: paginated_subscriptions.next_page.present?,
+          has_prev_page: paginated_subscriptions.prev_page.present?
+        }
+      else
+        page = [filter_params[:page].to_i, 1].max
+        per_page = [filter_params[:per_page].to_i.nonzero? || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE].min
+        total_count = paginated_subscriptions.count
+        total_pages = (total_count.to_f / per_page).ceil
+        
+        {
+          current_page: page,
+          per_page: per_page,
+          total_pages: total_pages,
+          total_count: total_count,
+          has_next_page: page < total_pages,
+          has_prev_page: page > 1
+        }
+      end
     end
 
     def build_subscriptions_summary(subscriptions)
@@ -103,19 +139,23 @@ module Admin
         active_subscriptions: subscriptions.where(status: 'active').count,
         past_due_subscriptions: subscriptions.where(status: 'past_due').count,
         canceled_subscriptions: subscriptions.where(status: 'canceled').count,
-        total_mrr: subscriptions.where(status: 'active').joins(:plan).sum('plans.monthly_price'),
+        total_mrr: calculate_total_mrr(subscriptions),
         avg_subscription_age: calculate_avg_subscription_age(subscriptions)
       }
     end
 
     def build_subscription_filter_options
       {
-        statuses: Subscription.distinct.pluck(:status).compact,
-        plans: Plan.select(:id, :name).order(:name),
+        statuses: Subscription.distinct.pluck(:status).compact.map do |status|
+          { value: status, label: status.humanize }
+        end,
+        plans: Plan.select(:id, :name, :monthly_price).order(:monthly_price),
         sort_options: [
           { value: 'created_at', label: 'Date Created' },
           { value: 'user_email', label: 'User Email' },
-          { value: 'plan_name', label: 'Plan Name' }
+          { value: 'plan_name', label: 'Plan Name' },
+          { value: 'status', label: 'Status' },
+          { value: 'monthly_cost', label: 'Monthly Cost' }
         ]
       }
     end
@@ -128,15 +168,24 @@ module Admin
           user_name: subscription.user.display_name,
           plan_name: subscription.plan&.name,
           status: subscription.status,
-          monthly_cost: subscription.monthly_cost,
+          monthly_cost: subscription.plan&.monthly_price || subscription.monthly_cost || 0,
           device_limit: subscription.device_limit,
           devices_count: subscription.user.devices.count,
+          extra_device_slots_count: subscription.extra_device_slots.count,
           created_at: subscription.created_at.iso8601,
           current_period_start: subscription.current_period_start&.iso8601,
           current_period_end: subscription.current_period_end&.iso8601,
-          days_past_due: subscription.past_due? ? (Date.current - subscription.current_period_end.to_date).to_i : 0
+          canceled_at: subscription.canceled_at&.iso8601,
+          days_past_due: calculate_days_past_due(subscription)
         }
       end
+    end
+
+    def calculate_total_mrr(subscriptions)
+      active_subscriptions = subscriptions.where(status: 'active')
+      plan_mrr = active_subscriptions.joins(:plan).sum('plans.monthly_price')
+      extra_slots_mrr = active_subscriptions.joins(:extra_device_slots).sum('extra_device_slots.monthly_cost')
+      plan_mrr + extra_slots_mrr
     end
 
     def calculate_avg_subscription_age(subscriptions)
@@ -144,6 +193,13 @@ module Admin
       
       total_age_days = subscriptions.sum { |sub| (Time.current - sub.created_at).to_i / 1.day }
       (total_age_days.to_f / subscriptions.count).round(1)
+    end
+
+    def calculate_days_past_due(subscription)
+      return 0 unless subscription.status == 'past_due' && subscription.current_period_end
+      
+      days = (Date.current - subscription.current_period_end.to_date).to_i
+      [days, 0].max
     end
 
     def sort_direction

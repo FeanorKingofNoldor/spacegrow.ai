@@ -13,56 +13,34 @@ class Api::V1::Admin::SupportController < Api::V1::Admin::BaseController
     end
   end
 
-  def analytics
+  def device_issues
     service = Admin::SupportAnalyticsService.new
-    result = service.support_analytics(params[:period])
+    result = service.device_issues_analysis(filter_params)
 
     if result[:success]
-      render_success(result.except(:success), "Support analytics loaded")
+      render_success(result.except(:success), "Device issues analysis loaded")
     else
       render_error(result[:error])
     end
   end
 
-  def trending_issues
+  def payment_issues
     service = Admin::SupportAnalyticsService.new
-    result = service.trending_issues_analysis(filter_params)
+    result = service.payment_issues_analysis(filter_params)
 
     if result[:success]
-      render_success(result.except(:success), "Trending issues loaded")
+      render_success(result.except(:success), "Payment issues analysis loaded")
     else
       render_error(result[:error])
     end
   end
 
-  def customer_satisfaction
+  def insights
     service = Admin::SupportAnalyticsService.new
-    result = service.customer_satisfaction_metrics(params[:period])
+    result = service.system_insights(params[:period])
 
     if result[:success]
-      render_success(result.except(:success), "Customer satisfaction metrics loaded")
-    else
-      render_error(result[:error])
-    end
-  end
-
-  def operational_metrics
-    service = Admin::SupportAnalyticsService.new
-    result = service.operational_metrics(params[:period])
-
-    if result[:success]
-      render_success(result.except(:success), "Operational metrics loaded")
-    else
-      render_error(result[:error])
-    end
-  end
-
-  def escalation_analysis
-    service = Admin::SupportAnalyticsService.new
-    result = service.escalation_analysis(filter_params)
-
-    if result[:success]
-      render_success(result.except(:success), "Escalation analysis loaded")
+      render_success(result.except(:success), "System insights loaded")
     else
       render_error(result[:error])
     end
@@ -72,6 +50,6 @@ class Api::V1::Admin::SupportController < Api::V1::Admin::BaseController
 
   def filter_params
     params.permit(:status, :priority, :category, :created_after, :created_before, 
-                  :assigned_to, :user_id, :page, :per_page, :sort_by, :sort_direction)
+                  :user_id, :page, :per_page, :sort_by, :sort_direction)
   end
 end

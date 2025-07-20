@@ -1,13 +1,14 @@
 # app/services/admin/subscription_status_update_service.rb
 module Admin
   class SubscriptionStatusUpdateService < ApplicationService
-    def initialize(subscription, new_status, reason = nil)
+    def initialize(subscription, new_status, reason = nil, admin_user_id = nil)
       @subscription = subscription
       @new_status = new_status
       @reason = reason
+      @admin_user_id = admin_user_id
     end
 
-    def call
+        def call
       begin
         validate_status_change
         perform_status_update
@@ -31,7 +32,7 @@ module Admin
 
     private
 
-    attr_reader :subscription, :new_status, :reason
+    attr_reader :subscription, :new_status, :reason, :admin_user_id
 
     def validate_status_change
       unless %w[active past_due canceled].include?(new_status)
@@ -139,9 +140,7 @@ module Admin
     end
 
     def current_admin_id
-      # This would be set from the controller context
-      # For now, using a placeholder
-      1 # Would be passed from controller or stored in context
+      admin_user_id || raise ArgumentError, "Admin user ID is required for subscription status updates"
     end
   end
 end
