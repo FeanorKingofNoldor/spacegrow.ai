@@ -13,15 +13,6 @@ begin
   
   # Configure Yabeda for Rails metrics collection
   Yabeda.configure do
-    # Basic Rails metrics (requests, responses, etc.)
-    # This is automatically enabled by yabeda-rails
-
-    # Database metrics
-    # This is automatically enabled by yabeda-rails
-
-    # Sidekiq metrics (background jobs)
-    # This is automatically enabled by yabeda-sidekiq
-
     # Custom IoT-specific metrics
     group :spacegrow do
       counter :device_connections, tags: [:status], comment: "Total device connections"
@@ -84,36 +75,27 @@ rescue => e
 end
 
 # =============================================================================
-# PROMETHEUS EXPORTER CONFIGURATION
+# PROMETHEUS EXPORTER CONFIGURATION - SIMPLIFIED
 # =============================================================================
 
 # Only enable Prometheus exporter in production or when explicitly requested
 if Rails.env.production? || ENV['ENABLE_PROMETHEUS'] == 'true'
   begin
-    # Require prometheus exporter
-    require 'prometheus_exporter/middleware'
-    require 'prometheus_exporter/server'
-    
-    # This middleware will respond to /metrics with Prometheus format
-    Rails.application.middleware.use PrometheusExporter::Middleware
-    
-    # Start the Prometheus exporter server (for collecting custom metrics)
-    unless Rails.env.test?
-      PrometheusExporter::Server::WebServer.start(
-        port: ENV.fetch('PROMETHEUS_PORT', 9394).to_i,
-        bind: ENV.fetch('PROMETHEUS_BIND', '0.0.0.0')
-      )
-      
-      Rails.logger.info "✅ Prometheus server started on port #{ENV.fetch('PROMETHEUS_PORT', 9394)}"
+    # SIMPLIFIED: Only use Yabeda's Prometheus integration, not prometheus_exporter gem
+    if defined?(Yabeda) && defined?(Yabeda::Prometheus)
+      # Yabeda will automatically provide /metrics endpoint
+      Rails.logger.info "✅ Prometheus metrics available at /metrics endpoint"
+    else
+      Rails.logger.warn "⚠️  Yabeda Prometheus adapter not available"
     end
     
   rescue LoadError => e
-    Rails.logger.warn "⚠️  Prometheus exporter gem not available - /metrics endpoint disabled: #{e.message}"
+    Rails.logger.warn "⚠️  Prometheus integration not available: #{e.message}"
   rescue => e
-    Rails.logger.error "❌ Prometheus exporter configuration failed: #{e.message}"
+    Rails.logger.error "❌ Prometheus configuration failed: #{e.message}"
   end
 else
-  Rails.logger.info "ℹ️  Prometheus exporter disabled (set ENABLE_PROMETHEUS=true to enable)"
+  Rails.logger.info "ℹ️  Prometheus metrics disabled (set ENABLE_PROMETHEUS=true to enable)"
 end
 
 # =============================================================================

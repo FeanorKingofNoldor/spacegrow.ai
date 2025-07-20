@@ -22,7 +22,7 @@ Rails.application.configure do
   config.lograge.custom_payload do |controller|
     {
       remote_ip: controller.request.remote_ip,
-      user_id: controller.current_user&.id,
+      user_id: controller.respond_to?(:current_user) ? controller.current_user&.id : nil,
       user_agent: controller.request.user_agent,
       request_id: controller.request.request_id,
       session_id: controller.request.session.id
