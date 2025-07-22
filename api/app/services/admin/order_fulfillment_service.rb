@@ -105,6 +105,22 @@ module Admin
       end
     end
 
+	def simple_analytics(period = 'month')
+		date_range = calculate_date_range(period)
+		
+		success(
+			order_metrics: Order.analytics_for_period(period),
+			payment_issues: Order.failed_payments.where(created_at: 24.hours.ago..).count
+		)
+	end
+
+	def payment_failure_summary
+		success(
+			recent_failures: Order.failed_payments.recent.includes(:user).limit(50),
+			summary: { total_failed_24h: Order.failed_payments.where(created_at: 24.hours.ago..).count }
+		)
+	end
+
     def export_orders(params)
       begin
         orders = Order.includes(:user, :order_items)

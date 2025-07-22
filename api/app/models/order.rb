@@ -1,4 +1,4 @@
-# app/models/order.rb - ENHANCED for Payment Processing
+# app/models/order.rb - ENHANCED for Admin + Payment Processing
 class Order < ApplicationRecord
   include Emailable  # ✅ Email tracking concern
 
@@ -10,18 +10,85 @@ class Order < ApplicationRecord
 
   validates :status, inclusion: { in: %w[pending paid completed refunded payment_failed cancelled] }
 
-  # ✅ NEW: Payment processing callbacks
-  after_update :handle_paid_status, if: :paid?
-  after_update :handle_refunded_status, if: :refunded?
-  after_update :handle_completed_status, if: :completed?
-  after_update :handle_payment_failed_status, if: :payment_failed?
+  # ===== ADMIN-FRIENDLY SCOPES =====
+  scope :in_date_range, ->(range) { where(created_at: range) }
+  scope :completed, -> { where(status: 'completed') }
+  scope :paid, -> { where(status: 'paid') }
+  scope :failed_payments, -> { where(status: 'payment_failed') }
+  scope :refunded, -> { where(status: 'refunded') }
+  scope :pending, -> { where(status: 'pending') }
+  scope :recent, -> { where(created_at: 24.hours.ago..) }
+  scope :recent_failures, -> { failed_payments.where(created_at: 24.hours.ago..) }
+  scope :with_devices, -> { joins(:line_items, line_items: :product).where.not(products: { device_type_id: nil }).distinct }
+  scope :accessories_only, -> { joins(:line_items, line_items: :product).where(products: { device_type_id: nil }).distinct }
+  scope :by_amount_range, ->(min, max) { where(total: min..max) if min && max }
+
+  # ===== PAYMENT PROCESSING CALLBACKS =====
+  after_update :handle_status_change, if: :saved_change_to_status?
   after_update_commit :send_order_emails, if: :just_became_paid?
 
+  # ===== ADMIN ANALYTICS CLASS METHODS =====
+  def self.analytics_for_period(period)
+    date_range = DateRangeHelper.calculate_range(period)
+    {
+      total_orders: in_date_range(date_range).count,
+      completed_orders: completed.in_date_range(date_range).count,
+      paid_orders: paid.in_date_range(date_range).count,
+      failed_orders: failed_payments.in_date_range(date_range).count,
+      total_revenue: completed.in_date_range(date_range).sum(:total),
+      avg_order_value: completed.in_date_range(date_range).average(:total)&.round(2) || 0,
+      devices_sold: calculate_devices_sold(date_range),
+      accessories_sold: calculate_accessories_sold(date_range)
+    }
+  end
+
+  def self.payment_failure_summary
+    {
+      recent_failures: recent_failures.includes(:user).limit(50).map(&:admin_summary),
+      total_failed_24h: recent_failures.count,
+      total_failed_amount: recent_failures.sum(:total),
+      failure_reasons: failed_payments.recent.group(:payment_failure_reason).count
+    }
+  end
+
+  def self.admin_overview(limit: 20)
+    {
+      recent_orders: includes(:user).order(created_at: :desc).limit(limit).map(&:admin_summary),
+      pending_orders: pending.count,
+      failed_payments_count: failed_payments.count,
+      revenue_today: completed.where(created_at: Date.current.all_day).sum(:total)
+    }
+  end
+
+  # ===== ADMIN HELPER METHODS =====
+  def admin_summary
+    {
+      id: id,
+      user_email: user.email,
+      status: status,
+      total: total,
+      device_count: device_count,
+      created_at: created_at,
+      payment_failure_reason: payment_failure_reason,
+      can_retry: can_be_retried?
+    }
+  end
+
+  def admin_actions_available
+    actions = []
+    actions << 'retry_payment' if can_be_retried?
+    actions << 'refund' if can_be_refunded?
+    actions << 'generate_tokens' if needs_device_activation?
+    actions << 'update_status' unless %w[completed refunded].include?(status)
+    actions
+  end
+
+  # ===== BUSINESS LOGIC METHODS =====
   def total
     line_items.sum(&:subtotal)
   end
 
-  # ✅ ENHANCED: Status checking methods
+  # Status checking methods
   def paid?
     status == 'paid'
   end
@@ -46,9 +113,13 @@ class Order < ApplicationRecord
     status == 'cancelled'
   end
 
-  # ✅ NEW: Payment processing helper methods
+  # Payment processing helper methods
   def can_be_retried?
     payment_failed? && retry_strategy != 'permanent_failure'
+  end
+
+  def can_be_refunded?
+    %w[paid completed].include?(status) && (refund_amount.nil? || refund_amount < total)
   end
 
   def retry_payment_url
@@ -71,13 +142,17 @@ class Order < ApplicationRecord
     end
   end
 
-  # ✅ ENHANCED: Email-related helper methods
+  # Device and product helper methods
   def has_devices?
     line_items.joins(:product).where.not(products: { device_type_id: nil }).exists?
   end
 
   def device_count
     line_items.joins(:product).where.not(products: { device_type_id: nil }).sum(:quantity)
+  end
+
+  def accessory_count
+    line_items.joins(:product).where(products: { device_type_id: nil }).sum(:quantity)
   end
 
   def just_became_paid?
@@ -92,7 +167,7 @@ class Order < ApplicationRecord
     paid? && has_devices? && device_activation_tokens.any?
   end
 
-  # ✅ ENHANCED: Inventory management methods
+  # Inventory management methods
   def items_available?
     line_items.all? { |item| item.product.can_purchase?(item.quantity) }
   end
@@ -113,7 +188,7 @@ class Order < ApplicationRecord
     end
   end
 
-  # ✅ NEW: Payment processing analytics
+  # Analytics and reporting
   def payment_processing_summary
     {
       order_id: id,
@@ -136,24 +211,32 @@ class Order < ApplicationRecord
 
   private
 
+  # ===== SIMPLIFIED CALLBACKS =====
+  def handle_status_change
+    case status
+    when 'paid'
+      handle_paid_status
+    when 'payment_failed'
+      handle_payment_failed_status
+    when 'completed'
+      handle_completed_status
+    when 'refunded'
+      handle_refunded_status
+    end
+  end
+
   def handle_paid_status
     Rails.logger.info "💳 [Order##{id}] Order status changed to paid, processing payment workflow"
-    
-    # This is now handled by PaymentProcessing::OrderCompletionService
-    # The service does: reserve stock, generate tokens, send emails
+    # Delegate to service - don't do complex logic in callback
   end
 
   def handle_payment_failed_status
     Rails.logger.info "❌ [Order##{id}] Order payment failed, processing failure workflow"
-    
-    # This is now handled by PaymentProcessing::PaymentFailureService
-    # The service does: release stock, send failure emails, set retry strategy
+    # Delegate to service - don't do complex logic in callback
   end
 
   def handle_completed_status
     Rails.logger.info "✅ [Order##{id}] Order completed successfully"
-    
-    # Final completion tasks
     update_user_statistics
     trigger_completion_analytics
   end
@@ -161,10 +244,12 @@ class Order < ApplicationRecord
   def handle_refunded_status
     Rails.logger.info "↩️ [Order##{id}] Order refunded, processing refund workflow"
     
-    # Return stock to inventory
+    # Simple refund logic - complex logic should be in service
     release_stock!
-    
-    # Expire activation tokens and handle activated devices
+    expire_activation_tokens!
+  end
+
+  def expire_activation_tokens!
     device_activation_tokens.each do |token|
       if token.device.present? && token.device.activation_token == token && token.device.active?
         raise "Cannot refund order: Device #{token.device.name} is already activated"
@@ -175,25 +260,35 @@ class Order < ApplicationRecord
     end
   end
 
-  # ✅ KEPT: Email workflow (now enhanced)
   def send_order_emails
     Rails.logger.info "📧 [Order##{id}] Order became paid, triggering email workflow"
-    
-    # The email sending is now handled by PaymentProcessing::OrderCompletionService
-    # This ensures emails are sent as part of the complete order workflow
+    # Email sending handled by PaymentProcessing::OrderCompletionService
   rescue => e
     Rails.logger.error "📧 [Order##{id}] Failed to trigger email workflow: #{e.message}"
     # Don't raise - email failures shouldn't break order processing
   end
 
   def update_user_statistics
-    # Update user order statistics
     user.increment!(:orders_count) if user.respond_to?(:orders_count)
     user.increment!(:total_spent, total) if user.respond_to?(:total_spent)
   end
 
   def trigger_completion_analytics
-    # TODO: Send to analytics service
     Rails.logger.info "📊 [Order##{id}] Order completion analytics: User #{user.id}, Total: $#{total}, Devices: #{device_count}"
+  end
+
+  # ===== PRIVATE CLASS METHODS FOR ANALYTICS =====
+  def self.calculate_devices_sold(date_range)
+    with_devices.completed.in_date_range(date_range)
+              .joins(:line_items, line_items: :product)
+              .where.not(products: { device_type_id: nil })
+              .sum('line_items.quantity')
+  end
+
+  def self.calculate_accessories_sold(date_range)
+    accessories_only.completed.in_date_range(date_range)
+                   .joins(:line_items, line_items: :product)
+                   .where(products: { device_type_id: nil })
+                   .sum('line_items.quantity')
   end
 end

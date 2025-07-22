@@ -26,9 +26,38 @@ module Admin
       end
     end
 
+	def billing_analytics(period = 'month')
+		success(
+			subscription_metrics: Subscription.analytics_for_period(period),
+			plan_distribution: Subscription.active.joins(:plan).group('plans.name').count,
+			growth_metrics: calculate_subscription_growth(period)
+		)
+	end
+
+	def payment_issues_summary
+		success(
+			past_due_subscriptions: Subscription.past_due.includes(:user, :plan).limit(50).map(&:admin_summary),
+			failed_payments: Order.payment_failure_summary,
+			summary: {
+			total_past_due: Subscription.past_due.count,
+			total_amount_at_risk: Subscription.past_due.joins(:plan).sum('plans.monthly_price')
+			}
+		)
+	end
+
     private
 
     attr_reader :filter_params
+
+	def calculate_subscription_growth(period)
+		date_range = DateRangeHelper.calculate_range(period)
+		{
+			new_subscriptions: Subscription.where(created_at: date_range).count,
+			cancellations: Subscription.where(status: 'canceled', updated_at: date_range).count,
+			net_growth: Subscription.where(created_at: date_range).count - 
+						Subscription.where(status: 'canceled', updated_at: date_range).count
+		}
+	end
 
     def build_subscription_query
       subscriptions = Subscription.includes(:user, :plan, :extra_device_slots)

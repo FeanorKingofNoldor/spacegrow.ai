@@ -121,48 +121,15 @@ class Api::V1::Admin::SubscriptionsController < Api::V1::Admin::BaseController
     render_error("Subscription not found", [], 404)
   end
 
-  # Simplified analytics (just what you need)
-  def billing_analytics
-    period = params[:period] || 'month'
-    
-    analytics = {
-      period: period,
-      subscription_metrics: {
-        total_active: Subscription.where(status: 'active').count,
-        total_past_due: Subscription.where(status: 'past_due').count,
-        total_canceled: Subscription.where(status: 'canceled').count,
-        mrr: Subscription.active.joins(:plan).sum('plans.monthly_price')
-      },
-      plan_distribution: Subscription.active.joins(:plan).group('plans.name').count,
-      recent_changes: Subscription.where(updated_at: 1.week.ago..).count
-    }
-    
-    render_success(analytics, "Billing analytics loaded")
-  end
+  	def billing_analytics
+		result = Admin::SubscriptionListService.new.billing_analytics(params[:period])
+		render_service_result(result, "Billing analytics loaded")
+	end
 
-  def payment_issues
-    issues = {
-      past_due_subscriptions: Subscription.where(status: 'past_due').includes(:user, :plan).map do |sub|
-        {
-          id: sub.id,
-          user_email: sub.user.email,
-          plan_name: sub.plan&.name,
-          amount_due: sub.monthly_cost,
-          days_past_due: (Date.current - sub.current_period_end.to_date).to_i
-        }
-      end,
-      failed_payments: Order.where(status: 'payment_failed', created_at: 1.week.ago..).includes(:user).map do |order|
-        {
-          id: order.id,
-          user_email: order.user.email,
-          amount: order.total,
-          failed_at: order.updated_at
-        }
-      end
-    }
-    
-    render_success(issues, "Payment issues loaded")
-  end
+	def payment_issues
+		result = Admin::SubscriptionListService.new.payment_issues_summary
+		render_service_result(result, "Payment issues loaded")
+	end
 
   private
 

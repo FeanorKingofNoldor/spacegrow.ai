@@ -1,4 +1,4 @@
-# app/models/subscription.rb - FINAL CLEAN VERSION
+# app/models/subscription.rb - ENHANCED WITH ADMIN FEATURES
 class Subscription < ApplicationRecord
   belongs_to :user
   belongs_to :plan
@@ -16,13 +16,40 @@ class Subscription < ApplicationRecord
   after_create :sync_user_role_with_plan
   after_update :sync_user_role_with_plan, if: :saved_change_to_plan_id?
 
-  # Scopes
+  # ===== EXISTING SCOPES (KEPT AS-IS) =====
   scope :active, -> { where(status: 'active') }
   scope :past_due, -> { where(status: 'past_due') }
   scope :canceled, -> { where(status: 'canceled') }
   scope :pending, -> { where(status: 'pending') }
 
-  # ===== SIMPLIFIED: Delegate to services =====
+  # ===== NEW ADMIN-FRIENDLY SCOPES =====
+  scope :in_date_range, ->(range) { where(created_at: range) }
+  scope :recent, -> { where(created_at: 24.hours.ago..) }
+
+  # ===== NEW ADMIN ANALYTICS CLASS METHODS =====
+  def self.analytics_for_period(period)
+    date_range = DateRangeHelper.calculate_range(period)
+    {
+      total_active: active.count,
+      total_past_due: past_due.count,
+      total_canceled: canceled.count,
+      new_subscriptions: in_date_range(date_range).count,
+      cancellations: where(status: 'canceled', updated_at: date_range).count,
+      mrr: active.joins(:plan).sum('plans.monthly_price'),
+      avg_revenue_per_user: active.joins(:plan).average('plans.monthly_price')&.round(2) || 0
+    }
+  end
+
+  def self.admin_overview(limit: 20)
+    {
+      recent_subscriptions: includes(:user, :plan).order(created_at: :desc).limit(limit).map(&:admin_summary),
+      past_due_count: past_due.count,
+      active_count: active.count,
+      mrr: active.joins(:plan).sum('plans.monthly_price')
+    }
+  end
+
+  # ===== SIMPLIFIED: Delegate to services (KEPT AS-IS) =====
   
   def device_limit
     # Always delegate to DeviceSlotManager for consistency
@@ -45,7 +72,7 @@ class Subscription < ApplicationRecord
     active? && Billing::DeviceSlotManager.new(user).can_activate_device?
   end
 
-  # ===== GRANULAR SLOT METHODS =====
+  # ===== GRANULAR SLOT METHODS (KEPT AS-IS) =====
   
   def active_extra_slots_count
     extra_device_slots.active.count
@@ -59,7 +86,7 @@ class Subscription < ApplicationRecord
     plan.monthly_price + total_extra_slot_cost
   end
   
-  # ===== DEVICE MANAGEMENT: Delegate to services =====
+  # ===== DEVICE MANAGEMENT: Delegate to services (KEPT AS-IS) =====
   
   def activate_device(device)
     Billing::DeviceStateManager.new(user).activate_device(device)
@@ -73,7 +100,7 @@ class Subscription < ApplicationRecord
     Billing::DeviceStateManager.new(user).wake_devices(device_ids)
   end
 
-  # ===== SLOT MANAGEMENT: Delegate to services =====
+  # ===== SLOT MANAGEMENT: Delegate to services (KEPT AS-IS) =====
   
   def purchase_extra_slot
     Billing::ExtraSlotManager.new(user).purchase_slot
@@ -87,7 +114,7 @@ class Subscription < ApplicationRecord
     Billing::ExtraSlotManager.new(user).list_user_slots
   end
 
-  # ===== PLAN CHANGES: Delegate to services =====
+  # ===== PLAN CHANGES: Delegate to services (KEPT AS-IS) =====
   
   def preview_plan_change(target_plan, interval = 'month')
     Billing::PlanChangeWorkflow.new(user).preview_plan_change(target_plan, interval)
@@ -97,7 +124,7 @@ class Subscription < ApplicationRecord
     Billing::PlanChangeWorkflow.new(user).execute_plan_change(target_plan, interval, options)
   end
 
-  # ===== STATUS HELPERS =====
+  # ===== STATUS HELPERS (KEPT AS-IS) =====
   
   def active?
     status == 'active'
@@ -115,7 +142,29 @@ class Subscription < ApplicationRecord
     status == 'pending'
   end
 
-  # ===== SUMMARY METHODS =====
+  # ===== NEW ADMIN HELPER METHODS =====
+  def admin_summary
+    {
+      id: id,
+      user_email: user.email,
+      plan_name: plan&.name,
+      status: status,
+      monthly_cost: monthly_cost,
+      device_count: user.devices.count,
+      created_at: created_at,
+      current_period_end: current_period_end
+    }
+  end
+
+  def admin_actions_available
+    actions = []
+    actions << 'update_status' unless %w[canceled].include?(status)
+    actions << 'force_plan_change' if active?
+    actions << 'manage_devices' if user.devices.any?
+    actions
+  end
+
+  # ===== SUMMARY METHODS (KEPT AS-IS) =====
   
   def billing_summary
     {

@@ -1,26 +1,16 @@
-# app/controllers/api/v1/admin/orders_controller.rb - CLEAN VERSION
+# app/controllers/api/v1/admin/orders_controller.rb - ULTRA-THIN VERSION
 class Api::V1::Admin::OrdersController < Api::V1::Admin::BaseController
   include ApiResponseHandling
 
   def index
     result = Admin::OrderFulfillmentService.new.list_orders(filter_params)
-    
-    if result[:success]
-      render_success(result.except(:success), "Orders loaded successfully")
-    else
-      render_error(result[:error])
-    end
+    render_service_result(result, "Orders loaded successfully")
   end
 
   def show
-    order = Order.includes(:user, :line_items, :device_activation_tokens).find(params[:id])
+    order = Order.find(params[:id])
     result = Admin::OrderFulfillmentService.new.order_details(order)
-    
-    if result[:success]
-      render_success(result.except(:success), "Order details loaded")
-    else
-      render_error(result[:error])
-    end
+    render_service_result(result, "Order details loaded")
   rescue ActiveRecord::RecordNotFound
     render_error("Order not found", [], 404)
   end
@@ -32,12 +22,7 @@ class Api::V1::Admin::OrdersController < Api::V1::Admin::BaseController
       params[:status], 
       params[:notes]
     )
-    
-    if result[:success]
-      render_success(result.except(:success), result[:message])
-    else
-      render_error(result[:error])
-    end
+    render_service_result(result, result[:message] || "Order status updated")
   rescue ActiveRecord::RecordNotFound
     render_error("Order not found", [], 404)
   end
@@ -49,12 +34,7 @@ class Api::V1::Admin::OrdersController < Api::V1::Admin::BaseController
       params[:amount]&.to_f,
       params[:reason]
     )
-    
-    if result[:success]
-      render_success(result.except(:success), result[:message])
-    else
-      render_error(result[:error])
-    end
+    render_service_result(result, result[:message] || "Refund processed")
   rescue ActiveRecord::RecordNotFound
     render_error("Order not found", [], 404)
   end
@@ -62,12 +42,7 @@ class Api::V1::Admin::OrdersController < Api::V1::Admin::BaseController
   def retry_payment
     order = Order.find(params[:id])
     result = Admin::OrderFulfillmentService.new.retry_payment(order)
-    
-    if result[:success]
-      render_success(result.except(:success), result[:message])
-    else
-      render_error(result[:error])
-    end
+    render_service_result(result, result[:message] || "Payment retry initiated")
   rescue ActiveRecord::RecordNotFound
     render_error("Order not found", [], 404)
   end
@@ -97,35 +72,21 @@ class Api::V1::Admin::OrdersController < Api::V1::Admin::BaseController
       params[:tracking_number],
       params[:carrier]
     )
-    
-    if result[:success]
-      render_success(result.except(:success), result[:message])
-    else
-      render_error(result[:error])
-    end
+    render_service_result(result, result[:message] || "Shipping updated")
   rescue ActiveRecord::RecordNotFound
     render_error("Order not found", [], 404)
   end
 
-  # Analytics endpoints (simplified)
+  # ===== ANALYTICS ENDPOINTS (Now Ultra-Thin!) =====
+  
   def analytics
-    result = Admin::OrderFulfillmentService.new.order_analytics(params[:period] || 'month')
-    
-    if result[:success]
-      render_success(result.except(:success), "Order analytics loaded")
-    else
-      render_error(result[:error])
-    end
+    result = Admin::OrderFulfillmentService.new.simple_analytics(params[:period])
+    render_service_result(result, "Order analytics loaded")
   end
 
   def payment_failures
-    result = Admin::OrderFulfillmentService.new.payment_failure_analysis(filter_params)
-    
-    if result[:success]
-      render_success(result.except(:success), "Payment failures loaded")
-    else
-      render_error(result[:error])
-    end
+    result = Admin::OrderFulfillmentService.new.payment_failure_summary
+    render_service_result(result, "Payment failures loaded")
   end
 
   private
@@ -133,5 +94,13 @@ class Api::V1::Admin::OrdersController < Api::V1::Admin::BaseController
   def filter_params
     params.permit(:status, :created_after, :created_before, :user_id, 
                   :min_amount, :max_amount, :page, :per_page, :search)
+  end
+
+  def render_service_result(result, success_message)
+    if result[:success]
+      render_success(result.except(:success), success_message)
+    else
+      render_error(result[:error])
+    end
   end
 end
