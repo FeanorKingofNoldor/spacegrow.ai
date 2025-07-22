@@ -34,7 +34,7 @@ gem "jsonapi-serializer"
 
 gem "redis"
 gem "redis-client"
-gem "sidekiq"
+gem "sidekiq", "~> 7.2"
 gem "sidekiq-scheduler"
 
 # =============================================================================

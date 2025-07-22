@@ -108,7 +108,7 @@ class Api::V1::Store::OrdersController < Api::V1::Store::BaseController
   end
 
   def create_order_from_cart
-    cart_service = StoreManagement::StoreManagement::StoreManagement::CartService.new(session)
+    cart_service = StoreManagement::CartService.new(session)
     cart_items = cart_service.items
     
     if cart_items.empty?

@@ -61,6 +61,6 @@ class Api::V1::Store::CheckoutController < Api::V1::Frontend::ProtectedControlle
   end
 
   def set_cart
-    @cart = StoreManagement::StoreManagement::StoreManagement::CartService.new(session)
+    @cart = StoreManagement::CartService.new(session)
   end
 end

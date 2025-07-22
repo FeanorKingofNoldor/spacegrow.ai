@@ -1,45 +1,25 @@
 # app/controllers/api/v1/auth/sessions_controller.rb
 class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
   include RackSessionsFix
+  include AuthenticationConcern  # ✅ NEW: Use centralized auth
   
-  before_action :authenticate_user!, only: [:index, :destroy_session, :logout_all, :me, :refresh, :update_profile, :change_password]
+  before_action :authenticate_user!, only: [
+    :index, :destroy_session, :logout_all, :me, 
+    :refresh, :update_profile, :change_password
+  ]
 
   def create
     user = User.find_by(email: params[:user][:email])
     
     if user&.valid_password?(params[:user][:password])
-      # Generate unique JWT ID
-      jti = SecureRandom.uuid
-      
-      # Create JWT token with JTI
-      token = JWT.encode(
-        { 
-          user_id: user.id,
-          jti: jti,
-          exp: 12.hours.from_now.to_i  # ✅ Changed to 12 hours
-        }, 
-        Rails.application.credentials.secret_key_base
+      # ✅ FIXED: Use centralized JWT service
+      token = generate_user_token(
+        user,
+        device_info: request.headers['User-Agent'] || 'Unknown Device',
+        ip_address: request.remote_ip
       )
       
-      # Get client info
-      device_info = request.headers['User-Agent'] || 'Unknown Device'
-      ip_address = request.remote_ip
-      
-      # Create session record
-      begin
-        user.create_session!(
-          jti: jti,
-          device_info: device_info,
-          ip_address: ip_address,
-          expires_at: 12.hours.from_now,
-          is_current: true
-        )
-      rescue => e
-        Rails.logger.error "Failed to create session: #{e.message}"
-        # Continue with login even if session tracking fails
-      end
-      
-      # ✅ Enhanced user data response
+      # Build consistent user response
       user_data = build_user_response(user)
       
       render json: {
@@ -55,58 +35,72 @@ class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
   end
 
   def destroy
-    # Get current token
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    if token
-      begin
-        payload = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
-        jti = payload['jti']
-        
-        # Add to denylist
-        JwtDenylist.create!(
-          jti: jti,
-          exp: Time.at(payload['exp'])
-        ) if jti
-        
-        # Remove session record
-        current_user&.logout_session!(jti) if jti
-        
-      rescue JWT::DecodeError
-        # Token already invalid, that's fine
-      end
+    # ✅ FIXED: Use centralized revocation
+    if revoke_current_token!
+      render json: {
+        status: { code: 200, message: 'Logged out successfully.' }
+      }
+    else
+      render json: {
+        status: { code: 500, message: 'Logout failed.' }
+      }, status: :internal_server_error
     end
-    
+  end
+
+  # Get current user info
+  def me
     render json: {
-      status: 200,
-      message: 'Logged out successfully.'
+      status: { code: 200, message: 'User retrieved successfully.' },
+      data: build_user_response(current_user)
     }
   end
 
-  # ✅ NEW: List all active sessions
+  # Refresh token (extend expiration)
+  def refresh
+    # Generate new token
+    new_token = generate_user_token(
+      current_user,
+      device_info: request.headers['User-Agent'] || 'Unknown Device',
+      ip_address: request.remote_ip
+    )
+    
+    # Revoke old token
+    revoke_current_token!
+    
+    render json: {
+      status: { code: 200, message: 'Token refreshed successfully.' },
+      token: new_token,
+      data: build_user_response(current_user)
+    }
+  end
+
+  # List all active sessions
   def index
-    sessions = current_user.active_sessions.map do |session|
-      {
-        jti: session.jti,
-        device_type: session.device_type,
-        ip_address: session.ip_address,
-        last_active: session.formatted_last_active,
-        created_at: session.created_at.iso8601,
-        is_current: session.is_current
-      }
-    end
+    sessions = if defined?(UserSession)
+                 current_user.active_sessions.map do |session|
+                   {
+                     jti: session.jti,
+                     device_info: session.device_info,
+                     ip_address: session.ip_address,
+                     last_active: session.last_active_at&.iso8601,
+                     created_at: session.created_at.iso8601,
+                     is_current: session.is_current
+                   }
+                 end
+               else
+                 []
+               end
     
     render json: {
       status: { code: 200, message: 'Sessions retrieved successfully.' },
       data: {
         sessions: sessions,
-        total_count: sessions.length,
-        session_limit: 5
+        total_count: sessions.length
       }
     }
   end
 
-  # ✅ NEW: Logout specific session
+  # Logout specific session
   def destroy_session
     jti = params[:jti]
     
@@ -118,11 +112,11 @@ class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
     end
     
     # Prevent logging out current session
-    current_token = request.headers['Authorization']&.split(' ')&.last
+    current_token = extract_token_from_request
     if current_token
       begin
-        current_payload = JWT.decode(current_token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
-        current_jti = current_payload['jti']
+        payload = Authentication::JwtService.decode(current_token)
+        current_jti = payload['jti']
         
         if jti == current_jti
           render json: {
@@ -135,7 +129,11 @@ class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
       end
     end
     
-    if current_user.logout_session!(jti)
+    # Revoke the specific session
+    if Authentication::JwtService.revoke!(jti)
+      # Remove session record if exists
+      current_user.logout_session!(jti) if defined?(UserSession)
+      
       render json: {
         status: { code: 200, message: 'Session logged out successfully.' }
       }
@@ -146,205 +144,74 @@ class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
     end
   end
 
-  # ✅ NEW: Logout all other sessions
+  # Logout all other sessions
   def logout_all
-    current_token = request.headers['Authorization']&.split(' ')&.last
+    current_token = extract_token_from_request
     
     if current_token
       begin
-        payload = JWT.decode(current_token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
+        payload = Authentication::JwtService.decode(current_token)
         current_jti = payload['jti']
         
-        current_user.logout_all_other_sessions!(current_jti)
+        # Logout all other sessions
+        if defined?(UserSession)
+          current_user.logout_all_other_sessions!(current_jti)
+        end
         
         render json: {
           status: { code: 200, message: 'All other sessions logged out successfully.' }
         }
       rescue JWT::DecodeError
-        render json: {
-          status: { code: 401, message: 'Invalid token.' }
-        }, status: :unauthorized
+        render_invalid_token
       end
     else
-      render json: {
-        status: { code: 401, message: 'No token provided.' }
-      }, status: :unauthorized
+      render_authentication_error
     end
   end
 
-  # ✅ Enhanced existing methods with session tracking
-  def me
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    if token
-      begin
-        payload = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
-        user = User.find(payload['user_id'])
-        jti = payload['jti']
-        
-        # Update session activity
-        user.touch_session_activity!(jti) if jti
-        
-        user_data = build_user_response(user)
-        
-        render json: {
-          status: { code: 200, message: 'User info retrieved successfully.' },
-          data: user_data
-        }, status: :ok
-      rescue JWT::ExpiredSignature
-        render json: {
-          status: { code: 401, message: 'Token has expired.' }
-        }, status: :unauthorized
-      rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-        render json: {
-          status: { code: 401, message: 'Invalid token.' }
-        }, status: :unauthorized
-      end
-    else
-      render json: {
-        status: { code: 401, message: 'No token provided.' }
-      }, status: :unauthorized
-    end
-  end
-
-  def refresh
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    if token
-      begin
-        # Decode current token (allow expired for refresh)
-        payload = JWT.decode(token, Rails.application.credentials.secret_key_base, false).first
-        user = User.find(payload['user_id'])
-        old_jti = payload['jti']
-        
-        # Generate new JTI
-        new_jti = SecureRandom.uuid
-        
-        # Generate new token
-        new_token = JWT.encode(
-          { 
-            user_id: user.id,
-            jti: new_jti,
-            exp: 12.hours.from_now.to_i  # ✅ Changed to 12 hours
-          }, 
-          Rails.application.credentials.secret_key_base
-        )
-        
-        # Update session with new JTI
-        old_session = user.find_session(old_jti)
-        if old_session
-          old_session.update!(
-            jti: new_jti,
-            expires_at: 12.hours.from_now,
-            last_active_at: Time.current
-          )
-        end
-        
-        # Add old JTI to denylist
-        JwtDenylist.create!(
-          jti: old_jti,
-          exp: Time.at(payload['exp'])
-        ) if old_jti
-        
-        user_data = build_user_response(user)
-        
-        render json: {
-          status: { code: 200, message: 'Token refreshed successfully.' },
-          data: user_data,
-          token: new_token
-        }, status: :ok
-      rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-        render json: {
-          status: { code: 401, message: 'Invalid token.' }
-        }, status: :unauthorized
-      end
-    else
-      render json: {
-        status: { code: 401, message: 'No token provided.' }
-      }, status: :unauthorized
-    end
-  end
-
-  # ✅ Keep existing methods (update_profile, change_password) but add session tracking
+  # Update user profile
   def update_profile
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    if token
-      begin
-        payload = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
-        user = User.find(payload['user_id'])
-        jti = payload['jti']
-        
-        # Update session activity
-        user.touch_session_activity!(jti) if jti
-        
-        if user.update(profile_params)
-          user_data = build_user_response(user)
-          
-          render json: {
-            status: { code: 200, message: 'Profile updated successfully' },
-            data: user_data
-          }
-        else
-          render json: {
-            status: { code: 422, message: user.errors.full_messages.join(', ') }
-          }, status: :unprocessable_entity
-        end
-      rescue JWT::ExpiredSignature
-        render json: {
-          status: { code: 401, message: 'Token has expired.' }
-        }, status: :unauthorized
-      rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-        render json: {
-          status: { code: 401, message: 'Invalid token.' }
-        }, status: :unauthorized
-      end
+    if current_user.update(profile_params)
+      render json: {
+        status: { code: 200, message: 'Profile updated successfully.' },
+        data: build_user_response(current_user)
+      }
     else
       render json: {
-        status: { code: 401, message: 'No token provided.' }
-      }, status: :unauthorized
+        status: { 
+          code: 422, 
+          message: 'Profile update failed.',
+          errors: current_user.errors.full_messages
+        }
+      }, status: :unprocessable_entity
     end
   end
 
+  # Change password
   def change_password
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    if token
-      begin
-        payload = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
-        user = User.find(payload['user_id'])
-        jti = payload['jti']
-        
-        # Update session activity
-        user.touch_session_activity!(jti) if jti
-        
-        if user.update_with_password(change_password_params)
-          render json: {
-            status: { code: 200, message: 'Password changed successfully.' }
-          }, status: :ok
-        else
-          render json: {
-            status: { 
-              code: 422, 
-              message: 'Password change failed.',
-              errors: user.errors.full_messages
-            }
-          }, status: :unprocessable_entity
-        end
-        
-      rescue JWT::ExpiredSignature
-        render json: {
-          status: { code: 401, message: 'Token has expired.' }
-        }, status: :unauthorized
-      rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-        render json: {
-          status: { code: 401, message: 'Invalid token.' }
-        }, status: :unauthorized
-      end
+    if current_user.update_with_password(change_password_params)
+      # Generate new token after password change
+      new_token = generate_user_token(
+        current_user,
+        device_info: request.headers['User-Agent'] || 'Unknown Device',
+        ip_address: request.remote_ip
+      )
+      
+      # Revoke old token
+      revoke_current_token!
+      
+      render json: {
+        status: { code: 200, message: 'Password changed successfully.' },
+        token: new_token
+      }
     else
       render json: {
-        status: { code: 401, message: 'No token provided.' }
-      }, status: :unauthorized
+        status: { 
+          code: 422, 
+          message: 'Password change failed.',
+          errors: current_user.errors.full_messages
+        }
+      }, status: :unprocessable_entity
     end
   end
 
@@ -359,9 +226,13 @@ class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
       timezone: user.timezone,
       role: user.role,
       created_at: user.created_at,
-      devices_count: user.devices_count,
-      active_sessions_count: user.active_sessions_count  # ✅ NEW
+      devices_count: user.devices_count
     }
+
+    # Add active sessions count if available
+    if defined?(UserSession)
+      user_data[:active_sessions_count] = user.active_sessions.count
+    end
 
     # Add subscription data if exists
     if user.subscription
@@ -387,36 +258,5 @@ class Api::V1::Auth::SessionsController < Api::V1::Auth::BaseController
 
   def change_password_params
     params.require(:user).permit(:current_password, :password, :password_confirmation)
-  end
-  
-  # ✅ Add authentication method
-  def authenticate_user!
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    if token.blank?
-      render json: { status: { code: 401, message: 'No token provided.' } }, status: :unauthorized
-      return
-    end
-    
-    begin
-      payload = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
-      jti = payload['jti']
-      
-      # Check if token is denylisted
-      if jti && JwtDenylist.exists?(jti: jti)
-        render json: { status: { code: 401, message: 'Token has been revoked.' } }, status: :unauthorized
-        return
-      end
-      
-      @current_user = User.find(payload['user_id'])
-    rescue JWT::ExpiredSignature
-      render json: { status: { code: 401, message: 'Token has expired.' } }, status: :unauthorized
-    rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-      render json: { status: { code: 401, message: 'Invalid token.' } }, status: :unauthorized
-    end
-  end
-  
-  def current_user
-    @current_user
   end
 end

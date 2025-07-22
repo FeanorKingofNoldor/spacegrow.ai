@@ -1,0 +1,18 @@
+# config/jwt.yml
+development:
+  lifetime: 43200 # 12 hours
+  algorithm: 'HS256'
+  issuer: 'spacegrow-api-dev'
+  audience: 'spacegrow-client-dev'
+
+test:
+  lifetime: 3600 # 1 hour for tests
+  algorithm: 'HS256'
+  issuer: 'spacegrow-api-test'
+  audience: 'spacegrow-client-test'
+
+production:
+  lifetime: 43200 # 12 hours
+  algorithm: 'HS256'
+  issuer: 'spacegrow-api'
+  audience: 'spacegrow-client'
