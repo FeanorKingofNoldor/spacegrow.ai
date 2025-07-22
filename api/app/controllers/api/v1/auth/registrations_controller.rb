@@ -1,23 +1,20 @@
+# app/controllers/api/v1/auth/registrations_controller.rb
 class Api::V1::Auth::RegistrationsController < Api::V1::Auth::BaseController
   include RackSessionsFix
+  include AuthenticationConcern  # ✅ Add this
 
   def create
     user = User.new(sign_up_params)
     
     if user.save
-      # Generate JWT token for the new user
-      token = JWT.encode(
-        { 
-          user_id: user.id, 
-          exp: 24.hours.from_now.to_i 
-        }, 
-        Rails.application.credentials.secret_key_base
+      # ✅ Use centralized token generation
+      token = generate_user_token(
+        user,
+        device_info: request.headers['User-Agent'] || 'Unknown Device',
+        ip_address: request.remote_ip
       )
 
-      # ✅ ENHANCED: Include display_name and subscription data
       user_data = UserSerializer.new(user).serializable_hash[:data][:attributes]
-      
-      # Add display_name and timezone if they exist
       user_data[:display_name] = user.display_name if user.respond_to?(:display_name)
       user_data[:timezone] = user.timezone if user.respond_to?(:timezone)
 
@@ -35,7 +32,6 @@ class Api::V1::Auth::RegistrationsController < Api::V1::Auth::BaseController
 
   private
 
-  # ✅ UPDATED: Include display_name in signup params
   def sign_up_params
     params.require(:user).permit(:email, :password, :password_confirmation, :role, :timezone, :display_name)
   end
