@@ -1,16 +1,7 @@
-# app/policies/admin_policy.rb (Base policy for admin namespace)
+# app/policies/admin_policy.rb (Updated - Keep Simple)
 class AdminPolicy < ApplicationPolicy
-  def initialize(user, record)
-    @user = user
-    @record = record
-  end
-
   def admin_access?
     user.admin?
-  end
-
-  def super_admin_access?
-    user.admin? # Expand this logic as needed
   end
 
   class Scope < Scope

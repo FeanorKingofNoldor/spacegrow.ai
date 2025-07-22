@@ -1,297 +1,274 @@
 # app/services/admin/dashboard_service.rb
 module Admin
   class DashboardService < ApplicationService
-    def initialize(period = 'week')
-      @period = period
-      @date_range = calculate_date_range(period)
-    end
-
     def call
       begin
         success(
-          summary: build_summary_stats,
-          recent_activity: build_recent_activity,
-          alerts: build_system_alerts,
-          quick_stats: build_quick_stats,
-          period: @period,
-          last_updated: Time.current.iso8601
+          business: business_overview,
+          devices: device_overview,
+          system: system_overview,
+          alerts: critical_alerts,
+          monitoring_tools: monitoring_tools_status
         )
       rescue => e
-        Rails.logger.error "Dashboard service error: #{e.message}"
-        failure("Failed to load dashboard data: #{e.message}")
+        Rails.logger.error "Admin Dashboard error: #{e.message}"
+        failure("Failed to load dashboard: #{e.message}")
       end
     end
 
     private
 
-    attr_reader :period, :date_range
-
-    def build_summary_stats
+    def business_overview
       {
         users: {
           total: User.count,
-          new_this_period: User.where(created_at: @date_range).count,
-          active_subscriptions: Subscription.where(status: 'active').count,
-          vip_users: User.where(role: 'vip').count
-        },
-        devices: {
-          total: Device.count,
-          active: Device.where(status: 'active').count,
-          offline: Device.where(status: 'offline').count,
-          error: Device.where(status: 'error').count,
-          new_this_period: Device.where(created_at: @date_range).count
+          new_this_week: User.where(created_at: 1.week.ago..).count,
+          active_subscriptions: User.joins(:subscription).where(subscriptions: { status: 'active' }).count,
+          past_due: User.joins(:subscription).where(subscriptions: { status: 'past_due' }).count
         },
         revenue: {
-          mrr: calculate_monthly_recurring_revenue,
-          total_revenue_this_period: calculate_period_revenue,
-          average_revenue_per_user: calculate_arpu,
-          past_due_amount: calculate_past_due_amount
+          mrr: calculate_mrr,
+          today: todays_revenue,
+          this_week: this_weeks_revenue
         },
-        subscriptions: {
-          active: Subscription.where(status: 'active').count,
-          past_due: Subscription.where(status: 'past_due').count,
-          canceled: Subscription.where(status: 'canceled').count,
-          new_this_period: Subscription.where(created_at: @date_range).count
+        growth: {
+          user_growth_week: calculate_user_growth,
+          device_growth_week: calculate_device_growth
         }
       }
     end
 
-    def build_recent_activity
+    def device_overview
       {
-        new_users: User.where(created_at: 24.hours.ago..)
-                      .limit(5)
-                      .pluck(:id, :email, :display_name, :created_at)
-                      .map { |id, email, name, created| 
-                        { id: id, email: email, name: name, created_at: created.iso8601 } 
-                      },
-        
-        new_devices: Device.where(created_at: 24.hours.ago..)
-                          .includes(:user)
-                          .limit(5)
-                          .map { |device|
-                            {
-                              id: device.id,
-                              name: device.name,
-                              user_email: device.user.email,
-                              status: device.status,
-                              created_at: device.created_at.iso8601
-                            }
-                          },
-        
-        recent_orders: Order.where(created_at: 24.hours.ago..)
-                           .includes(:user)
-                           .limit(5)
-                           .map { |order|
-                             {
-                               id: order.id,
-                               user_email: order.user.email,
-                               total: order.total,
-                               status: order.status,
-                               created_at: order.created_at.iso8601
-                             }
-                           },
-        
-        device_alerts: Device.where(status: 'error', updated_at: 24.hours.ago..)
-                            .includes(:user)
-                            .limit(5)
-                            .map { |device|
-                              {
-                                id: device.id,
-                                name: device.name,
-                                user_email: device.user.email,
-                                issue: device.last_error || 'Connection error',
-                                updated_at: device.updated_at.iso8601
-                              }
-                            }
+        total: Device.count,
+        online: Device.where(status: 'active').count,
+        offline: Device.where(last_connection: ..1.hour.ago).count,
+        errors: Device.where(status: 'error').count,
+        new_this_week: Device.where(created_at: 1.week.ago..).count,
+        by_type: Device.joins(:device_type).group('device_types.name').count,
+        connection_health: calculate_connection_health
       }
     end
 
-    def build_system_alerts
+    def system_overview
+      {
+        database: check_database_health,
+        redis: check_redis_health,
+        sidekiq: check_sidekiq_health,
+        disk_usage: get_disk_usage_percent,
+        memory_usage: get_memory_usage_mb,
+        uptime: calculate_uptime
+      }
+    end
+
+    def critical_alerts
       alerts = []
-
-      # Check for devices with errors
-      error_device_count = Device.where(status: 'error').count
-      if error_device_count > 0
-        alerts << {
-          type: 'warning',
-          title: 'Device Errors',
-          message: "#{error_device_count} device(s) reporting errors",
-          count: error_device_count,
-          action_url: '/admin/devices?status=error'
-        }
-      end
-
-      # Check for past due subscriptions
-      past_due_count = Subscription.where(status: 'past_due').count
-      if past_due_count > 0
-        alerts << {
-          type: 'danger',
-          title: 'Past Due Subscriptions',
-          message: "#{past_due_count} subscription(s) past due",
-          count: past_due_count,
-          action_url: '/admin/subscriptions?status=past_due'
-        }
-      end
-
-      # Check for offline devices (more than 1 hour)
-      offline_device_count = Device.where(
-        status: 'offline',
-        last_connection: ..1.hour.ago
-      ).count
       
-      if offline_device_count > 10 # Only alert if significant number
-        alerts << {
-          type: 'info',
-          title: 'Offline Devices',
-          message: "#{offline_device_count} device(s) offline for over 1 hour",
-          count: offline_device_count,
-          action_url: '/admin/devices?status=offline'
-        }
-      end
+      # Device alerts
+      error_devices = Device.where(status: 'error').count
+      alerts << {
+        type: 'error',
+        message: "#{error_devices} devices in error state",
+        action: 'Check device fleet',
+        url: '/admin/devices?status=error'
+      } if error_devices > 5
 
-      # Check for failed payments in last 24 hours
-      failed_payments = Order.where(
-        status: 'payment_failed',
-        created_at: 24.hours.ago..
-      ).count
-      
-      if failed_payments > 0
-        alerts << {
-          type: 'warning',
-          title: 'Payment Failures',
-          message: "#{failed_payments} payment failure(s) in last 24 hours",
-          count: failed_payments,
-          action_url: '/admin/orders?status=payment_failed'
-        }
-      end
+      offline_devices = Device.where(last_connection: ..1.hour.ago).count
+      alerts << {
+        type: 'warning', 
+        message: "#{offline_devices} devices offline >1 hour",
+        action: 'Check connectivity',
+        url: '/admin/devices?status=offline'
+      } if offline_devices > 10
+
+      # User alerts
+      past_due_users = User.joins(:subscription).where(subscriptions: { status: 'past_due' }).count
+      alerts << {
+        type: 'warning',
+        message: "#{past_due_users} users with past due payments",
+        action: 'Review billing',
+        url: '/admin/users?status=past_due'
+      } if past_due_users > 3
+
+      # System alerts
+      sidekiq_queue_size = Sidekiq::Queue.new.size
+      alerts << {
+        type: 'error',
+        message: "Sidekiq queue backed up (#{sidekiq_queue_size} jobs)",
+        action: 'Check background jobs',
+        url: '/admin/sidekiq'
+      } if sidekiq_queue_size > 100
 
       alerts
     end
 
-    def build_quick_stats
+    def monitoring_tools_status
       {
-        device_utilization: calculate_device_utilization_percentage,
-        system_uptime: calculate_system_uptime_percentage,
-        growth_rate: calculate_user_growth_rate,
-        revenue_trend: calculate_revenue_trend,
-        top_device_types: get_top_device_types,
-        plan_distribution: get_plan_distribution
+        database: {
+          name: 'Database Performance',
+          url: '/admin/pghero',
+          status: check_database_health,
+          description: 'Slow queries, connections, indexes'
+        },
+        background_jobs: {
+          name: 'Background Jobs',
+          url: '/admin/sidekiq',
+          status: check_sidekiq_health,
+          description: 'Job queues, failures, processing'
+        },
+        health_check: {
+          name: 'System Health',
+          url: '/health_check',
+          status: 'active',
+          description: 'Database, Redis, migrations'
+        },
+        metrics: {
+          name: 'IoT Metrics',
+          url: '/metrics',
+          status: 'active',
+          description: 'Prometheus metrics for devices'
+        },
+        errors: {
+          name: 'Error Tracking',
+          url: sentry_dashboard_url,
+          status: 'external',
+          description: 'Application errors and performance'
+        }
       }
     end
 
-    # Calculation methods with real data
-    def calculate_monthly_recurring_revenue
-      # Sum up all active subscription plan prices
-      plan_mrr = Subscription.active
-                           .joins(:plan)
-                           .sum('plans.monthly_price')
-      
-      # Add extra device slot costs
-      extra_mrr = ExtraDeviceSlot.joins(subscription: :user)
-                                .where(subscriptions: { status: 'active' })
-                                .sum(:monthly_cost)
-      
-      plan_mrr + extra_mrr
-    end
+    # === CALCULATION METHODS ===
 
-    def calculate_period_revenue
-      Order.where(
-        status: 'completed',
-        created_at: @date_range
-      ).sum(:total)
-    end
-
-    def calculate_arpu
-      active_subscriptions = Subscription.where(status: 'active').count
-      return 0 if active_subscriptions.zero?
-      
-      (calculate_monthly_recurring_revenue.to_f / active_subscriptions).round(2)
-    end
-
-    def calculate_past_due_amount
-      Subscription.where(status: 'past_due')
+    def calculate_mrr
+      Subscription.where(status: 'active')
                  .joins(:plan)
                  .sum('plans.monthly_price')
+                 .to_f
     end
 
-    def calculate_device_utilization_percentage
-      total_capacity = Subscription.active
-                                 .joins(:plan)
-                                 .sum('plans.device_limit')
-      
-      return 0 if total_capacity.zero?
-      
-      active_devices = Device.where(status: 'active').count
-      (active_devices.to_f / total_capacity * 100).round(1)
+    def todays_revenue
+      Order.where(created_at: Date.current.all_day, status: 'completed')
+           .sum(:total)
+           .to_f
     end
 
-    def calculate_system_uptime_percentage
-      # Simple calculation based on device connectivity
+    def this_weeks_revenue
+      Order.where(created_at: 1.week.ago.., status: 'completed')
+           .sum(:total)
+           .to_f
+    end
+
+    def calculate_user_growth
+      current_week = User.where(created_at: 1.week.ago..).count
+      previous_week = User.where(created_at: 2.weeks.ago..1.week.ago).count
+      return 0 if previous_week == 0
+      
+      ((current_week - previous_week).to_f / previous_week * 100).round(1)
+    end
+
+    def calculate_device_growth
+      current_week = Device.where(created_at: 1.week.ago..).count
+      previous_week = Device.where(created_at: 2.weeks.ago..1.week.ago).count
+      return 0 if previous_week == 0
+      
+      ((current_week - previous_week).to_f / previous_week * 100).round(1)
+    end
+
+    def calculate_connection_health
       total_devices = Device.count
-      return 100 if total_devices.zero?
+      return 100 if total_devices == 0
       
-      connected_devices = Device.where.not(status: 'error').count
-      (connected_devices.to_f / total_devices * 100).round(1)
+      online_devices = Device.where(status: 'active').count
+      ((online_devices.to_f / total_devices) * 100).round(1)
     end
 
-    def calculate_user_growth_rate
-      current_period_users = User.where(created_at: @date_range).count
-      previous_period_users = User.where(
-        created_at: calculate_previous_period_range
-      ).count
-      
-      return 0 if previous_period_users.zero?
-      
-      growth = ((current_period_users - previous_period_users).to_f / previous_period_users * 100)
-      growth.round(1)
-    end
+    # === HEALTH CHECK METHODS ===
 
-    def calculate_revenue_trend
-      current_revenue = calculate_period_revenue
-      previous_revenue = Order.where(
-        status: 'completed',
-        created_at: calculate_previous_period_range
-      ).sum(:total)
-      
-      return 0 if previous_revenue.zero?
-      
-      trend = ((current_revenue - previous_revenue).to_f / previous_revenue * 100)
-      trend.round(1)
-    end
-
-    def get_top_device_types
-      Device.joins(:device_type)
-            .group('device_types.name')
-            .order('COUNT(*) DESC')
-            .limit(5)
-            .count
-    end
-
-    def get_plan_distribution
-      Subscription.active
-                 .joins(:plan)
-                 .group('plans.name')
-                 .count
-    end
-
-    def calculate_date_range(period)
-      case period
-      when 'today'
-        Date.current.all_day
-      when 'week'
-        1.week.ago..Time.current
-      when 'month'
-        1.month.ago..Time.current
-      when 'quarter'
-        3.months.ago..Time.current
-      else
-        1.week.ago..Time.current
+    def check_database_health
+      begin
+        ActiveRecord::Base.connection.execute("SELECT 1")
+        connection_count = ActiveRecord::Base.connection.execute(
+          "SELECT count(*) FROM pg_stat_activity"
+        ).first['count']
+        
+        status = connection_count > 90 ? 'warning' : 'healthy'
+        { status: status, connections: connection_count }
+      rescue => e
+        { status: 'error', error: e.message }
       end
     end
 
-    def calculate_previous_period_range
-      duration = @date_range.end - @date_range.begin
-      (@date_range.begin - duration)..@date_range.begin
+    def check_redis_health
+      begin
+        info = $redis.info
+        memory_mb = (info['used_memory'].to_f / 1024 / 1024).round(2)
+        
+        status = memory_mb > 500 ? 'warning' : 'healthy'
+        { status: status, memory_mb: memory_mb, connected_clients: info['connected_clients'] }
+      rescue => e
+        { status: 'error', error: e.message }
+      end
+    end
+
+    def check_sidekiq_health
+      begin
+        stats = Sidekiq::Stats.new
+        queue_size = stats.enqueued
+        
+        status = case queue_size
+                when 0..50 then 'healthy'
+                when 51..100 then 'warning' 
+                else 'error'
+                end
+                
+        {
+          status: status,
+          enqueued: queue_size,
+          failed: stats.failed,
+          processed: stats.processed
+        }
+      rescue => e
+        { status: 'error', error: e.message }
+      end
+    end
+
+    def get_disk_usage_percent
+      begin
+        stat = Sys::Filesystem.stat('/')
+        ((stat.bytes_used.to_f / stat.bytes_total) * 100).round(1)
+      rescue => e
+        Rails.logger.warn "Could not get disk usage: #{e.message}"
+        0
+      end
+    end
+
+    def get_memory_usage_mb
+      begin
+        memory = Vmstat.memory
+        (memory.active_bytes.to_f / 1024 / 1024).round(2)
+      rescue => e
+        Rails.logger.warn "Could not get memory usage: #{e.message}"
+        0
+      end
+    end
+
+    def calculate_uptime
+      begin
+        uptime_seconds = File.read('/proc/uptime').split.first.to_f
+        uptime_days = (uptime_seconds / 86400).round(1)
+        "#{uptime_days} days"
+      rescue
+        "Unknown"
+      end
+    end
+
+    def sentry_dashboard_url
+      # Return your Sentry dashboard URL or 'Not configured'
+      if Rails.application.credentials.dig(Rails.env.to_sym, :sentry, :dsn).present?
+        "https://sentry.io/organizations/your-org/projects/"
+      else
+        nil
+      end
     end
   end
 end

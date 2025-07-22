@@ -3,34 +3,26 @@ class Api::V1::Admin::DashboardController < Api::V1::Admin::BaseController
   include ApiResponseHandling
 
   def index
-    service = Admin::DashboardMetricsService.new
-    result = service.daily_operations_overview
-
+    result = Admin::DashboardService.new.call
+    
     if result[:success]
-      render_success(result.except(:success), "Dashboard metrics loaded successfully")
+      render_success(result.except(:success), "Dashboard loaded successfully")
     else
       render_error(result[:error])
     end
   end
 
-  def alerts
-    service = Admin::DashboardMetricsService.new
-    result = service.critical_alerts
-
+  def quick_stats
+    # For real-time dashboard updates if needed
+    result = Admin::DashboardService.new.call
+    
     if result[:success]
-      render_success(result.except(:success), "Critical alerts loaded")
-    else
-      render_error(result[:error])
-    end
-  end
-
-  def metrics
-    time_period = params[:period] || 'today'
-    service = Admin::DashboardMetricsService.new
-    result = service.time_period_metrics(time_period)
-
-    if result[:success]
-      render_success(result.except(:success), "Metrics for #{time_period} loaded")
+      quick_data = {
+        users: result[:business][:users],
+        devices: result[:devices],
+        alerts: result[:alerts]
+      }
+      render_success(quick_data, "Quick stats loaded")
     else
       render_error(result[:error])
     end
