@@ -1,11 +1,7 @@
 # app/models/device.rb
 class Device < ApplicationRecord
   include Suspendable  # ✅ Extract suspension logic to concern
-  
-  # ✅ NEW: Include admin concerns
-  include AdminSearchable
-  include AdminAnalytics
-  include AdminAlertable
+
 
   belongs_to :user
   belongs_to :order, optional: true
@@ -45,14 +41,9 @@ class Device < ApplicationRecord
   scope :warning_devices, -> { where(last_connection: 10.minutes.ago..1.hour.ago) }
   scope :critical_devices, -> { offline_devices.or(error_devices) }
   scope :by_device_type, ->(type_name) { joins(:device_type).where(device_types: { name: type_name }) }
-  scope :by_owner_plan, ->(plan_name) { joins(user: { subscription: :plan }).where(plans: { name: plan_name }) }
-  scope :over_limit_devices, -> { joins(:user).where('(SELECT COUNT(*) FROM devices d2 WHERE d2.user_id = devices.user_id) > (SELECT device_limit FROM users WHERE users.id = devices.user_id)') }
-  scope :underutilized_users, -> { joins(:user).group('users.id').having('COUNT(devices.id) < (users.device_limit * 0.5)') }
   scope :recent_registrations, ->(days = 7) { where(created_at: days.days.ago..Time.current) }
-  scope :frequent_disconnects, -> { where('last_connection < ? AND updated_at > ?', 6.hours.ago, 24.hours.ago) }
   scope :long_running, ->(days = 30) { where('created_at < ?', days.days.ago) }
   scope :by_firmware_version, ->(version) { where(firmware_version: version) }
-  scope :needs_update, -> { where('firmware_version IS NULL OR firmware_version < ?', latest_firmware_version) }
   scope :geographic_region, ->(region) { where("location ->> 'region' = ?", region) }
 
   # ✅ KEEP: Device-specific methods
@@ -317,90 +308,6 @@ class Device < ApplicationRecord
     end
     
     activities.sort_by { |a| a[:timestamp] }.reverse.first(limit)
-  end
-
-  # ===== CLASS METHODS FOR ADMIN ANALYTICS =====
-  
-  def self.admin_fleet_overview
-    {
-      total_devices: count,
-      by_status: group(:status).count,
-      by_type: joins(:device_type).group('device_types.name').count,
-      by_health: {
-        healthy: healthy_devices.count,
-        warning: warning_devices.count,
-        critical: critical_devices.count
-      },
-      connection_stats: {
-        online: recently_connected(5).count,
-        recently_online: recently_connected(60).count - recently_connected(5).count,
-        offline: offline_devices(1).count,
-        never_connected: never_connected.count
-      },
-      fleet_utilization: calculate_fleet_utilization,
-      geographic_distribution: analyze_geographic_distribution
-    }
-  end
-
-  def self.admin_health_trends(days = 7)
-    date_range = days.days.ago..Time.current
-    
-    daily_stats = (0...days).map do |i|
-      date = i.days.ago.to_date
-      day_start = date.beginning_of_day
-      day_end = date.end_of_day
-      
-      {
-        date: date,
-        total_devices: where(created_at: ..day_end).count,
-        online_devices: where(last_connection: day_start..day_end).count,
-        error_devices: where(status: 'error', updated_at: day_start..day_end).count,
-        new_registrations: where(created_at: day_start..day_end).count
-      }
-    end
-    
-    daily_stats.reverse
-  end
-
-  def self.admin_performance_summary
-    total = count
-    return {} if total == 0
-    
-    {
-      fleet_size: total,
-      health_distribution: {
-        healthy: (healthy_devices.count.to_f / total * 100).round(1),
-        warning: (warning_devices.count.to_f / total * 100).round(1),
-        critical: (critical_devices.count.to_f / total * 100).round(1)
-      },
-      connection_distribution: {
-        online: (recently_connected(5).count.to_f / total * 100).round(1),
-        offline: (offline_devices(1).count.to_f / total * 100).round(1),
-        never_connected: (never_connected.count.to_f / total * 100).round(1)
-      },
-      average_device_age: calculate_average_device_age,
-      firmware_compliance: calculate_firmware_compliance
-    }
-  end
-
-  def self.admin_maintenance_queue
-    {
-      needs_firmware_update: needs_update.count,
-      frequent_disconnects: frequent_disconnects.count,
-      error_devices: error_devices.count,
-      never_connected: never_connected.where(created_at: ..1.day.ago).count,
-      over_limit_users: joins(:user).where('(SELECT COUNT(*) FROM devices d2 WHERE d2.user_id = devices.user_id) > (SELECT device_limit FROM users WHERE users.id = devices.user_id)').distinct.count(:user_id)
-    }
-  end
-
-  def self.admin_user_device_distribution
-    {
-      users_with_devices: joins(:user).distinct.count(:user_id),
-      users_at_limit: joins(:user).where('(SELECT COUNT(*) FROM devices d2 WHERE d2.user_id = devices.user_id) >= (SELECT device_limit FROM users WHERE users.id = devices.user_id)').distinct.count(:user_id),
-      users_over_limit: joins(:user).where('(SELECT COUNT(*) FROM devices d2 WHERE d2.user_id = devices.user_id) > (SELECT device_limit FROM users WHERE users.id = devices.user_id)').distinct.count(:user_id),
-      average_devices_per_user: (count.to_f / joins(:user).distinct.count(:user_id)).round(2),
-      device_utilization_by_plan: calculate_utilization_by_plan
-    }
   end
 
   private

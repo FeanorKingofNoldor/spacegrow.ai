@@ -1,4 +1,4 @@
-# app/controllers/api/v1/admin/devices_controller.rb
+# app/controllers/api/v1/admin/devices_controller.rb - SIMPLIFIED FOR STARTUP
 class Api::V1::Admin::DevicesController < Api::V1::Admin::BaseController
   include ApiResponseHandling
 
@@ -32,8 +32,8 @@ class Api::V1::Admin::DevicesController < Api::V1::Admin::BaseController
     end
   end
 
-  def restart
-    result = Admin::DeviceService.new.restart_device(params[:id])
+  def suspend
+    result = Admin::DeviceService.new.suspend_device(params[:id], params[:reason])
     
     if result[:success]
       render_success(result.except(:success), result[:message])
@@ -42,18 +42,8 @@ class Api::V1::Admin::DevicesController < Api::V1::Admin::BaseController
     end
   end
 
-  def troubleshoot
-    result = Admin::DeviceService.new.device_troubleshooting(params[:id])
-    
-    if result[:success]
-      render_success(result.except(:success), "Troubleshooting info loaded")
-    else
-      render_error(result[:error])
-    end
-  end
-
-  def bulk_suspend
-    result = Admin::DeviceService.new.bulk_suspend_devices(params[:device_ids], params[:reason])
+  def reactivate
+    result = Admin::DeviceService.new.reactivate_device(params[:id])
     
     if result[:success]
       render_success(result.except(:success), result[:message])

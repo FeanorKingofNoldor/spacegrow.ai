@@ -30,13 +30,9 @@ class User < ApplicationRecord
   scope :past_due_subscribers, -> { joins(:subscription).where(subscriptions: { status: 'past_due' }) }
   scope :canceled_subscribers, -> { joins(:subscription).where(subscriptions: { status: 'canceled' }) }
   scope :no_subscription, -> { left_joins(:subscription).where(subscriptions: { id: nil }) }
-  scope :high_value_customers, -> { joins(:orders).where(orders: { status: 'completed' }).group('users.id').having('SUM(orders.total) > ?', 500) }
   scope :recent_activity, ->(days = 7) { where(last_sign_in_at: days.days.ago..Time.current) }
-  scope :churn_risk, -> { past_due_subscribers.or(inactive_users(30)) }
-  scope :by_plan, ->(plan_name) { joins(subscription: :plan).where(plans: { name: plan_name }) }
   scope :with_devices, -> { joins(:devices).distinct }
   scope :without_devices, -> { left_joins(:devices).where(devices: { id: nil }) }
-  scope :over_device_limit, -> { joins(:devices, :subscription).group('users.id, subscriptions.id, plans.device_limit').having('COUNT(devices.id) > plans.device_limit') }
 
   validates :display_name, 
     length: { maximum: 50 }, 
@@ -229,91 +225,6 @@ class User < ApplicationRecord
     }
   end
 
-  def admin_financial_summary
-    completed_orders = orders.where(status: 'completed')
-    
-    {
-      total_orders: orders.count,
-      completed_orders: completed_orders.count,
-      total_spent: completed_orders.sum(:total),
-      average_order_value: completed_orders.average(:total)&.round(2) || 0,
-      failed_payments: orders.where(status: 'payment_failed').count,
-      monthly_recurring_revenue: subscription&.monthly_cost || 0,
-      last_order: orders.order(created_at: :desc).first&.created_at
-    }
-  end
-
-  def admin_subscription_history
-    subscriptions.includes(:plan).order(created_at: :desc).map do |sub|
-      {
-        id: sub.id,
-        plan_name: sub.plan&.name,
-        status: sub.status,
-        created_at: sub.created_at,
-        updated_at: sub.updated_at,
-        monthly_cost: sub.monthly_cost
-      }
-    end
-  end
-
-  def admin_activity_timeline(limit = 10)
-    activities = []
-    
-    # Recent orders
-    orders.recent.limit(3).each do |order|
-      activities << {
-        type: 'order',
-        description: "Order ##{order.id} (#{order.status}) - $#{order.total}",
-        timestamp: order.created_at,
-        metadata: { order_id: order.id, status: order.status, amount: order.total }
-      }
-    end
-    
-    # Recent device registrations
-    devices.recent.limit(3).each do |device|
-      activities << {
-        type: 'device',
-        description: "Registered device: #{device.name}",
-        timestamp: device.created_at,
-        metadata: { device_id: device.id, device_name: device.name }
-      }
-    end
-    
-    # Subscription changes
-    subscriptions.recent.limit(2).each do |sub|
-      activities << {
-        type: 'subscription',
-        description: "Subscription: #{sub.plan&.name} (#{sub.status})",
-        timestamp: sub.created_at,
-        metadata: { subscription_id: sub.id, plan: sub.plan&.name }
-      }
-    end
-    
-    # Login activity
-    if last_sign_in_at
-      activities << {
-        type: 'login',
-        description: "Last login",
-        timestamp: last_sign_in_at,
-        metadata: { ip: last_sign_in_ip }
-      }
-    end
-    
-    activities.sort_by { |a| a[:timestamp] }.reverse.first(limit)
-  end
-
-  def admin_flags
-    flags = []
-    flags << 'vip_customer' if orders.where(status: 'completed').sum(:total) > 1000
-    flags << 'enterprise_user' if enterprise?
-    flags << 'early_adopter' if created_at < 6.months.ago
-    flags << 'high_device_usage' if devices.count >= (device_limit * 0.8)
-    flags << 'support_contact' if respond_to?(:support_tickets) && support_tickets.count > 5
-    flags << 'payment_issues' if orders.where(status: 'payment_failed').count > 2
-    flags << 'churned_user' if subscription&.canceled? && subscription.updated_at > 30.days.ago
-    flags
-  end
-
   # ===== CLASS METHODS FOR ADMIN ANALYTICS =====
   
   def self.admin_growth_metrics(period = 'month')
@@ -332,63 +243,6 @@ class User < ApplicationRecord
     }
   end
 
-  def self.admin_cohort_analysis
-    # Analyze user cohorts by signup month
-    monthly_cohorts = group_by_month(:created_at, last: 12).count
-    
-    cohorts = monthly_cohorts.map do |month, signup_count|
-      retained_users = where(created_at: month.beginning_of_month..month.end_of_month)
-                      .joins(:subscription)
-                      .where(subscriptions: { status: 'active' })
-                      .count
-      
-      {
-        month: month,
-        signups: signup_count,
-        retained: retained_users,
-        retention_rate: signup_count > 0 ? ((retained_users.to_f / signup_count) * 100).round(1) : 0
-      }
-    end
-    
-    cohorts
-  end
-
-  def self.admin_segment_distribution
-    {
-      by_role: group(:role).count,
-      by_plan: joins(subscription: :plan).group('plans.name').count,
-      by_status: group_by_admin_status,
-      by_device_usage: group_by_device_usage,
-      by_spending: group_by_spending_tier
-    }
-  end
-
-  def self.group_by_admin_status
-    {
-      active: active_subscribers.count,
-      past_due: past_due_subscribers.count,
-      canceled: canceled_subscribers.count,
-      no_subscription: no_subscription.count
-    }
-  end
-
-  def self.group_by_device_usage
-    {
-      no_devices: without_devices.count,
-      under_utilized: with_devices.select { |u| u.devices.count < (u.device_limit * 0.5) }.count,
-      well_utilized: with_devices.select { |u| u.devices.count >= (u.device_limit * 0.5) && u.devices.count <= u.device_limit }.count,
-      over_limit: with_devices.select { |u| u.devices.count > u.device_limit }.count
-    }
-  end
-
-  def self.group_by_spending_tier
-    {
-      low_spender: joins(:orders).where(orders: { status: 'completed' }).group('users.id').having('SUM(orders.total) < ?', 100).count.count,
-      medium_spender: joins(:orders).where(orders: { status: 'completed' }).group('users.id').having('SUM(orders.total) BETWEEN ? AND ?', 100, 500).count.count,
-      high_spender: joins(:orders).where(orders: { status: 'completed' }).group('users.id').having('SUM(orders.total) > ?', 500).count.count
-    }
-  end
-
   # ===== ADMIN SEARCH METHODS =====
   
   def self.admin_search(query)
@@ -400,18 +254,6 @@ class User < ApplicationRecord
     )
   end
 
-  def self.admin_filter_by_risk_level(level)
-    case level
-    when 'high'
-      churn_risk.or(over_device_limit)
-    when 'medium'
-      inactive_users(14).where.not(id: churn_risk.select(:id))
-    when 'low'
-      active_subscribers.where.not(id: inactive_users(14).select(:id))
-    else
-      all
-    end
-  end
 
   def self.admin_recent_activity_summary
     {

@@ -42,15 +42,6 @@ class Order < ApplicationRecord
     }
   end
 
-  def self.payment_failure_summary
-    {
-      recent_failures: recent_failures.includes(:user).limit(50).map(&:admin_summary),
-      total_failed_24h: recent_failures.count,
-      total_failed_amount: recent_failures.sum(:total),
-      failure_reasons: failed_payments.recent.group(:payment_failure_reason).count
-    }
-  end
-
   def self.admin_overview(limit: 20)
     {
       recent_orders: includes(:user).order(created_at: :desc).limit(limit).map(&:admin_summary),
